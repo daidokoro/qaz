@@ -5,14 +5,16 @@ import (
 	"io/ioutil"
 	"log"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"text/template"
 )
 
 // Go Template Function Map here
+var increment = 0
 
 var templateFunctions = template.FuncMap{
-	// simple additon function useful for counters in loops
+	// simple additon function useful for counters
 	"Add": func(a int, b int) int {
 		return a + b
 	},
@@ -20,6 +22,12 @@ var templateFunctions = template.FuncMap{
 	// strip function for removing characters from text
 	"Strip": func(s string, rmv string) string {
 		return strings.Replace(s, rmv, "", -1)
+	},
+
+	// Inc function returns an incremented value for each call.
+	"Inc": func() string {
+		increment = increment + 1
+		return strconv.Itoa(increment)
 	},
 
 	// file function for reading text from a given file under the files folder
