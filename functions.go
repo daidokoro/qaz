@@ -25,7 +25,11 @@ var templateFunctions = template.FuncMap{
 	},
 
 	// Inc function returns an incremented value for each call.
-	"Inc": func() string {
+	"Inc": func(reset bool) string {
+		if reset {
+			increment = 1
+		}
+
 		increment = increment + 1
 		return strconv.Itoa(increment)
 	},
