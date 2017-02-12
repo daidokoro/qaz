@@ -5,6 +5,7 @@ Qaze is a Fork of the Bora project by [@pkazmierczak](https://github.com/pkazmie
 
 Qaze focuses on mininal abstraction from the underlying AWS Cloudformation Platform and instead focuses on dyanamic template generation, using Go Templates and custom templating functions. This allows it to be more future proof and allows quick access to new functionality when Amazon inevitably enhance the Cloudformation Platform.
 
+--
 
 *Features:*
 - Advanced templating functionality & custom built-in template functions 
@@ -38,7 +39,7 @@ qaze requires:
 
 ## How It Works!
 
-*qaze* get's uses a main _config.yml_ file as its source-of-truth. This file tells it what stacks it controls and what values to pass to those stacks. 
+Qaze uses a main _config.yml_ file as its source-of-truth. The file tells it what stacks it controls and the values to pass to those stacks. 
 
 ```yaml
 
