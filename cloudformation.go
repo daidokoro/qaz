@@ -217,22 +217,46 @@ func (s *stack) outputs(session *session.Session) error {
 
 	svc := cloudformation.New(session)
 
-	describeStacksInput := &cloudformation.DescribeStacksInput{
+	outputParams := &cloudformation.DescribeStacksInput{
 		StackName: aws.String(s.stackname),
 	}
 
-	outputs, err := svc.DescribeStacks(describeStacksInput)
+	outputs, err := svc.DescribeStacks(outputParams)
 	if err != nil {
 		log.Println("Unable to reach stack", err.Error())
 		return err
 	}
 
 	for _, i := range outputs.Stacks {
+
 		fmt.Printf("\n"+"[%s]"+"\n", *i.StackName)
 		for _, o := range i.Outputs {
-			fmt.Println(*o.OutputKey, "->", *o.OutputValue)
+
+			fmt.Printf("  Description: %s\n  %s: %s\n\n", *o.Description, colorString(*o.OutputKey, "magenta"), *o.OutputValue)
+
 		}
 		fmt.Println()
+
+	}
+
+	return nil
+}
+
+// Exports - prints all cloudformation exports
+func Exports(session *session.Session) error {
+
+	svc := cloudformation.New(session)
+
+	exportParams := &cloudformation.ListExportsInput{}
+	exports, err := svc.ListExports(exportParams)
+
+	if err != nil {
+		return err
+	}
+
+	for _, i := range exports.Exports {
+
+		fmt.Printf("Export Name: %s\nExport Value: %s\n--\n", colorString(*i.Name, "magenta"), *i.Value)
 	}
 
 	return nil

@@ -55,10 +55,13 @@ func init() {
 	checkCmd.Flags().StringVarP(&job.cfgFile, "config", "c", "config.yml", "path to config file")
 	checkCmd.Flags().StringVarP(&job.tplFile, "template", "t", "template", "path to template file Or stack::url")
 
+	// Define Exports Flags
+	exportsCmd.Flags().StringVarP(&region, "region", "r", "eu-west-1", "AWS Region")
+
 	// Define Root Flags
 	rootCmd.Flags().BoolVarP(&job.version, "version", "", false, "print current/running version")
 	rootCmd.PersistentFlags().StringVarP(&job.profile, "profile", "p", "default", "configured aws profile")
-	rootCmd.AddCommand(generateCmd, deployCmd, terminateCmd, statusCmd, outputsCmd, initCmd, updateCmd, checkCmd)
+	rootCmd.AddCommand(generateCmd, deployCmd, terminateCmd, statusCmd, outputsCmd, initCmd, updateCmd, checkCmd, exportsCmd)
 }
 
 // root command (calls all other commands)
@@ -327,9 +330,13 @@ var statusCmd = &cobra.Command{
 
 var outputsCmd = &cobra.Command{
 	Use:     "outputs [stack]",
-	Short:   "Prints stack outputs/exports",
-	Example: "qaze outputs vpc --config path/to/config",
+	Short:   "Prints stack outputs",
+	Example: "qaze outputs vpc subnets --config path/to/config",
 	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) < 1 {
+			fmt.Println("Please specify stack(s) to check, For details try --> qaze outputs --help")
+		}
+
 		err := configReader(job.cfgFile)
 		if err != nil {
 			log.Println(err.Error())
@@ -341,6 +348,7 @@ var outputsCmd = &cobra.Command{
 			log.Println("Error: ", err.Error())
 			return
 		}
+
 		for _, s := range args {
 			wg.Add(1)
 			go func(s string) {
@@ -349,6 +357,23 @@ var outputsCmd = &cobra.Command{
 			}(s)
 		}
 		wg.Wait()
+
+	},
+}
+
+var exportsCmd = &cobra.Command{
+	Use:     "exports",
+	Short:   "Prints stack exports",
+	Example: "qaze exports",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		sess, err := awsSession()
+		if err != nil {
+			log.Println("Error: ", err.Error())
+			return
+		}
+
+		Exports(sess)
 
 	},
 }
