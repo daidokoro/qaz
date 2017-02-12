@@ -8,6 +8,7 @@ Qaze focuses on mininal abstraction from the underlying AWS Cloudformation Platf
 --
 
 *Features:*
+
 - Advanced templating functionality & custom built-in template functions 
 
 - Support for templates written in JSON & YAML
@@ -18,9 +19,9 @@ Qaze focuses on mininal abstraction from the underlying AWS Cloudformation Platf
 
 - Support for AWS Profile selection for Multi-AWS account environments
 
-- *Decoupled* build mechanism. Qaze can manage infrasture by accessing config/templates via S3 or HTTP(S). This way the tool does not need to be stored with the files.
+- *Decoupled* build mechanism. Qaze can manage infrastructure by accessing config/templates via S3 or HTTP(S). This way the tool does not need to be stored with the files.
 
-- *Decoupled* stack managemnt. Stacks can be launched individually from different locations and build according to the depency chain as long as the same configuration file is read. 
+- *Decoupled* stack management. Stacks can be launched individually from different locations and build according to the depency chain as long as the same configuration file is read. 
 
 
 ## Installation
@@ -88,9 +89,9 @@ Note: Config files do not need to be named config.yml
 
 ## Templates (Getting those values!)
 
-Go has an excellent and expandable templating library which is utilised this in this project to project addition logic in creating templates. To read more on Go Template see [Here](https://golang.org/pkg/text/template)
+Go has an excellent and expandable templating library which is utilised in this project for additional logic in creating templates. To read more on Go Template see [Here](https://golang.org/pkg/text/template). All features of Go Templating are supported in Qaze.
 
-We'll run through some basic tips and tricks to get you started.
+We'll run through some basic tips and tricks to get started.
 
 Note that templates must have the same file name (_extension excluded_) as the stack they reference in config when working with local files, however, this does not apply when doing remote calls via S3 or Http for templates.
 
@@ -109,7 +110,7 @@ That's it! Use the generate command to varify the value
 
 Go Templates are also capable of looping values, for example, to get the values of both _private_ & _public_ in my *subnets* stack, I would do the following.
 
-``` yaml
+```
 {{ range $index, $value := .subnets.subnets }} # "range" allows us to loop over items in the template
   {{ range $access, $cidr := $value }} # looping over the key value pairs 
     {{$access}} {{$cidr}} # printing output
