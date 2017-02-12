@@ -1,0 +1,672 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Basic WP stack
+Mappings:
+  AWSRegion2AMI:
+    ap-northeast-1:
+      AMI: ami-936d9d93
+    ap-southeast-1:
+      AMI: ami-96f1c1c4
+    ap-southeast-2:
+      AMI: ami-69631053
+    eu-central-1:
+      AMI: ami-accff2b1
+    eu-west-1:
+      AMI: ami-47a23a30
+    sa-east-1:
+      AMI: ami-4d883350
+    us-east-1:
+      AMI: ami-d05e75b8
+    us-west-1:
+      AMI: ami-df6a8b9b
+    us-west-2:
+      AMI: ami-5189a661
+Outputs:
+  ELBurl:
+    Description: URL of ELB
+    Value:
+      Fn::Join:
+      - ''
+      - - http://
+        - Fn::GetAtt:
+          - ElasticLoadBalancer
+          - DNSName
+  LoadbalancerSecurityGroupID:
+    Description: LoadbalancerSecurityGroupID
+    Value:
+      Fn::Join:
+      - ''
+      - - Ref: LoadbalancerSecurityGroup
+  PublicRouteTable:
+    Description: Public Route Table.
+    Value:
+      Fn::Join:
+      - ''
+      - - Ref: PublicRouteTable
+        - ' (0.0.0.0/0 -> '
+        - Ref: InternetGateway
+        - )
+  PublicSubnet1:
+    Description: 'Public Subnet #1.'
+    Value:
+      Fn::Join:
+      - ''
+      - - Ref: PubSubnet1
+        - ' ('
+        - Ref: PublicSubnet1
+        - ') '
+        - Ref: AvailabilityZone1
+  PublicSubnet2:
+    Description: 'Public Subnet #2.'
+    Value:
+      Fn::Join:
+      - ''
+      - - Ref: PubSubnet2
+        - ' ('
+        - Ref: PublicSubnet2
+        - ') '
+        - Ref: AvailabilityZone2
+  VPCID:
+    Description: VPC Info.
+    Value:
+      Fn::Join:
+      - ''
+      - - Ref: VPC
+        - ' ('
+        - Ref: VpcCidr
+        - )
+  WebServerSecurityGroupID:
+    Description: WebServerSecurityGroupID
+    Value:
+      Fn::Join:
+      - ''
+      - - Ref: WebServerSecurityGroup
+Parameters:
+  AvailabilityZone1:
+    Default: eu-central-1a
+    Description: First AZ to use for PublicSubnet1/PrivateSubnet1.
+    Type: String
+  AvailabilityZone2:
+    Default: eu-central-1b
+    Description: Second AZ to use for PublicSubnet2/PrivateSubnet2.
+    Type: String
+  Company:
+    AllowedPattern: '[\x20-\x7E]*'
+    ConstraintDescription: can contain only ASCII characters.
+    Default: Company-Name
+    Description: Company-Name
+    MaxLength: '255'
+    MinLength: '1'
+    Type: String
+  Domain:
+    Default: lab.cloudreach.co.uk
+    Description: (?:[a-z][a-z-]+\.)?[a-z][a-z-]+\.([a-z]{2,6})$
+    Type: String
+  InstanceType:
+    AllowedValues:
+    - t2.micro
+    - t2.medium
+    - m3.medium
+    - m3.large
+    - m3.xlarge
+    - m3.2xlarge
+    ConstraintDescription: must be a valid EC2 instance type.
+    Default: t2.micro
+    Description: Instance type for NAT nodes.
+    Type: String
+  KeyName:
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+    Default: showroom
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instances
+    Type: AWS::EC2::KeyPair::KeyName
+  PrivateSubnet1:
+    Default: 10.0.1.0/24
+    Description: Address range for a private subnet to be created in AZ1.
+    Type: String
+  PrivateSubnet2:
+    Default: 10.0.3.0/24
+    Description: Address range for a private subnet to be created in AZ2.
+    Type: String
+  Project:
+    AllowedPattern: '[\x20-\x7E]*'
+    ConstraintDescription: can contain only ASCII characters.
+    Default: Project-Name
+    Description: Project-Name
+    MaxLength: '255'
+    MinLength: '1'
+    Type: String
+  PublicSubnet1:
+    Default: 10.0.0.0/24
+    Description: Address range for a public subnet to be created in AZ1.
+    Type: String
+  PublicSubnet2:
+    Default: 10.0.2.0/24
+    Description: Address range for a public subnet to be created in AZ2.
+    Type: String
+  VpcCidr:
+    Default: 10.0.0.0/16
+    Description: CIDR address for the VPC to be created.
+    Type: String
+  WebServerCapacity:
+    ConstraintDescription: must be between 1 and 5 EC2 instances.
+    Default: '2'
+    Description: The initial nuber of WebServer instances
+    MaxValue: '5'
+    MinValue: '1'
+    Type: Number
+Resources:
+  CPUAlarmHigh:
+    Properties:
+      AlarmActions:
+      - Ref: WebServerScaleUpPolicy
+      AlarmDescription: Scale-up if CPU > 50% for 1 minute
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+      - Name: AutoScalingGroupName
+        Value:
+          Ref: WebServerAutoScalingGroup
+      EvaluationPeriods: '2'
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Period: '60'
+      Statistic: Average
+      Threshold: '50'
+    Type: AWS::CloudWatch::Alarm
+  CPUAlarmLow:
+    Properties:
+      AlarmActions:
+      - Ref: WebServerScaleDownPolicy
+      AlarmDescription: Scale-down if CPU < 70% for 1 minute
+      ComparisonOperator: LessThanThreshold
+      Dimensions:
+      - Name: AutoScalingGroupName
+        Value:
+          Ref: WebServerAutoScalingGroup
+      EvaluationPeriods: '2'
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Period: '60'
+      Statistic: Average
+      Threshold: '70'
+    Type: AWS::CloudWatch::Alarm
+  DBEC2SecurityGroup:
+    Properties:
+      GroupDescription: Open database for access
+      SecurityGroupIngress:
+      - CidrIp:
+          Ref: PublicSubnet1
+        FromPort: '3306'
+        IpProtocol: tcp
+        ToPort: '3306'
+      - CidrIp:
+          Ref: PublicSubnet2
+        FromPort: '3306'
+        IpProtocol: tcp
+        ToPort: '3306'
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Join:
+          - '-'
+          - - SG-DB
+            - Ref: Project
+      VpcId:
+        Ref: VPC
+    Type: AWS::EC2::SecurityGroup
+  Database:
+    Properties:
+      ImageId: ami-f125399d
+      InstanceType:
+        Ref: InstanceType
+      KeyName:
+        Ref: KeyName
+      SecurityGroupIds:
+      - Ref: DBEC2SecurityGroup
+      SubnetId:
+        Ref: PriSubnet1
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Join:
+          - '-'
+          - - DB
+            - Ref: Project
+    Type: AWS::EC2::Instance
+  ELBcname:
+    DependsOn:
+    - InternetGateway
+    - GatewayToInternet
+    Properties:
+      Comment: CNAME to Web ELB
+      HostedZoneId: ZTUOGS2NQKC92
+      Name:
+        Fn::Join:
+        - ''
+        - - Ref: Project
+          - .showroom.
+          - Ref: Domain
+      ResourceRecords:
+      - Fn::GetAtt:
+        - ElasticLoadBalancer
+        - DNSName
+      TTL: '900'
+      Type: CNAME
+    Type: AWS::Route53::RecordSet
+  ElasticLoadBalancer:
+    DependsOn:
+    - InternetGateway
+    - GatewayToInternet
+    Properties:
+      CrossZone: 'true'
+      HealthCheck:
+        HealthyThreshold: '3'
+        Interval: '5'
+        Target: HTTP:80/
+        Timeout: '2'
+        UnhealthyThreshold: '5'
+      Listeners:
+      - InstancePort: '80'
+        LoadBalancerPort: '80'
+        Protocol: HTTP
+      SecurityGroups:
+      - Ref: LoadbalancerSecurityGroup
+      Subnets:
+      - Ref: PubSubnet1
+      - Ref: PubSubnet2
+    Type: AWS::ElasticLoadBalancing::LoadBalancer
+  GatewayToInternet:
+    Properties:
+      InternetGatewayId:
+        Ref: InternetGateway
+      VpcId:
+        Ref: VPC
+    Type: AWS::EC2::VPCGatewayAttachment
+  InternetGateway:
+    Properties:
+      Tags:
+      - Key: Application
+        Value:
+          Ref: AWS::StackName
+      - Key: Name
+        Value:
+          Fn::Join:
+          - '-'
+          - - IGW
+            - Ref: Project
+      - Key: Network
+        Value: Public
+    Type: AWS::EC2::InternetGateway
+  LoadbalancerSecurityGroup:
+    Properties:
+      GroupDescription: Enable HTTP access via port 80 and 443 access
+      SecurityGroupIngress:
+      - CidrIp: 0.0.0.0/0
+        FromPort: '443'
+        IpProtocol: tcp
+        ToPort: '443'
+      - CidrIp: 0.0.0.0/0
+        FromPort: '80'
+        IpProtocol: tcp
+        ToPort: '80'
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Join:
+          - '-'
+          - - SG-ELB
+            - Ref: Project
+      VpcId:
+        Ref: VPC
+    Type: AWS::EC2::SecurityGroup
+  PriSubnet1:
+    Properties:
+      AvailabilityZone:
+        Ref: AvailabilityZone1
+      CidrBlock:
+        Ref: PrivateSubnet1
+      Tags:
+      - Key: Application
+        Value:
+          Ref: AWS::StackName
+      - Key: Name
+        Value:
+          Fn::Join:
+          - '-'
+          - - NT-PR-1
+            - Ref: Project
+      - Key: Network
+        Value: Private
+      VpcId:
+        Ref: VPC
+    Type: AWS::EC2::Subnet
+  PriSubnet1RTAssoc:
+    Properties:
+      RouteTableId:
+        Ref: PrivateRouteTable1
+      SubnetId:
+        Ref: PriSubnet1
+    Type: AWS::EC2::SubnetRouteTableAssociation
+  PrivateRouteTable1:
+    Properties:
+      Tags:
+      - Key: Application
+        Value:
+          Ref: AWS::StackName
+      - Key: Name
+        Value:
+          Fn::Join:
+          - '-'
+          - - RT-PR-1
+            - Ref: Project
+      - Key: Network
+        Value: Private
+      VpcId:
+        Ref: VPC
+    Type: AWS::EC2::RouteTable
+  PubSubnet1:
+    Properties:
+      AvailabilityZone:
+        Ref: AvailabilityZone1
+      CidrBlock:
+        Ref: PublicSubnet1
+      MapPublicIpOnLaunch: 'true'
+      Tags:
+      - Key: Application
+        Value:
+          Ref: AWS::StackName
+      - Key: Name
+        Value:
+          Fn::Join:
+          - '-'
+          - - NT-PU-1
+            - Ref: Project
+      - Key: Network
+        Value: Public
+      VpcId:
+        Ref: VPC
+    Type: AWS::EC2::Subnet
+  PubSubnet1RTAssoc:
+    Properties:
+      RouteTableId:
+        Ref: PublicRouteTable
+      SubnetId:
+        Ref: PubSubnet1
+    Type: AWS::EC2::SubnetRouteTableAssociation
+  PubSubnet2:
+    Properties:
+      AvailabilityZone:
+        Ref: AvailabilityZone2
+      CidrBlock:
+        Ref: PublicSubnet2
+      MapPublicIpOnLaunch: 'true'
+      Tags:
+      - Key: Application
+        Value:
+          Ref: AWS::StackName
+      - Key: Name
+        Value:
+          Fn::Join:
+          - '-'
+          - - NT-PU-2
+            - Ref: Project
+      - Key: Network
+        Value: Public
+      VpcId:
+        Ref: VPC
+    Type: AWS::EC2::Subnet
+  PubSubnet2RTAssoc:
+    Properties:
+      RouteTableId:
+        Ref: PublicRouteTable
+      SubnetId:
+        Ref: PubSubnet2
+    Type: AWS::EC2::SubnetRouteTableAssociation
+  PublicRoute:
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:
+        Ref: InternetGateway
+      RouteTableId:
+        Ref: PublicRouteTable
+    Type: AWS::EC2::Route
+  PublicRouteTable:
+    Properties:
+      Tags:
+      - Key: Application
+        Value:
+          Ref: AWS::StackName
+      - Key: Name
+        Value:
+          Fn::Join:
+          - '-'
+          - - RT-PU-1
+            - Ref: Project
+      - Key: Network
+        Value: Public
+      VpcId:
+        Ref: VPC
+    Type: AWS::EC2::RouteTable
+  VPC:
+    Properties:
+      CidrBlock:
+        Ref: VpcCidr
+      Tags:
+      - Key: Application
+        Value:
+          Ref: AWS::StackName
+      - Key: Name
+        Value:
+          Fn::Join:
+          - '-'
+          - - VPC
+            - Ref: Project
+      - Key: Network
+        Value: Public
+    Type: AWS::EC2::VPC
+  WebServerAutoScalingGroup:
+    CreationPolicy:
+      ResourceSignal:
+        Count: 1
+        Timeout: PT10M
+    Properties:
+      AvailabilityZones:
+      - Ref: AvailabilityZone1
+      - Ref: AvailabilityZone2
+      LaunchConfigurationName:
+        Ref: WebServerLaunchConfiguration
+      LoadBalancerNames:
+      - Ref: ElasticLoadBalancer
+      MaxSize: '5'
+      MinSize:
+        Ref: WebServerCapacity
+      Tags:
+      - Key: Name
+        PropagateAtLaunch: 'true'
+        Value:
+          Fn::Join:
+          - '-'
+          - - WEB-ASG
+            - Ref: Project
+      VPCZoneIdentifier:
+      - Ref: PubSubnet1
+      - Ref: PubSubnet2
+    Type: AWS::AutoScaling::AutoScalingGroup
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MaxBatchSize: '1'
+        MinInstancesInService: '1'
+        PauseTime: PT5M
+        WaitOnResourceSignals: 'true'
+  WebServerHTTPAllowELB:
+    Properties:
+      FromPort: '80'
+      GroupId:
+        Ref: WebServerSecurityGroup
+      IpProtocol: tcp
+      SourceSecurityGroupId:
+        Ref: LoadbalancerSecurityGroup
+      ToPort: '80'
+    Type: AWS::EC2::SecurityGroupIngress
+  WebServerLaunchConfiguration:
+    DependsOn:
+    - PubSubnet1RTAssoc
+    - PubSubnet2RTAssoc
+    - Database
+    Metadata:
+      AWS::CloudFormation::Init:
+        configSets:
+          wordpress_install:
+          - install_wordpress
+        install_wordpress:
+          commands:
+            01_configure_wordpress:
+              command: /tmp/create-wp-config
+              cwd: /var/www/html/wordpress
+          files:
+            /tmp/create-wp-config:
+              content:
+                Fn::Join:
+                - ''
+                - - '#!/bin/bash
+
+                    '
+                  - 'cp /var/www/html/wordpress/wp-config-sample.php /var/www/html/wordpress/wp-config.php
+
+                    '
+                  - 'sed -i "s/''database_name_here''/''wordpress''/g" wp-config.php
+
+                    '
+                  - 'sed -i "s/''username_here''/''root''/g" wp-config.php
+
+                    '
+                  - 'sed -i "s/''password_here''/''wordpress''/g" wp-config.php
+
+                    '
+                  - sed -i "s/'localhost'/'
+                  - Fn::GetAtt:
+                    - Database
+                    - PrivateIp
+                  - '''/g" wp-config.php
+
+                    '
+              group: root
+              mode: '000500'
+              owner: root
+          packages:
+            apt:
+              apache2: []
+              mysql-client: []
+              php5: []
+              php5-mysql: []
+              sendmail: []
+          sources:
+            /var/www/html: http://wordpress.org/latest.tar.gz
+    Properties:
+      AssociatePublicIpAddress: 'true'
+      ImageId: ami-91233ffd
+      InstanceType:
+        Ref: InstanceType
+      KeyName:
+        Ref: KeyName
+      SecurityGroups:
+      - Ref: WebServerSecurityGroup
+      UserData:
+        Fn::Base64:
+          Fn::Join:
+          - ''
+          - - '#!/bin/bash -x
+
+              '
+            - 'exec > /tmp/userdata.log 2>&1
+
+              '
+            - '/usr/local/bin/cfn-init -v '
+            - '         --stack '
+            - Ref: AWS::StackName
+            - '         --resource WebServerLaunchConfiguration '
+            - '         --configsets wordpress_install '
+            - '         --region '
+            - Ref: AWS::Region
+            - '
+
+              '
+            - '/bin/mv /var/www/html/wordpress/* /var/www/html/
+
+              '
+            - '/bin/rm -f /var/www/html/index.html
+
+              '
+            - '/bin/rm -rf /var/www/html/wordpress/
+
+              '
+            - '/usr/sbin/service apache2 restart
+
+              '
+            - '/usr/bin/curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+
+              '
+            - '/bin/chmod +x wp-cli.phar
+
+              '
+            - '/bin/mv wp-cli.phar /usr/local/bin/wp
+
+              '
+            - 'cd /var/www/html/ && sudo -u www-data /usr/local/bin/wp core install '
+            - --url='
+            - Ref: ELBcname
+            - ''' '
+            - --title='
+            - Ref: Project
+            - ''' '
+            - '--admin_user=''root'' '
+            - '--admin_password=''wordpress'' '
+            - '--admin_email=''wordpress@piotr.lab.cloudreach.co.uk''
+
+              '
+            - '/usr/local/bin/cfn-signal -e $? '
+            - '         --stack '
+            - Ref: AWS::StackName
+            - '         --resource WebServerAutoScalingGroup '
+            - '         --region '
+            - Ref: AWS::Region
+            - '
+
+              '
+    Type: AWS::AutoScaling::LaunchConfiguration
+  WebServerScaleDownPolicy:
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName:
+        Ref: WebServerAutoScalingGroup
+      Cooldown: '60'
+      ScalingAdjustment: '-1'
+    Type: AWS::AutoScaling::ScalingPolicy
+  WebServerScaleUpPolicy:
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName:
+        Ref: WebServerAutoScalingGroup
+      Cooldown: '60'
+      ScalingAdjustment: '1'
+    Type: AWS::AutoScaling::ScalingPolicy
+  WebServerSecurityGroup:
+    Properties:
+      GroupDescription: Enable HTTP access via port 80 and SSH access
+      SecurityGroupIngress:
+      - CidrIp: 0.0.0.0/0
+        FromPort: '80'
+        IpProtocol: tcp
+        ToPort: '80'
+      - CidrIp: 0.0.0.0/0
+        FromPort: '22'
+        IpProtocol: tcp
+        ToPort: '22'
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Join:
+          - '-'
+          - - SG-WEB
+            - Ref: Project
+      VpcId:
+        Ref: VPC
+    Type: AWS::EC2::SecurityGroup

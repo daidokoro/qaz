@@ -1,0 +1,26 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+{{ range .sqs.queues }}
+  {{ .QueueName }}Queue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: {{ .QueueName }}
+  {{ end }}
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: PublicRead
+      WebsiteConfiguration:
+        IndexDocument: {{ .sqs.indexdocument }}
+        ErrorDocument: error.html
+
+Outputs:
+  WebsiteURL:
+    Value: !GetAtt S3Bucket.WebsiteURL
+    Description: URL for the website hosted on S3
+  S3BucketSecureURL:
+    Value: !Sub
+        - https://${Domain}
+        - Domain: !GetAtt S3Bucket.DomainName
+    Description: Name of the S3 bucket to hold website content

@@ -1,0 +1,36 @@
+# Specify the AWS region code
+# bora will attempt to get it from AWS configuration
+# or from the environment. This setting overrides
+# every other.
+region: "eu-west-1"
+
+# Required: specify the name of the stack
+# (bora will look for a template under templates/
+# that matches the stack name
+project: "ad"
+
+
+stacks:
+  simple:
+    cf:
+      # SSH Keyname
+      key_name: <your key>
+
+      # Fully qualified domain name (FQDN) of the forest root domain e.g. corp.example.com
+      fdqn: example.io
+
+      # NetBIOS name of the domain (upto 15 characters) for users of earlier versions of Windows e.g. CORP
+      domain_netbios_name: exp
+
+      # Administrator credentials
+      password: Password123@!
+
+      # Directory Size: Small | Large
+      ad_size: Small
+
+      # -- VPC --
+      vpc_cidr: 10.10.0.0/16
+
+      subnets:
+        - private: 10.10.0.0/24
+        - public: 10.10.1.0/24

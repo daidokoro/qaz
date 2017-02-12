@@ -1,0 +1,39 @@
+
+# Specify the AWS region code
+# bora will attempt to get it from AWS configuration
+# or from the environment. This setting overrides
+# every other.
+region: "eu-west-1"
+
+# Required: specify the name of the stack
+# (bora will look for a template under templates/
+# that matches the stack name
+project: "daidokoro"
+
+# Optional: global values, accisible accross
+# all stacks can be define under global
+global:
+  tags:
+    - code: app
+    - env: dev
+    - version: 1.0.0
+    - domain: example
+    - lang: eng
+
+# Stack-specific variables
+# You can define arbitrary keys in here,
+# *except* for the top-level CF key, which
+# bora requires.
+
+stacks:
+  vpc:
+    cf:
+      cidr_block: 10.10.0.0/16
+
+  subnets:
+    depends_on:
+      - vpc
+    cf:
+      subnets:
+      - private: 10.10.0.0/24
+      - public: 10.10.2.0/24

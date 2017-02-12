@@ -1,0 +1,87 @@
+
+# Define resources
+Resources:
+  VPC:
+    Type: "AWS::EC2::VPC"
+    Properties:
+      CidrBlock: {{ .simple.vpc_cidr }}
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+
+  IGW:
+    Type: "AWS::EC2::InternetGateway"
+    Properties:
+      Tags:
+        - Key: Name
+          Value: InternetGateway
+
+  AttachIGW:
+    Type: "AWS::EC2::VPCGatewayAttachment"
+    Properties:
+      InternetGatewayId: !Ref IGW
+      VpcId: !Ref VPC
+
+  EIP:
+    Type: "AWS::EC2::EIP"
+    Properties:
+      Domain: !Ref VPC
+
+  NAT:
+    Type: "AWS::EC2::NatGateway"
+    Properties:
+      AllocationId: !GetAtt EIP.AllocationId
+      SubnetId: !Ref privateSubnet
+
+
+{{ range $index, $value := .simple.subnets }}
+  {{ range $access, $cidr := $value }}
+
+
+  {{ $access }}Subnet:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone: eu-west-1{{ if eq $access `public` }}a{{ else }}b{{ end }}
+      CidrBlock: {{ $cidr }}
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: {{ $access }}subnet
+
+  RoutingTable{{ $access }}:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: {{ $access }}RoutingTable
+
+  {{ $access }}RouteTableAssoc:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      RouteTableId: !Ref RoutingTable{{ $access }}
+      SubnetId: !Ref {{ $access }}Subnet
+
+  {{ $access }}Route:
+    Type: "AWS::EC2::Route"
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      RouteTableId: !Ref RoutingTable{{ $access }}
+      {{ if eq $access `public` }}GatewayId: !Ref IGW{{ else }}NatGatewayId: !Ref NAT{{ end }}
+
+  {{ end }}
+{{ end }}
+
+  SimpleAD:
+    Type: "AWS::DirectoryService::SimpleAD"
+    Properties:
+      CreateAlias: true
+      Description: "A Simple AD"
+      Name: {{ .simple.fdqn }}
+      Password: {{ .simple.password }}
+      ShortName: {{ .simple.domain_netbios_name }}
+      Size: {{ .simple.ad_size }}
+      VpcSettings:
+        SubnetIds:
+          - !Ref publicSubnet
+          - !Ref privateSubnet
+        VpcId: !Ref VPC

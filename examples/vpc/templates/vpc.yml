@@ -1,0 +1,17 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: |
+  This is an example VPC deployed via Qaze!
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: {{ .vpc.cidr_block }}
+
+Outputs:
+  vpcid:
+    Description: VPC ID
+    Value:  !Ref VPC
+    Export:
+      Name: !Sub "${AWS::StackName}-vpcid"

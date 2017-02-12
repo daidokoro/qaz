@@ -1,0 +1,12 @@
+# Global Values - [Required]
+region: "eu-central-1"
+project: "example-dev"
+
+# Stack values
+stacks:
+  sqs:
+    cf:
+      Queues:
+        - QueueName: "daido"
+        - QueueName: "koro"
+      indexdocument: "main.html"
