@@ -1,9 +1,9 @@
 # qaze—A CLI tool for Templating & Managing stacks in AWS Cloudformation
 [![Build Status](https://travis-ci.org/daidokoro/qaze.svg)](https://travis-ci.org/daidokoro/qaze)
 
-Qaze is a Fork of the Bora project by [@pkazmierczak](https://github.com/pkazmierczak) that aims to focus on simplifying the process of deploying infrastructure on AWS via Cloudformation by utilising the Go Templates Library and custom functions to generate diverse and configurable tables.
+Qaze is a Fork of the Bora project by [@pkazmierczak](https://github.com/pkazmierczak) that aims to focus on simplifying the process of deploying infrastructure on AWS via Cloudformation by utilising the Go Templates Library and custom functions to generate diverse and configurable templates.
 
-Qaze focuses on mininal abstraction from the underlying AWS Cloudformation Platform and instead focuses on dyanamic template generation, using Go Templates and custom templating functions. This allows it to be future proof against failure and allow quick access to new functionality when Amazon inevitably enhance the Cloudformation Platform.
+Qaze focuses on mininal abstraction from the underlying AWS Cloudformation Platform and instead focuses on dyanamic template generation, using Go Templates and custom templating functions. This allows it to be more future proof and allows quick access to new functionality when Amazon inevitably enhance the Cloudformation Platform.
 
 
 *Features:*
