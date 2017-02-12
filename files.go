@@ -52,14 +52,16 @@ func fetchContent(source string) (string, error) {
 
 // configReader parses the config YAML file with Viper
 func configReader(conf string) error {
-	viper.AddConfigPath(".") // Required - for some reason
+	viper.SetConfigType("yaml")
 
 	cfg, err := fetchContent(conf)
+
 	if err != nil {
 		return err
 	}
 
-	err = viper.ReadConfig(bytes.NewBufferString(cfg))
+	err = viper.ReadConfig(bytes.NewBuffer([]byte(cfg)))
+
 	if err != nil {
 		log.Fatal("Fatal error, can't read the config file")
 		return err
