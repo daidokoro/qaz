@@ -67,7 +67,7 @@ func init() {
 // root command (calls all other commands)
 var rootCmd = &cobra.Command{
 	Use:   "qaze",
-	Short: "qaze is a simple wrapper around Cloudformation. ",
+	Short: fmt.Sprintf("%s\n--> Shut up & deploy my templates...!", colorString(banner.PrintS("qaze"), "magenta")),
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if job.version {
