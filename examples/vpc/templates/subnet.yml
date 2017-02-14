@@ -1,0 +1,25 @@
+{{- $tags := .global.tags -}}
+Description: Test Subnet Stack deployed by Qaze
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+{{- range $index, $value := .subnet.subnets }}
+{{- range $access, $cidr := $value }}
+
+  {{ $access }}Subnet:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone: eu-west-1{{ if eq $access `public` }}a{{ else }}b{{ end }}
+      CidrBlock: {{ $cidr }}
+      VpcId: %stack_output "vpc::vpcid"%
+      Tags:
+        - Key: Name
+          Value: {{ $access }}subnet
+    {{ range $i, $val := $tags }}
+      {{- range $k, $v := $val }}
+        - Key: {{$k}}
+          Value: {{$v}}
+    {{ end }}
+    {{- end }}
+
+  {{- end -}}
+{{- end -}}
