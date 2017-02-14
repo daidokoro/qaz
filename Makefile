@@ -8,8 +8,7 @@ test:
 	go test
 
 clean:
-	rm -f bora
+	rm -f qaze
 
 get-deps:
 	go get ./...
-
