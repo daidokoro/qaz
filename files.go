@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"strings"
 	"text/template"
 
@@ -24,27 +23,31 @@ var (
 func fetchContent(source string) (string, error) {
 	switch strings.Split(strings.ToLower(source), ":")[0] {
 	case "http":
+		Log(fmt.Sprintln("Source Type: [http] Detected, Fetching Source: ", source), level.debug)
 		resp, err := Get(source)
 		if err != nil {
 			return "", err
 		}
 		return resp, nil
 	case "https":
+		Log(fmt.Sprintln("Source Type: [https] Detected, Fetching Source: ", source), level.debug)
 		resp, err := Get(source)
 		if err != nil {
 			return "", err
 		}
 		return resp, nil
 	case "s3":
+		Log(fmt.Sprintln("Source Type: [s3] Detected, Fetching Source: ", source), level.debug)
 		resp, err := S3Read(source)
 		if err != nil {
 			return "", err
 		}
 		return resp, nil
 	default:
+		Log(fmt.Sprintln("Source Type: [file] Detected, Fetching Source: ", source), level.debug)
 		b, err := ioutil.ReadFile(source)
 		if err != nil {
-			log.Fatal("Error reading the template file: ", err)
+			return "", err
 		}
 		return string(b), nil
 	}
@@ -60,10 +63,10 @@ func configReader(conf string) error {
 		return err
 	}
 
+	Log(fmt.Sprintln("Reading Config String into viper:", cfg), level.debug)
 	err = viper.ReadConfig(bytes.NewBuffer([]byte(cfg)))
 
 	if err != nil {
-		log.Fatal("Fatal error, can't read the config file")
 		return err
 	}
 
@@ -78,6 +81,8 @@ func configReader(conf string) error {
 	// Get Global values
 	cfvars["global"] = viper.Get("global")
 
+	Log(fmt.Sprintln("Keys identified in Config:", viper.AllKeys()), level.debug)
+
 	// if stacks is 0 at this point, All Stacks are assumed.
 	if len(job.stacks) == 0 {
 		job.stacks = make(map[string]string)
@@ -88,13 +93,22 @@ func configReader(conf string) error {
 
 	for s := range job.stacks {
 		stacks[s] = &stack{}
+		key := "stacks." + s
+		Log(fmt.Sprintf("Evaluating: [%s] in config"+"\n", s), level.debug)
 
-		for _, v := range viper.Sub("stacks." + s).AllKeys() {
+		Log(fmt.Sprintf("Checking if [%s] exists in [%s]", key, strings.Join(viper.AllKeys(), ", ")), level.debug)
+		if !strings.Contains(strings.Join(viper.AllKeys(), ""), key) {
+			return fmt.Errorf("Key not found in config: %s", key)
+		}
 
+		for _, v := range viper.Sub(key).AllKeys() {
+			Log(fmt.Sprintln("Processing: ", v), level.debug)
 			// Using case statement for setting keyword values, added for scalability later.
 			switch v {
 			case "depends_on":
-				stacks[s].dependsOn = viper.Get(fmt.Sprintf("stacks.%s.%s", s, v)).([]interface{})
+				dept := viper.Get(fmt.Sprintf("stacks.%s.%s", s, v)).([]interface{})
+				Log(fmt.Sprintf("Found Dependency for [%s]: %s", s, dept), level.debug)
+				stacks[s].dependsOn = dept
 			default:
 				// TODO: Nothing for now - more built-in values to come... maybe
 			}
@@ -120,7 +134,7 @@ func templateParser(source string) (string, error) {
 	// Create template
 	t, err := template.New("template").Funcs(templateFunctions).Parse(templ)
 	if err != nil {
-		log.Fatal("Error parsing the template file: ", err)
+		return "", err
 	}
 
 	// so that we can write to string

@@ -1,14 +1,13 @@
 package main
 
 import (
+	"errors"
 	"fmt"
-	"log"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 )
@@ -20,7 +19,6 @@ type stack struct {
 	template   string
 	dependsOn  []interface{}
 	dependents []interface{}
-	built      bool
 }
 
 // State - struct for handling stack deploy/terminate statuses
@@ -39,6 +37,7 @@ var mutex = &sync.Mutex{}
 
 // updateState - Locks cross channel object and updates value
 func updateState(statusMap map[string]string, name string, status string) {
+	Log(fmt.Sprintf("Updating Stack Status Map: %s - %s", name, status), level.debug)
 	mutex.Lock()
 	statusMap[name] = status
 	mutex.Unlock()
@@ -59,23 +58,26 @@ func (s *stack) deploy(session *session.Session) error {
 		Capabilities:    []*string{&capability},
 	}
 
+	Log(fmt.Sprintln("Calling [CreateStack] with parameters:", createParams), level.debug)
 	if _, err := svc.CreateStack(createParams); err != nil {
-		log.Fatal("Deploying failed: ", err.Error())
-	} else {
+		return errors.New(fmt.Sprintln("Deploying failed: ", err.Error()))
 
-		go verbose(s.stackname, "CREATE", session)
-		describeStacksInput := &cloudformation.DescribeStacksInput{
-			StackName: aws.String(s.stackname),
-		}
-		if err := svc.WaitUntilStackCreateComplete(describeStacksInput); err != nil {
-			// FIXME this works in so far that we wait until the stack is
-			// completed and capture errors, but it doesn't really tail
-			// cloudroamtion events.
-			log.Fatal(err)
-		}
-
-		log.Printf("Deployment successful: [%s]"+"\n", s.stackname)
 	}
+
+	go verbose(s.stackname, "CREATE", session)
+	describeStacksInput := &cloudformation.DescribeStacksInput{
+		StackName: aws.String(s.stackname),
+	}
+
+	Log(fmt.Sprintln("Calling [WaitUntilStackCreateComplete] with parameters:", describeStacksInput), level.debug)
+	if err := svc.WaitUntilStackCreateComplete(describeStacksInput); err != nil {
+		// FIXME this works in so far that we wait until the stack is
+		// completed and capture errors, but it doesn't really tail
+		// cloudroamtion events.
+		return err
+	}
+
+	Log(fmt.Sprintf("Deployment successful: [%s]", s.stackname), "info")
 
 	return nil
 }
@@ -90,13 +92,13 @@ func (s *stack) update(session *session.Session) error {
 	}
 
 	if s.stackExists(session) {
-		log.Println("Stack exists, updating...")
+		Log("Stack exists, updating...", "info")
 
+		Log(fmt.Sprintln("Calling [UpdateStack] with parameters:", updateParams), level.debug)
 		_, err := svc.UpdateStack(updateParams)
 
 		if err != nil {
-			log.Fatal("Updating stack failed ", err)
-			return err
+			return errors.New(fmt.Sprintln("Update failed: ", err))
 		}
 
 		go verbose(s.stackname, "UPDATE", session)
@@ -104,15 +106,15 @@ func (s *stack) update(session *session.Session) error {
 		describeStacksInput := &cloudformation.DescribeStacksInput{
 			StackName: aws.String(s.stackname),
 		}
-
+		Log(fmt.Sprintln("Calling [WaitUntilStackUpdateComplete] with parameters:", describeStacksInput), level.debug)
 		if err := svc.WaitUntilStackUpdateComplete(describeStacksInput); err != nil {
 			// FIXME this works in so far that we wait until the stack is
 			// completed and capture errors, but it doesn't really tail
 			// cloudroamtion events.
-			log.Fatal(err)
+			return err
 		}
 
-		log.Printf("Stack update successful: [%s]"+"\n", s.stackname)
+		Log(fmt.Sprintf("Stack update successful: [%s]", s.stackname), "info")
 
 	}
 	return nil
@@ -125,31 +127,28 @@ func (s *stack) terminate(session *session.Session) error {
 		StackName: aws.String(s.stackname),
 	}
 
+	Log(fmt.Sprintln("Calling [DeleteStack] with parameters:", params), level.debug)
 	_, err := svc.DeleteStack(params)
 
 	go verbose(s.stackname, "DELETE", session)
 
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			log.Fatal("Deleting failed: ", awsErr.Code(), awsErr.Message())
-		} else {
-			log.Fatal("Deleting failed ", err)
-			return err
-		}
+		return errors.New(fmt.Sprintln("Deleting failed: ", err))
 	}
 
 	describeStacksInput := &cloudformation.DescribeStacksInput{
 		StackName: aws.String(s.stackname),
 	}
 
+	Log(fmt.Sprintln("Calling [WaitUntilStackDeleteComplete] with parameters:", describeStacksInput), level.debug)
 	if err := svc.WaitUntilStackDeleteComplete(describeStacksInput); err != nil {
 		// FIXME this works in so far that we wait until the stack is
 		// completed and capture errors, but it doesn't really tail
 		// cloudroamtion events.
-		log.Fatal(err)
+		return err
 	}
 
-	log.Printf("Deletion successful: [%s]"+"\n", s.stackname)
+	Log(fmt.Sprintf("Deletion successful: [%s]", s.stackname), "info")
 	return nil
 }
 
@@ -160,6 +159,7 @@ func (s *stack) stackExists(session *session.Session) bool {
 		StackName: aws.String(s.stackname),
 	}
 
+	Log(fmt.Sprintln("Calling [DescribeStacks] with parameters:", describeStacksInput), level.debug)
 	_, err := svc.DescribeStacks(describeStacksInput)
 
 	if err == nil {
@@ -176,11 +176,14 @@ func (s *stack) status(session *session.Session) error {
 		StackName: aws.String(s.stackname),
 	}
 
+	Log(fmt.Sprintln("Calling [UpdateStack] with parameters:", describeStacksInput), level.debug)
 	status, err := svc.DescribeStacks(describeStacksInput)
 
 	if err != nil {
-		fmt.Printf("create_pending -> %s [%s]"+"\n", s.name, s.stackname)
-		s.built = false
+		if strings.Contains(strings.ToLower(err.Error()), "exist") {
+			fmt.Printf("create_pending -> %s [%s]"+"\n", s.name, s.stackname)
+			return nil
+		}
 		return err
 	}
 
@@ -204,14 +207,13 @@ func (s *stack) status(session *session.Session) error {
 		s.stackname,
 	)
 
-	s.built = true
 	return nil
 }
 
 func (s *stack) outputs(session *session.Session) error {
 
 	if s == nil {
-		log.Println("Stack does not exist in config")
+		Log("Stack does not exist in config", "warn")
 		return nil
 	}
 
@@ -221,10 +223,10 @@ func (s *stack) outputs(session *session.Session) error {
 		StackName: aws.String(s.stackname),
 	}
 
+	Log(fmt.Sprintln("Calling [DescribeStacks] with parameters:", outputParams), level.debug)
 	outputs, err := svc.DescribeStacks(outputParams)
 	if err != nil {
-		log.Println("Unable to reach stack", err.Error())
-		return err
+		return errors.New(fmt.Sprintln("Unable to reach stack", err.Error()))
 	}
 
 	for _, i := range outputs.Stacks {
@@ -248,6 +250,8 @@ func Exports(session *session.Session) error {
 	svc := cloudformation.New(session)
 
 	exportParams := &cloudformation.ListExportsInput{}
+
+	Log(fmt.Sprintln("Calling [ListExports] with parameters:", exportParams), level.debug)
 	exports, err := svc.ListExports(exportParams)
 
 	if err != nil {
@@ -269,6 +273,7 @@ func (s *stack) state(session *session.Session) (string, error) {
 		StackName: aws.String(s.stackname),
 	}
 
+	Log(fmt.Sprintln("Calling [DescribeStacks] with parameters: ", describeStacksInput), level.debug)
 	status, err := svc.DescribeStacks(describeStacksInput)
 	if err != nil {
 		if strings.Contains(err.Error(), "not exist") {
@@ -292,14 +297,14 @@ func Check(template string, session *session.Session) error {
 		TemplateBody: aws.String(template),
 	}
 
+	Log(fmt.Sprintf("Calling [ValidateTemplate] with parameters:\n%s"+"\n--\n", params), level.debug)
 	resp, err := svc.ValidateTemplate(params)
 	if err != nil {
-		log.Printf(colorString("Failed!", "red"))
 		return err
 	}
 
-	log.Printf(
-		"%s\n\n%s",
+	fmt.Printf(
+		"%s\n\n%s"+"\n",
 		colorString("Valid!", "green"),
 		resp.GoString(),
 	)
@@ -332,7 +337,7 @@ func DeployHandler() {
 				defer wg.Done()
 
 				// Deploy 0 Depency Stacks first - each on their on go routine
-				log.Printf("Deploying a template for [%s]", s.name)
+				Log(fmt.Sprintf("Deploying a template for [%s]", s.name), "info")
 
 				s.deploy(sess)
 
@@ -346,8 +351,10 @@ func DeployHandler() {
 
 		wg.Add(1)
 		go func(s *stack, sess *session.Session) {
-			log.Printf("[%s] depends on: %s"+"\n", s.name, s.dependsOn)
+			Log(fmt.Sprintf("[%s] depends on: %s", s.name, s.dependsOn), "info")
 			defer wg.Done()
+
+			Log(fmt.Sprintf("Beginning Wait State for Depencies of [%s]"+"\n", s.name), level.debug)
 			for {
 				depts := []string{}
 				for _, dept := range s.dependsOn {
@@ -372,14 +379,14 @@ func DeployHandler() {
 
 				if all(depts, state.complete) {
 					// Deploy stack once dependencies clear
-					log.Printf("Deploying a template for [%s]", s.name)
+					Log(fmt.Sprintf("Deploying a template for [%s]", s.name), "info")
 					s.deploy(sess)
 					return
 				}
 
 				for _, v := range depts {
 					if v == state.failed {
-						log.Printf("Error, Deploy Cancelled for stack [%s] due to dependency failure!", s.name)
+						Log(fmt.Sprintf("Deploy Cancelled for stack [%s] due to dependency failure!", s.name), "warn")
 						return
 					}
 				}
@@ -442,7 +449,7 @@ func TerminateHandler() {
 			// Stacks with no Reverse depencies are terminate first
 			updateState(status, s.name, state.pending)
 
-			log.Printf("Terminating stack [%s]", s.stackname)
+			Log(fmt.Sprintf("Terminating stack [%s]", s.stackname), "info")
 			if err := s.terminate(sess); err != nil {
 				updateState(status, s.name, state.failed)
 				return

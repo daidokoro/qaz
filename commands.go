@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -22,47 +21,12 @@ var job = struct {
 	stacks       map[string]string
 	terminateAll bool
 	version      bool
+	request      string
+	debug        bool
 }{}
 
 // Wait Group for handling goroutines
 var wg sync.WaitGroup
-
-func init() {
-	// Define Generate Flags
-	generateCmd.Flags().StringVarP(&job.cfgFile, "config", "c", "config.yml", "path to config file")
-	generateCmd.Flags().StringVarP(&job.tplFile, "template", "t", "template", "path to template file Or stack::url")
-
-	// Define Deploy Flags
-	deployCmd.Flags().StringVarP(&job.cfgFile, "config", "c", "config.yml", "path to config file")
-	deployCmd.Flags().StringArrayVarP(&job.tplFiles, "template", "t", []string{`./templates/*`}, "path to template file(s) Or stack::url")
-
-	// Define Terminate Flags
-	terminateCmd.Flags().StringVarP(&job.cfgFile, "config", "c", "config.yml", "path to config file")
-	terminateCmd.Flags().BoolVarP(&job.terminateAll, "all", "A", false, "terminate all stacks")
-
-	// Define Status Flags
-	statusCmd.Flags().StringVarP(&job.cfgFile, "config", "c", "config.yml", "path to config file")
-
-	// Define Output Flags
-	outputsCmd.Flags().StringVarP(&job.cfgFile, "config", "c", "config.yml", "path. to config file")
-	outputsCmd.Flags().StringVarP(&job.profile, "profile", "p", "default", "configured aws profile")
-
-	// Define Update Flags
-	updateCmd.Flags().StringVarP(&job.cfgFile, "config", "c", "config.yml", "path to config file")
-	updateCmd.Flags().StringVarP(&job.tplFile, "template", "t", "", "path to template file Or stack::url [Required]")
-
-	// Define Check Flags
-	checkCmd.Flags().StringVarP(&job.cfgFile, "config", "c", "config.yml", "path to config file")
-	checkCmd.Flags().StringVarP(&job.tplFile, "template", "t", "template", "path to template file Or stack::url")
-
-	// Define Exports Flags
-	exportsCmd.Flags().StringVarP(&region, "region", "r", "eu-west-1", "AWS Region")
-
-	// Define Root Flags
-	rootCmd.Flags().BoolVarP(&job.version, "version", "", false, "print current/running version")
-	rootCmd.PersistentFlags().StringVarP(&job.profile, "profile", "p", "default", "configured aws profile")
-	rootCmd.AddCommand(generateCmd, deployCmd, terminateCmd, statusCmd, outputsCmd, initCmd, updateCmd, checkCmd, exportsCmd)
-}
 
 // root command (calls all other commands)
 var rootCmd = &cobra.Command{
@@ -74,6 +38,7 @@ var rootCmd = &cobra.Command{
 			fmt.Printf("qaze - Version %s"+"\n", version)
 			return
 		}
+
 		cmd.Help()
 	},
 }
@@ -142,26 +107,27 @@ var generateCmd = &cobra.Command{
 	Short: "Generates a JSON or YAML template",
 	Run: func(cmd *cobra.Command, args []string) {
 
+		job.request = "generate"
+
 		s, source, err := getSource(job.tplFile)
 		if err != nil {
-			log.Println(err.Error())
+			handleError(err)
 			return
 		}
 
 		job.tplFile = source
 		err = configReader(job.cfgFile)
 		if err != nil {
-			log.Println(err.Error())
+			handleError(err)
 			return
 		}
 
 		name := fmt.Sprintf("%s-%s", project, s)
-		log.Println("Generating a template for ", name)
+		Log(fmt.Sprintln("Generating a template for ", name), "debug")
 
 		tpl, err := templateParser(job.tplFile)
-
 		if err != nil {
-			log.Println(err.Error())
+			handleError(err)
 			return
 		}
 		fmt.Println(tpl)
@@ -177,6 +143,9 @@ var deployCmd = &cobra.Command{
 		"qaze deploy -c path/to/config -t stack::http://someurl",
 	}, "\n"),
 	Run: func(cmd *cobra.Command, args []string) {
+
+		job.request = "deploy"
+
 		job.stacks = make(map[string]string)
 
 		sourceCopy := job.tplFiles
@@ -200,7 +169,7 @@ var deployCmd = &cobra.Command{
 		for _, f := range job.tplFiles {
 			s, source, err := getSource(f)
 			if err != nil {
-				log.Println(err.Error())
+				handleError(err)
 				return
 			}
 			job.stacks[s] = source
@@ -208,13 +177,13 @@ var deployCmd = &cobra.Command{
 
 		err := configReader(job.cfgFile)
 		if err != nil {
-			log.Println(err.Error())
+			handleError(err)
 			return
 		}
 
 		for s, f := range job.stacks {
 			if v, err := templateParser(f); err != nil {
-				log.Println("Error", err.Error())
+				handleError(err)
 			} else {
 				stacks[s].template = v
 			}
@@ -236,9 +205,11 @@ var updateCmd = &cobra.Command{
 	}, "\n"),
 	Run: func(cmd *cobra.Command, args []string) {
 
+		job.request = "update"
+
 		s, source, err := getSource(job.tplFile)
 		if err != nil {
-			log.Println(err.Error())
+			handleError(err)
 			return
 		}
 
@@ -248,13 +219,13 @@ var updateCmd = &cobra.Command{
 
 		err = configReader(job.cfgFile)
 		if err != nil {
-			log.Println(err.Error())
+			handleError(err)
 			return
 		}
 
 		v, err := templateParser(job.tplFile)
 		if err != nil {
-			log.Println("Error", err.Error())
+			handleError(err)
 			return
 		}
 
@@ -263,7 +234,7 @@ var updateCmd = &cobra.Command{
 		// Update stack
 		sess, err := awsSession()
 		if err != nil {
-			fmt.Println("Error:", err.Error())
+			handleError(err)
 			return
 		}
 		stacks[s].update(sess)
@@ -276,6 +247,8 @@ var terminateCmd = &cobra.Command{
 	Short: "Terminates stacks",
 	Run: func(cmd *cobra.Command, args []string) {
 
+		job.request = "terminate"
+
 		if !job.terminateAll {
 			job.stacks = make(map[string]string)
 			for _, stk := range args {
@@ -283,14 +256,14 @@ var terminateCmd = &cobra.Command{
 			}
 
 			if len(job.stacks) == 0 {
-				log.Println("No stack specified for termination")
+				Log("No stack specified for termination", "warn")
 				return
 			}
 		}
 
 		err := configReader(job.cfgFile)
 		if err != nil {
-			log.Println(err.Error())
+			handleError(err)
 			return
 		}
 
@@ -304,22 +277,26 @@ var statusCmd = &cobra.Command{
 	Short: "Prints status of deployed/un-deployed stacks",
 	Run: func(cmd *cobra.Command, args []string) {
 
+		job.request = "status"
+
 		err := configReader(job.cfgFile)
 		if err != nil {
-			log.Println(err.Error())
+			handleError(err)
 			return
 		}
 
 		sess, err := awsSession()
 		if err != nil {
-			log.Println("Error: ", err.Error())
+			handleError(err)
 			return
 		}
 
 		for _, v := range stacks {
 			wg.Add(1)
 			go func(s *stack) {
-				s.status(sess)
+				if err := s.status(sess); err != nil {
+					handleError(err)
+				}
 				wg.Done()
 			}(v)
 
@@ -333,26 +310,32 @@ var outputsCmd = &cobra.Command{
 	Short:   "Prints stack outputs",
 	Example: "qaze outputs vpc subnets --config path/to/config",
 	Run: func(cmd *cobra.Command, args []string) {
+
+		job.request = "outputs"
+
 		if len(args) < 1 {
 			fmt.Println("Please specify stack(s) to check, For details try --> qaze outputs --help")
+			return
 		}
 
 		err := configReader(job.cfgFile)
 		if err != nil {
-			log.Println(err.Error())
+			handleError(err)
 			return
 		}
 
 		sess, err := awsSession()
 		if err != nil {
-			log.Println("Error: ", err.Error())
+			handleError(err)
 			return
 		}
 
 		for _, s := range args {
 			wg.Add(1)
 			go func(s string) {
-				stacks[s].outputs(sess)
+				if err := stacks[s].outputs(sess); err != nil {
+					handleError(err)
+				}
 				wg.Done()
 			}(s)
 		}
@@ -367,9 +350,11 @@ var exportsCmd = &cobra.Command{
 	Example: "qaze exports",
 	Run: func(cmd *cobra.Command, args []string) {
 
+		job.request = "exports"
+
 		sess, err := awsSession()
 		if err != nil {
-			log.Println("Error: ", err.Error())
+			handleError(err)
 			return
 		}
 
@@ -388,9 +373,11 @@ var checkCmd = &cobra.Command{
 	}, "\n"),
 	Run: func(cmd *cobra.Command, args []string) {
 
+		job.request = "validate"
+
 		s, source, err := getSource(job.tplFile)
 		if err != nil {
-			log.Println(err.Error())
+			handleError(err)
 			return
 		}
 
@@ -398,27 +385,27 @@ var checkCmd = &cobra.Command{
 
 		err = configReader(job.cfgFile)
 		if err != nil {
-			log.Println(err.Error())
+			handleError(err)
 			return
 		}
 
 		name := fmt.Sprintf("%s-%s", project, s)
-		log.Println("Validating template for ", name)
+		fmt.Println("Validating template for", name)
 
 		tpl, err := templateParser(job.tplFile)
 		if err != nil {
-			log.Println(err.Error())
+			handleError(err)
 			return
 		}
 
 		sess, err := awsSession()
 		if err != nil {
-			log.Println("Error: ", err.Error())
+			handleError(err)
 			return
 		}
 
 		if err := Check(tpl, sess); err != nil {
-			fmt.Println(err.Error())
+			handleError(err)
 			return
 		}
 	},

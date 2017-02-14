@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -111,7 +110,7 @@ func verbose(s string, c string, session *session.Session) {
 	printed := make(map[string]interface{})
 
 	for {
-
+		Log(fmt.Sprintf("Calling [DescribeStackEvents] with parameters: %s", describeStacksInput), level.debug)
 		stackevents, _ := svc.DescribeStackEvents(describeStacksInput)
 
 		for _, event := range stackevents.StackEvents {
@@ -131,8 +130,9 @@ func verbose(s string, c string, session *session.Session) {
 
 			if _, ok := printed[line]; !ok {
 				if strings.Split(*event.ResourceStatus, "_")[0] == c {
-					log.Println(strings.Trim(line, "- "))
+					Log(strings.Trim(line, "- "), level.info)
 				}
+
 				printed[line] = nil
 			}
 		}
@@ -154,6 +154,7 @@ func all(a []string, s string) bool {
 
 // stringIn - returns true if string in array
 func stringIn(s string, a []interface{}) bool {
+	Log(fmt.Sprintf("Checking If [%s] is in: %s", s, a), level.debug)
 	for _, str := range a {
 		if str.(string) == s {
 			return true
@@ -223,12 +224,15 @@ func S3Read(url string) (string, error) {
 		Key:    aws.String(key),
 	}
 
+	Log(fmt.Sprintln("Calling S3 [GetObject] with parameters:", params), level.debug)
 	resp, err := svc.GetObject(params)
 	if err != nil {
 		return "", err
 	}
 
 	buf := new(bytes.Buffer)
+
+	Log("Reading from S3 Response Body", level.debug)
 	buf.ReadFrom(resp.Body)
 	return buf.String(), nil
 }
