@@ -14,11 +14,12 @@ import (
 
 // stack - holds all meaningful information about a particular stack.
 type stack struct {
-	name       string
-	stackname  string
-	template   string
-	dependsOn  []interface{}
-	dependents []interface{}
+	name         string
+	stackname    string
+	template     string
+	dependsOn    []interface{}
+	dependents   []interface{}
+	stackoutputs *cloudformation.DescribeStacksOutput
 }
 
 // State - struct for handling stack deploy/terminate statuses
@@ -49,8 +50,17 @@ func (s *stack) setStackName() {
 }
 
 func (s *stack) deploy(session *session.Session) error {
+
+	err := s.deployTimeParser()
+	if err != nil {
+		return err
+	}
+
+	Log(fmt.Sprintf("Updated Template:\n%s", s.template), level.debug)
+
 	svc := cloudformation.New(session)
 	capability := "CAPABILITY_IAM"
+
 	createParams := &cloudformation.CreateStackInput{
 		StackName:       aws.String(s.stackname),
 		DisableRollback: aws.Bool(true), // no rollback by default
@@ -210,38 +220,21 @@ func (s *stack) status(session *session.Session) error {
 	return nil
 }
 
-func (s *stack) outputs(session *session.Session) error {
-
-	if s == nil {
-		Log("Stack does not exist in config", "warn")
-		return nil
-	}
+// StackOutputs - Returns outputs of given stackname
+func StackOutputs(name string, session *session.Session) (*cloudformation.DescribeStacksOutput, error) {
 
 	svc := cloudformation.New(session)
-
 	outputParams := &cloudformation.DescribeStacksInput{
-		StackName: aws.String(s.stackname),
+		StackName: aws.String(name),
 	}
 
 	Log(fmt.Sprintln("Calling [DescribeStacks] with parameters:", outputParams), level.debug)
 	outputs, err := svc.DescribeStacks(outputParams)
 	if err != nil {
-		return errors.New(fmt.Sprintln("Unable to reach stack", err.Error()))
+		return &cloudformation.DescribeStacksOutput{}, errors.New(fmt.Sprintln("Unable to reach stack", err.Error()))
 	}
 
-	for _, i := range outputs.Stacks {
-
-		fmt.Printf("\n"+"[%s]"+"\n", *i.StackName)
-		for _, o := range i.Outputs {
-
-			fmt.Printf("  Description: %s\n  %s: %s\n\n", *o.Description, colorString(*o.OutputKey, "magenta"), *o.OutputValue)
-
-		}
-		fmt.Println()
-
-	}
-
-	return nil
+	return outputs, nil
 }
 
 // Exports - prints all cloudformation exports
@@ -339,7 +332,9 @@ func DeployHandler() {
 				// Deploy 0 Depency Stacks first - each on their on go routine
 				Log(fmt.Sprintf("Deploying a template for [%s]", s.name), "info")
 
-				s.deploy(sess)
+				if err := s.deploy(sess); err != nil {
+					handleError(err)
+				}
 
 				updateState(status, s.name, state.complete)
 
@@ -380,7 +375,10 @@ func DeployHandler() {
 				if all(depts, state.complete) {
 					// Deploy stack once dependencies clear
 					Log(fmt.Sprintf("Deploying a template for [%s]", s.name), "info")
-					s.deploy(sess)
+
+					if err := s.deploy(sess); err != nil {
+						handleError(err)
+					}
 					return
 				}
 

@@ -125,7 +125,7 @@ var generateCmd = &cobra.Command{
 		name := fmt.Sprintf("%s-%s", project, s)
 		Log(fmt.Sprintln("Generating a template for ", name), "debug")
 
-		tpl, err := templateParser(job.tplFile)
+		tpl, err := genTimeParser(job.tplFile)
 		if err != nil {
 			handleError(err)
 			return
@@ -182,7 +182,7 @@ var deployCmd = &cobra.Command{
 		}
 
 		for s, f := range job.stacks {
-			if v, err := templateParser(f); err != nil {
+			if v, err := genTimeParser(f); err != nil {
 				handleError(err)
 			} else {
 				stacks[s].template = v
@@ -223,7 +223,7 @@ var updateCmd = &cobra.Command{
 			return
 		}
 
-		v, err := templateParser(job.tplFile)
+		v, err := genTimeParser(job.tplFile)
 		if err != nil {
 			handleError(err)
 			return
@@ -333,8 +333,16 @@ var outputsCmd = &cobra.Command{
 		for _, s := range args {
 			wg.Add(1)
 			go func(s string) {
-				if err := stacks[s].outputs(sess); err != nil {
+				outputs, err := StackOutputs(s, sess)
+				if err != nil {
 					handleError(err)
+				}
+
+				for _, i := range outputs.Stacks {
+					fmt.Printf("\n"+"[%s]"+"\n", *i.StackName)
+					for _, o := range i.Outputs {
+						fmt.Printf("  Description: %s\n  %s: %s\n\n", *o.Description, colorString(*o.OutputKey, "magenta"), *o.OutputValue)
+					}
 				}
 				wg.Done()
 			}(s)
@@ -392,7 +400,7 @@ var checkCmd = &cobra.Command{
 		name := fmt.Sprintf("%s-%s", project, s)
 		fmt.Println("Validating template for", name)
 
-		tpl, err := templateParser(job.tplFile)
+		tpl, err := genTimeParser(job.tplFile)
 		if err != nil {
 			handleError(err)
 			return

@@ -2,8 +2,10 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"strings"
 	"text/template"
 
@@ -51,6 +53,23 @@ func fetchContent(source string) (string, error) {
 		}
 		return string(b), nil
 	}
+}
+
+// getName  - Checks if arg is url or file and returns stack name and filepath/url
+func getSource(s string) (string, string, error) {
+	if strings.Contains(s, "::") {
+		vals := strings.Split(s, "::")
+		if len(vals) < 2 {
+			return "", "", errors.New(`Error, invalid url format --> Example: stackname::http://someurl OR stackname::s3://bucket/key`)
+		}
+
+		return vals[0], vals[1], nil
+
+	}
+
+	name := filepath.Base(strings.Replace(s, filepath.Ext(s), "", -1))
+	return name, s, nil
+
 }
 
 // configReader parses the config YAML file with Viper
@@ -124,7 +143,8 @@ func configReader(conf string) error {
 	return nil
 }
 
-func templateParser(source string) (string, error) {
+// genTimeParser - Parses templates before deploying them...
+func genTimeParser(source string) (string, error) {
 
 	templ, err := fetchContent(source)
 	if err != nil {
@@ -132,7 +152,7 @@ func templateParser(source string) (string, error) {
 	}
 
 	// Create template
-	t, err := template.New("template").Funcs(templateFunctions).Parse(templ)
+	t, err := template.New("template").Funcs(genTimeFunctions).Parse(templ)
 	if err != nil {
 		return "", err
 	}
@@ -141,4 +161,22 @@ func templateParser(source string) (string, error) {
 	var doc bytes.Buffer
 	t.Execute(&doc, cfvars)
 	return doc.String(), nil
+}
+
+// deployTimeParser - Parses templates during deployment to resolve specfic Dependency functions like stackout...
+func (s *stack) deployTimeParser() error {
+
+	// Create template
+	t, err := template.New("template").Delims("%", "%").Funcs(deployTimeFunctions).Parse(s.template)
+	if err != nil {
+		return err
+	}
+
+	// so that we can write to string
+	var doc bytes.Buffer
+	t.Execute(&doc, cfvars)
+	s.template = doc.String()
+	Log(fmt.Sprintf("Deploy Time Template Generate:\n%s", s.template), level.debug)
+
+	return nil
 }

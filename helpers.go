@@ -10,7 +10,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -235,21 +234,4 @@ func S3Read(url string) (string, error) {
 	Log("Reading from S3 Response Body", level.debug)
 	buf.ReadFrom(resp.Body)
 	return buf.String(), nil
-}
-
-// getName  - Checks if arg is url or file and returns stack name and filepath/url
-func getSource(s string) (string, string, error) {
-	if strings.Contains(s, "::") {
-		vals := strings.Split(s, "::")
-		if len(vals) < 2 {
-			return "", "", errors.New(`Error, invalid url format --> Example: stackname::http://someurl OR stackname::s3://bucket/key`)
-		}
-
-		return vals[0], vals[1], nil
-
-	}
-
-	name := filepath.Base(strings.Replace(s, filepath.Ext(s), "", -1))
-	return name, s, nil
-
 }
