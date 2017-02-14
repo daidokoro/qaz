@@ -4,6 +4,7 @@ project: "example-dev"
 
 # Stack values
 stacks:
+  # Define sqs stack here
   sqs:
     cf:
       Queues:

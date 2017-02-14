@@ -1,36 +1,20 @@
-# Specify the AWS region code
-# qaze will attempt to get it from AWS configuration
-# or from the environment. This setting overrides
-# every other.
 region: "eu-west-1"
-
-# Required: The project name is prepended to the
-# stack names at build time to create unique
-# identifier on the Cloudformation platform
 project: "daidokoro"
 
-# Optional: global values, accisible accross
-# all stacks can be define under global
 global:
-
-
-# All stack specific values are defined
-# under the "stacks" keyword below.
+  tags:
+    - code: go
+    - service: example
+    - life: live
 
 stacks:
   vpc:
-    # Note: "cf" is a required keyword, which tells
-    # qaze when to start reading in template values.
     cf:
       cidr: 10.10.0.0/16
 
   subnet:
-    # Note: the "depends_on" keyword is used to list
-    # stack dependencies. Any amount can be listed.
-    # This key_word must be defined outside of "cf"
     depends_on:
       - vpc
-
     cf:
       subnets:
         - private: 10.10.0.0/24

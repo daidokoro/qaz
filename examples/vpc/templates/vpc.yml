@@ -7,7 +7,7 @@ Resources:
   VPC:
     Type: AWS::EC2::VPC
     Properties:
-      CidrBlock: {{ .vpc.cidr_block }}
+      CidrBlock: {{ .vpc.cidr }}
 
 Outputs:
   vpcid:
