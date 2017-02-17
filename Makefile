@@ -1,5 +1,5 @@
 # This is how we want to name the binary output
-BINARY=qaze
+BINARY=qaz
 
 all:
 	go build -o ${BINARY}
@@ -8,7 +8,7 @@ test:
 	go test
 
 clean:
-	rm -f qaze
+	rm -f qaz
 
 get-deps:
 	go get ./...

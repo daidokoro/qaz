@@ -84,7 +84,19 @@ func init() {
 	rootCmd.Flags().BoolVarP(&job.version, "version", "", false, "print current/running version")
 	rootCmd.PersistentFlags().StringVarP(&job.profile, "profile", "p", "default", "configured aws profile")
 	rootCmd.PersistentFlags().BoolVarP(&job.debug, "debug", "", false, "Run in debug mode...")
-	rootCmd.AddCommand(generateCmd, deployCmd, terminateCmd, statusCmd, outputsCmd, initCmd, updateCmd, checkCmd, exportsCmd)
+
+	// Define Tail Flags
+	tailCmd.Flags().StringVarP(&job.cfgFile, "config", "c", "config.yml", "path to config file")
+
+	// Define Invoke Flags
+	invokeCmd.Flags().StringVarP(&region, "region", "r", "eu-west-1", "AWS Region")
+
+	rootCmd.AddCommand(
+		generateCmd, deployCmd, terminateCmd,
+		statusCmd, outputsCmd, initCmd,
+		updateCmd, checkCmd, exportsCmd,
+		invokeCmd, tailCmd,
+	)
 
 	// Setup logging
 	log.SetFormatter(new(prefixed.TextFormatter))

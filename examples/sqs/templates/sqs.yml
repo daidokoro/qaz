@@ -1,14 +1,12 @@
----
+Description: Simple SQS/S3 deployment - by Qaz
 AWSTemplateFormatVersion: '2010-09-09'
 Resources:
-
 {{- range .sqs.queues }}
   {{ .QueueName }}Queue:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: {{ .QueueName }}
-{{ end -}}
-
+{{ end }}
   S3Bucket:
     Type: AWS::S3::Bucket
     Properties:

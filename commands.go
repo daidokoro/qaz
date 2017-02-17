@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/CrowdSurge/banner"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/spf13/cobra"
 )
 
@@ -23,6 +24,7 @@ var job = struct {
 	version      bool
 	request      string
 	debug        bool
+	funcName     string
 }{}
 
 // Wait Group for handling goroutines
@@ -30,12 +32,12 @@ var wg sync.WaitGroup
 
 // root command (calls all other commands)
 var rootCmd = &cobra.Command{
-	Use:   "qaze",
-	Short: fmt.Sprintf("%s\n--> Shut up & deploy my templates...!", colorString(banner.PrintS("qaze"), "magenta")),
+	Use:   "qaz",
+	Short: fmt.Sprintf("%s\n--> Shut up & deploy my templates...!", colorString(banner.PrintS("qaz"), "magenta")),
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if job.version {
-			fmt.Printf("qaze - Version %s"+"\n", version)
+			fmt.Printf("qaz - Version %s"+"\n", version)
 			return
 		}
 
@@ -45,11 +47,11 @@ var rootCmd = &cobra.Command{
 
 var initCmd = &cobra.Command{
 	Use:   "init [target directory]",
-	Short: "Creates a basic qaze project",
+	Short: "Creates a basic qaz project",
 	Run: func(cmd *cobra.Command, args []string) {
 
 		// Print Banner
-		banner.Print("qaze")
+		banner.Print("qaz")
 		fmt.Printf("\n--\n")
 
 		var target string
@@ -61,7 +63,7 @@ var initCmd = &cobra.Command{
 		}
 
 		// Get Project & AWS Region
-		project = getInput("-> Enter your Project name", "MyqazeProject")
+		project = getInput("-> Enter your Project name", "MyqazProject")
 		region = getInput("-> Enter AWS Region", "eu-west-1")
 
 		// set target paths
@@ -104,7 +106,7 @@ var initCmd = &cobra.Command{
 
 var generateCmd = &cobra.Command{
 	Use:   "generate",
-	Short: "Generates a JSON or YAML template",
+	Short: "Generates template from configuration values",
 	Run: func(cmd *cobra.Command, args []string) {
 
 		job.request = "generate"
@@ -138,9 +140,9 @@ var deployCmd = &cobra.Command{
 	Use:   "deploy",
 	Short: "Deploys stack(s) to AWS",
 	Example: strings.Join([]string{
-		"qaze deploy -c path/to/config -t path/to/template",
-		"qaze deploy -c path/to/config -t stack::s3//bucket/key",
-		"qaze deploy -c path/to/config -t stack::http://someurl",
+		"qaz deploy -c path/to/config -t path/to/template",
+		"qaz deploy -c path/to/config -t stack::s3//bucket/key",
+		"qaz deploy -c path/to/config -t stack::http://someurl",
 	}, "\n"),
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -199,9 +201,9 @@ var updateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Updates a given stack",
 	Example: strings.Join([]string{
-		"qaze update -c path/to/config -t stack::path/to/template",
-		"qaze update -c path/to/config -t stack::s3//bucket/key",
-		"qaze update -c path/to/config -t stack::http://someurl",
+		"qaz update -c path/to/config -t stack::path/to/template",
+		"qaz update -c path/to/config -t stack::s3//bucket/key",
+		"qaz update -c path/to/config -t stack::http://someurl",
 	}, "\n"),
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -308,13 +310,13 @@ var statusCmd = &cobra.Command{
 var outputsCmd = &cobra.Command{
 	Use:     "outputs [stack]",
 	Short:   "Prints stack outputs",
-	Example: "qaze outputs vpc subnets --config path/to/config",
+	Example: "qaz outputs vpc subnets --config path/to/config",
 	Run: func(cmd *cobra.Command, args []string) {
 
 		job.request = "outputs"
 
 		if len(args) < 1 {
-			fmt.Println("Please specify stack(s) to check, For details try --> qaze outputs --help")
+			fmt.Println("Please specify stack(s) to check, For details try --> qaz outputs --help")
 			return
 		}
 
@@ -333,7 +335,7 @@ var outputsCmd = &cobra.Command{
 		for _, s := range args {
 			wg.Add(1)
 			go func(s string) {
-				outputs, err := StackOutputs(s, sess)
+				outputs, err := StackOutputs(stacks[s].stackname, sess)
 				if err != nil {
 					handleError(err)
 				}
@@ -355,7 +357,7 @@ var outputsCmd = &cobra.Command{
 var exportsCmd = &cobra.Command{
 	Use:     "exports",
 	Short:   "Prints stack exports",
-	Example: "qaze exports",
+	Example: "qaz exports",
 	Run: func(cmd *cobra.Command, args []string) {
 
 		job.request = "exports"
@@ -375,9 +377,9 @@ var checkCmd = &cobra.Command{
 	Use:   "check",
 	Short: "Validates Cloudformation Templates",
 	Example: strings.Join([]string{
-		"qaze check -c path/to/config.yml -t path/to/template -c path/to/config",
-		"qaze check -c path/to/config.yml -t stack::http://someurl.example",
-		"qaze check -c path/to/config.yml -t stack::s3://bucket/key",
+		"qaz check -c path/to/config.yml -t path/to/template -c path/to/config",
+		"qaz check -c path/to/config.yml -t stack::http://someurl.example",
+		"qaz check -c path/to/config.yml -t stack::s3://bucket/key",
 	}, "\n"),
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -416,5 +418,45 @@ var checkCmd = &cobra.Command{
 			handleError(err)
 			return
 		}
+	},
+}
+
+var invokeCmd = &cobra.Command{
+	Use:   "invoke",
+	Short: "Invoke AWS Lambda Functions",
+	Run: func(cmd *cobra.Command, args []string) {
+		job.request = "lambda_invoke"
+		fmt.Println(colorString("Coming Soon!", "magenta"))
+	},
+}
+
+var tailCmd = &cobra.Command{
+	Use:     "tail",
+	Short:   "Tail Real-Time AWS Cloudformation events",
+	Example: "qaz tail -r eu-west-1",
+	Run: func(cmd *cobra.Command, args []string) {
+		job.request = "tail"
+
+		err := configReader(job.cfgFile)
+		if err != nil {
+			handleError(err)
+			return
+		}
+
+		sess, err := awsSession()
+		if err != nil {
+			handleError(err)
+		}
+
+		// Tail each stack on it's own goroutine.
+		for _, s := range stacks {
+			wg.Add(1)
+			go func(s *stack, sess *session.Session) {
+				verbose(s.stackname, "", sess)
+				wg.Done()
+			}(s, sess)
+		}
+
+		wg.Wait() // Will probably wait forevery
 	},
 }
