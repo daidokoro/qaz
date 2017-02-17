@@ -18,12 +18,15 @@ func awsSession() (*session.Session, error) {
 
 	// Using sync.Once to ensure session is created only once.
 	once.Do(func() {
-		Log("Creating AWS Session", level.debug)
-		sess, err = session.NewSessionWithOptions(session.Options{
+		//define session options
+		options := session.Options{
 			Config:            aws.Config{Region: aws.String(region)},
 			Profile:           job.profile,
 			SharedConfigState: session.SharedConfigEnable,
-		})
+		}
+
+		Log(fmt.Sprintf("Creating AWS Session with options: Regioin: %s, Profile: %s ", region, job.profile), level.debug)
+		sess, err = session.NewSessionWithOptions(options)
 	})
 
 	if err != nil {
