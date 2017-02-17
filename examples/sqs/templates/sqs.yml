@@ -1,4 +1,4 @@
-Description: Simple SQS/S3 deployment 
+Description: Simple SQS/S3 deployment - by Qaz
 AWSTemplateFormatVersion: '2010-09-09'
 Resources:
 {{- range .sqs.queues }}
