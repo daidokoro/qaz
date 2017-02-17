@@ -25,14 +25,14 @@ import (
 func configTemplate(project string, region string) []byte {
 	return []byte(fmt.Sprintf(`
 # Specify the AWS region code
-# bora will attempt to get it from AWS configuration
+# qaz will attempt to get it from AWS configuration
 # or from the environment. This setting overrides
 # every other.
 
 region: %s
 
 # Required: specify the name of the Project
-# (bora will prepend this value to the stack
+# (qaz will prepend this value to the stack
 # names defined below.
 
 project: %s
@@ -101,7 +101,7 @@ func colorString(s string, color string) string {
 func verbose(s string, c string, session *session.Session) {
 	svc := cloudformation.New(session)
 
-	describeStacksInput := &cloudformation.DescribeStackEventsInput{
+	params := &cloudformation.DescribeStackEventsInput{
 		StackName: aws.String(s),
 	}
 
@@ -109,8 +109,13 @@ func verbose(s string, c string, session *session.Session) {
 	printed := make(map[string]interface{})
 
 	for {
-		Log(fmt.Sprintf("Calling [DescribeStackEvents] with parameters: %s", describeStacksInput), level.debug)
-		stackevents, _ := svc.DescribeStackEvents(describeStacksInput)
+		Log(fmt.Sprintf("Calling [DescribeStackEvents] with parameters: %s", params), level.debug)
+		stackevents, err := svc.DescribeStackEvents(params)
+		if err != nil {
+			Log(fmt.Sprintln("Error when tailing events: ", err.Error()), level.debug)
+		}
+
+		Log(fmt.Sprintln("Response:", stackevents), level.debug)
 
 		for _, event := range stackevents.StackEvents {
 
@@ -128,7 +133,7 @@ func verbose(s string, c string, session *session.Session) {
 			}, " - ")
 
 			if _, ok := printed[line]; !ok {
-				if strings.Split(*event.ResourceStatus, "_")[0] == c {
+				if strings.Split(*event.ResourceStatus, "_")[0] == c || c == "" {
 					Log(strings.Trim(line, "- "), level.info)
 				}
 
