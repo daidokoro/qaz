@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/CrowdSurge/banner"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/spf13/cobra"
 )
 
@@ -23,6 +24,7 @@ var job = struct {
 	version      bool
 	request      string
 	debug        bool
+	funcName     string
 }{}
 
 // Wait Group for handling goroutines
@@ -104,7 +106,7 @@ var initCmd = &cobra.Command{
 
 var generateCmd = &cobra.Command{
 	Use:   "generate",
-	Short: "Generates a JSON or YAML template",
+	Short: "Generates template from configuration values",
 	Run: func(cmd *cobra.Command, args []string) {
 
 		job.request = "generate"
@@ -333,7 +335,7 @@ var outputsCmd = &cobra.Command{
 		for _, s := range args {
 			wg.Add(1)
 			go func(s string) {
-				outputs, err := StackOutputs(s, sess)
+				outputs, err := StackOutputs(stacks[s].stackname, sess)
 				if err != nil {
 					handleError(err)
 				}
@@ -416,5 +418,45 @@ var checkCmd = &cobra.Command{
 			handleError(err)
 			return
 		}
+	},
+}
+
+var invokeCmd = &cobra.Command{
+	Use:   "invoke",
+	Short: "Invoke AWS Lambda Functions",
+	Run: func(cmd *cobra.Command, args []string) {
+		job.request = "lambda_invoke"
+		fmt.Println(colorString("Coming Soon!", "magenta"))
+	},
+}
+
+var tailCmd = &cobra.Command{
+	Use:     "tail",
+	Short:   "Tail Real-Time AWS Cloudformation events",
+	Example: "qaze tail -r eu-west-1",
+	Run: func(cmd *cobra.Command, args []string) {
+		job.request = "tail"
+
+		err := configReader(job.cfgFile)
+		if err != nil {
+			handleError(err)
+			return
+		}
+
+		sess, err := awsSession()
+		if err != nil {
+			handleError(err)
+		}
+
+		// Tail each stack on it's own goroutine.
+		for _, s := range stacks {
+			wg.Add(1)
+			go func(s *stack, sess *session.Session) {
+				verbose(s.stackname, "", sess)
+				wg.Done()
+			}(s, sess)
+		}
+
+		wg.Wait() // Will probably wait forevery
 	},
 }
