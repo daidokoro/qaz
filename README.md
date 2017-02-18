@@ -1,6 +1,6 @@
-# qaz—A CLI tool for Templating & Managing stacks in AWS Cloudformation  [![Release](https://img.shields.io/github/release/daidokoro/qaz.svg)
+# qaz—A CLI tool for Templating & Managing stacks in AWS Cloudformation  ![Release](https://img.shields.io/github/release/daidokoro/qaz.svg)
 [![Build Status](https://travis-ci.org/daidokoro/qaz.svg)](https://travis-ci.org/daidokoro/qaz)
-[![Go Report Card](https://goreportcard.com/badge/github.com/daidokoro/qaz)
+![Go Report Card](https://goreportcard.com/badge/github.com/daidokoro/qaz)
 
 
 Qaz is a Fork of the Bora project by [@pkazmierczak](https://github.com/pkazmierczak) that aims to focus on simplifying the process of deploying infrastructure on AWS via Cloudformation by utilising the Go Templates Library and custom functions to generate diverse and configurable templates.
@@ -224,7 +224,7 @@ Example
 ```
 # stackname::output
 
-<< stack_output anotherproject-vpc::vpcid >>
+<< stack_output_ext external-vpc::vpcid >>
 ```
 
 
