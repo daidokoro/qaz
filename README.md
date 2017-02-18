@@ -100,33 +100,13 @@ Note: Config files do not need to be named config.yml
 
 Go has an excellent and expandable templating library which is utilised in this project for additional logic in creating templates. To read more on Go Template see [Here](https://golang.org/pkg/text/template). All features of Go Template are supported in Qaz.
 
-We'll run through some basic tips and tricks to get started.
-
 Note that templates must have the same file name (_extension excluded_) as the stack they reference in config when working with local files, however, this does not apply when dealing with remote templates on S3 or via Http.
 
---
+__Templing in Qaz__
 
-To access the values in our template we need to use template syntax. In its most basic form, to fetch say the value for `cidr` in my vpc stack config I would do the following:
+We'll run through some basic tips and tricks to get started.
 
-
-_{{ .vpc.cidr }}_
-
-
-That's it! Use the generate command to varify the value
-`$ qaz generate -c path/to/config -t path/to/template`
-
---
-
-Go Templates are also capable of looping values, for example, to get the values of both _private_ & _public_ in my *subnets* stack, I would do the following.
-
-_{{ range $index, $value := .subnets.subnets }}_
-_{{ range $access, $cidr := $value }}_
-_{{$access}} {{$cidr}}_
-_{{ end }}_
-_{{ end }}_
-
-The above should give you the access level and subnets defined above. More examples as well as the full template implementation of this example can be found in the project examples folder.
-
+[![asciicast](https://asciinema.org/a/c1ep21ub0o0ppeh23ifvzu9fa.png)](https://asciinema.org/a/c1ep21ub0o0ppeh23ifvzu9fa?speed=1.5)
 
 
 #### Deploying Stacks
