@@ -108,9 +108,9 @@ Note that templates must have the same file name (_extension excluded_) as the s
 
 To access the values in our template we need to use template syntax. In its most basic form, to fetch say the value for `cidr` in my vpc stack config I would do the following:
 
-```yaml
-{{ .vpc.cidr }}
-```
+
+_{{ .vpc.cidr }}_
+
 
 That's it! Use the generate command to varify the value
 `$ qaz generate -c path/to/config -t path/to/template`
@@ -119,13 +119,11 @@ That's it! Use the generate command to varify the value
 
 Go Templates are also capable of looping values, for example, to get the values of both _private_ & _public_ in my *subnets* stack, I would do the following.
 
-```
-{{ range $index, $value := .subnets.subnets }}
-  {{ range $access, $cidr := $value }}
-    {{$access}} {{$cidr}}
-  {{ end }}
-{{ end }}
-```
+_{{ range $index, $value := .subnets.subnets }}_
+_{{ range $access, $cidr := $value }}_
+_{{$access}} {{$cidr}}_
+_{{ end }}_
+_{{ end }}_
 
 The above should give you the access level and subnets defined above. More examples as well as the full template implementation of this example can be found in the project examples folder.
 
@@ -184,9 +182,9 @@ A template function for reading values from an external file into a template. Fo
 
 Example:
 
-```
-{{ myfile.txt | file }} # Returns the value of myfile.txt under the files directory
-```
+
+_{{ myfile.txt | file }}_ # Returns the value of myfile.txt under the files directory
+
 
 __s3_read:__
 
@@ -194,18 +192,18 @@ As the name suggests, this function reads the content of a given s3 key and writ
 
 Example:
 
-```
-`{{ "s3://mybucket/key" | s3_read }}` # writes the contents of the object to the template
-```
+
+_{{ "s3://mybucket/key" | s3_read }}_ # writes the contents of the object to the template
+
 
 __GET:__
 
 GET implements http GET requests on a given url, and writes the response to the template.
 
 Example
-```
-{{ "http://localhost" | GET }}
-```
+
+_{{ "http://localhost" | GET }}_
+
 
 --
 
