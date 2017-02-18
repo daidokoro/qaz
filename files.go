@@ -102,15 +102,8 @@ func configReader(conf string) error {
 
 	Log(fmt.Sprintln("Keys identified in Config:", viper.AllKeys()), level.debug)
 
-	// if stacks is 0 at this point, All Stacks are assumed.
-	if len(job.stacks) == 0 {
-		job.stacks = make(map[string]string)
-		for _, stk := range viper.Sub("stacks").AllKeys() {
-			job.stacks[strings.Split(stk, ".")[0]] = ""
-		}
-	}
-
-	for s := range job.stacks {
+	for _, val := range viper.Sub("stacks").AllKeys() {
+		s := strings.Split(val, ".")[0]
 		stacks[s] = &stack{}
 		key := "stacks." + s
 		Log(fmt.Sprintf("Evaluating: [%s] in config"+"\n", s), level.debug)
@@ -167,7 +160,7 @@ func genTimeParser(source string) (string, error) {
 func (s *stack) deployTimeParser() error {
 
 	// Create template
-	t, err := template.New("template").Delims("%", "%").Funcs(deployTimeFunctions).Parse(s.template)
+	t, err := template.New("template").Delims("<<", ">>").Funcs(deployTimeFunctions).Parse(s.template)
 	if err != nil {
 		return err
 	}
