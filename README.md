@@ -120,11 +120,11 @@ That's it! Use the generate command to varify the value
 Go Templates are also capable of looping values, for example, to get the values of both _private_ & _public_ in my *subnets* stack, I would do the following.
 
 ```
-{{ range $index, $value := .subnets.subnets }} # "range" allows us to loop over items in the template
-  {{ range $access, $cidr := $value }} # looping over the key value pairs
-    {{$access}} {{$cidr}} # printing output
+{{ range $index, $value := .subnets.subnets }}
+  {{ range $access, $cidr := $value }}
+    {{$access}} {{$cidr}}
   {{ end }}
-{{ end }} # Closing loops
+{{ end }}
 ```
 
 The above should give you the access level and subnets defined above. More examples as well as the full template implementation of this example can be found in the project examples folder.
@@ -145,7 +145,7 @@ Configuration can be retrieved from both Http Get requests & S3.
 $ qaz deploy -c s3://mybucket/super_config.yml -t vpc::http://someurl/vpc_dev.yml
 ```
 
-### Deploying via S3
+__Deploying via S3__
 
 [![asciicast](https://asciinema.org/a/64r2bgjbtdf9uzrym6dfc35dn.png)](https://asciinema.org/a/64r2bgjbtdf9uzrym6dfc35dn?speed=1.5)
 
@@ -171,9 +171,8 @@ $ qaz deploy -c path/to/config.yml -t "path/*"
 ```
 Quotes are required when using wildcards.
 
---
 
- ### Built in Template Functions
+__Built in Template Functions__
 
 Template Functions expand the functionality of Go's Templating library by allowing you to execute external functions to retreive additional information for building your template.
 
@@ -186,7 +185,7 @@ A template function for reading values from an external file into a template. Fo
 Example:
 
 ```
-{{ myfile.txt | File }} # Returns the value of myfile.txt under the files directory
+{{ myfile.txt | file }} # Returns the value of myfile.txt under the files directory
 ```
 
 __s3_read:__
@@ -196,7 +195,7 @@ As the name suggests, this function reads the content of a given s3 key and writ
 Example:
 
 ```
-{{ "s3://mybucket/key" | S3Read }} # writes the contents of the object to the template
+`{{ "s3://mybucket/key" | s3_read }}` # writes the contents of the object to the template
 ```
 
 __GET:__
