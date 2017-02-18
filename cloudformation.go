@@ -314,6 +314,11 @@ func DeployHandler() {
 	sess, _ := awsSession()
 
 	for _, stk := range stacks {
+
+		if _, ok := job.stacks[stk.name]; !ok && len(job.stacks) > 0 {
+			continue
+		}
+
 		// Set deploy status & Check if stack exists
 		if stk.stackExists(sess) {
 
@@ -401,13 +406,16 @@ func DeployHandler() {
 
 // TerminateHandler - Handles terminating stacks in the correct order
 func TerminateHandler() {
-	// status -  pending, failed, completed
+	// 	status -  pending, failed, completed
 	var status = make(map[string]string)
 
 	sess, _ := awsSession()
 
 	for _, stk := range stacks {
-		// Check if stack exists
+		if _, ok := job.stacks[stk.name]; !ok && len(job.stacks) > 0 {
+			Log(fmt.Sprintf("%s: not in job.stacks, skipping", stk.name), level.debug)
+			continue // only process items in the job.stacks unless empty
+		}
 
 		if len(stk.dependsOn) == 0 {
 			wg.Add(1)
@@ -416,24 +424,23 @@ func TerminateHandler() {
 				// Reverse depency look-up so termination waits for all stacks
 				// which depend on it, to finish terminating first.
 				for {
-					depts := []string{}
 
 					for _, stk := range stacks {
-
+						// fmt.Println(stk, stk.dependsOn)
 						if stringIn(s.name, stk.dependsOn) {
+							Log(fmt.Sprintf("[%s]: Depends on [%s].. Waiting for dependency to terminate", stk.name, s.name), level.info)
+							for {
 
-							mutex.Lock()
-							depts = append(depts, status[stk.name])
-							mutex.Unlock()
+								if !stk.stackExists(sess) {
+									break
+								}
+								time.Sleep(time.Second * 2)
+							}
 						}
 					}
 
-					if all(depts, state.complete) {
-						s.terminate(sess)
-						updateState(status, s.name, state.complete)
-						return
-					}
-
+					s.terminate(sess)
+					return
 				}
 
 			}(*stk, sess)
@@ -444,7 +451,7 @@ func TerminateHandler() {
 		go func(s *stack, sess *session.Session) {
 			defer wg.Done()
 
-			// Stacks with no Reverse depencies are terminate first
+			// Stacks with no Reverse depencies are terminated first
 			updateState(status, s.name, state.pending)
 
 			Log(fmt.Sprintf("Terminating stack [%s]", s.stackname), "info")

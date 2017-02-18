@@ -258,7 +258,7 @@ var terminateCmd = &cobra.Command{
 			}
 
 			if len(job.stacks) == 0 {
-				Log("No stack specified for termination", "warn")
+				Log("No stack specified for termination", level.warn)
 				return
 			}
 		}

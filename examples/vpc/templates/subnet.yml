@@ -10,7 +10,7 @@ Resources:
     Properties:
       AvailabilityZone: eu-west-1{{ if eq $access `public` }}a{{ else }}b{{ end }}
       CidrBlock: {{ $cidr }}
-      VpcId: %stack_output "vpc::vpcid"%
+      VpcId: << stack_output "vpc::vpcid" >>
       Tags:
         - Key: Name
           Value: {{ $access }}subnet
