@@ -102,9 +102,9 @@ Go has an excellent and expandable templating library which is utilised in this 
 
 Note that templates must have the same file name (_extension excluded_) as the stack they reference in config when working with local files, however, this does not apply when dealing with remote templates on S3 or via Http.
 
-__Templing in Qaz__
+__Templating in Qaz__
 
-We'll run through some basic tips and tricks to get started.
+We'll run through some basics to get started.
 
 [![asciicast](https://asciinema.org/a/c1ep21ub0o0ppeh23ifvzu9fa.png)](https://asciinema.org/a/c1ep21ub0o0ppeh23ifvzu9fa?speed=1.5)
 
