@@ -145,6 +145,10 @@ Configuration can be retrieved from both Http Get requests & S3.
 $ qaz deploy -c s3://mybucket/super_config.yml -t vpc::http://someurl/vpc_dev.yml
 ```
 
+### Deploying via S3
+
+[![asciicast](https://asciinema.org/a/64r2bgjbtdf9uzrym6dfc35dn.png)](https://asciinema.org/a/64r2bgjbtdf9uzrym6dfc35dn?speed=1.5)
+
 The stack name must be specified using the syntax above. This tells Qaz what values to associate with this stack.
 
 ```
