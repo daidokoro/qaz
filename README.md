@@ -1,27 +1,33 @@
-# qaz—A CLI tool for Templating & Managing stacks in AWS Cloudformation
+# qaz—A CLI tool for Templating & Managing stacks in AWS Cloudformation  [![Release](https://img.shields.io/github/release/daidokoro/qaz.svg)]
 [![Build Status](https://travis-ci.org/daidokoro/qaz.svg)](https://travis-ci.org/daidokoro/qaz)
+[![Go Report Card](https://goreportcard.com/badge/github.com/daidokoro/qaz)]
+
 
 Qaz is a Fork of the Bora project by [@pkazmierczak](https://github.com/pkazmierczak) that aims to focus on simplifying the process of deploying infrastructure on AWS via Cloudformation by utilising the Go Templates Library and custom functions to generate diverse and configurable templates.
 
-Qaz focuses on mininal abstraction from the underlying AWS Cloudformation Platform and instead focuses on dyanamic template generation, using Go Templates and custom templating functions. This allows it to be more future proof and allows quick access to new functionality when Amazon inevitably enhance the Cloudformation Platform.
+Qaz focuses on minimal abstraction from the underlying AWS Cloudformation Platform. It instead enhances customisability and re-usability of templates through dynamic template generation via Go Templates and custom template functions.
 
 --
 
 *Features:*
 
-- Advanced templating functionality & custom built-in template functions
+- Advanced template functionality & custom built-in template functions
 
-- Support for templates written in JSON & YAML
+- Support for Cloudformation templates written in JSON & YAML
+
+- Dynamic deploy script generation utilising the built-in templating functionality
 
 - Single YAML Configuration file for multiple stack templates per environment
 
-- Utilises Goroutines for Multi-stack concurrent Cloudformation requests for *all* appropriate calls
+- Utilises Go-routines for Multi-stack concurrent Cloudformation requests for *all* appropriate calls
 
 - Support for AWS Profile selection for Multi-AWS account environments
 
-- *Decoupled* build mechanism. Qaz can manage infrastructure by accessing config/templates via S3 or HTTP(S). This way the tool does not need to be stored with the files.
+- Cross stack referencing with support for Cloudformation Exports(_Preferred_) & dynamically retrieving stack outputs on deploy
 
-- *Decoupled* stack management. Stacks can be launched individually from different locations and build according to the depency chain as long as the same configuration file is read.
+- *Decoupled* build mechanism. Qaz can manage infrastructure by accessing config/templates via S3 or HTTP(S). The tool does not need to be in the same place as the files.
+
+- *Decoupled* stack management. Stacks can be launched individually from different locations and build consistently according to the dependency chain as long as the same configuration file is read.
 
 
 ## Installation
@@ -89,15 +95,15 @@ Note: Config files do not need to be named config.yml
 
 ## Templates (Getting those values!)
 
-Go has an excellent and expandable templating library which is utilised in this project for additional logic in creating templates. To read more on Go Template see [Here](https://golang.org/pkg/text/template). All features of Go Templating are supported in Qaz.
+Go has an excellent and expandable templating library which is utilised in this project for additional logic in creating templates. To read more on Go Template see [Here](https://golang.org/pkg/text/template). All features of Go Template are supported in Qaz.
 
 We'll run through some basic tips and tricks to get started.
 
-Note that templates must have the same file name (_extension excluded_) as the stack they reference in config when working with local files, however, this does not apply when doing remote calls via S3 or Http for templates.
+Note that templates must have the same file name (_extension excluded_) as the stack they reference in config when working with local files, however, this does not apply when dealing with remote templates on S3 or via Http.
 
 --
 
-To access the values in our template we need to use templating syntax. In it's most basic form, to fetch say the value for `cidr` in my vpc stack config I would do the following:
+To access the values in our template we need to use template syntax. In its most basic form, to fetch say the value for `cidr` in my vpc stack config I would do the following:
 
 ```yaml
 {{ .vpc.cidr }}
@@ -130,7 +136,7 @@ Stacks can be Deployed/Terminated with a single command.
 
 The above however, only works when you are using Qaz in the root of your project directory. Alternatively, Qaz offers a few ways fetching both configuration and template files.
 
-Configuration can be retreived from both Http Get requests & S3.
+Configuration can be retrieved from both Http Get requests & S3.
 
 ```
 $ qaz deploy -c s3://mybucket/super_config.yml -t vpc::http://someurl/vpc_dev.yml
@@ -164,9 +170,9 @@ Quotes are required when using wildcards.
 
 Template Functions expand the functionality of Go's Templating library by allowing you to execute external functions to retreive additional information for building your template.
 
-Qaz supports all the Go Template functions as well as some custom ones. Three of these are:
+Qaz supports all the Go Template functions as well as some custom ones. These include:
 
-__File:__
+__file:__
 
 A template function for reading values from an external file into a template. For now the file needs to be in the `files` directory in the rood of the project folder.
 
@@ -176,7 +182,7 @@ Example:
 {{ myfile.txt | File }} # Returns the value of myfile.txt under the files directory
 ```
 
-__S3Read:__
+__s3_read:__
 
 As the name suggests, this function reads the content of a given s3 key and writes it to the template.
 
@@ -197,33 +203,73 @@ Example
 
 --
 
+Qaz also supports Deploy-Time functions which are run just before the template is pushed to AWS. These include:
+
+__stack_output__
+
+stack_output fetches the output value of a given stack and stores the value in your template. This function using the stack name as defined in your project configuration
+
+Example
+```
+# stackname::output
+
+<< stack_output vpc::vpcid >>
+```
+
+__stack_output_ext__
+
+stack_output_ext fetches the output value of a given stack that exists outside of your project/configuration and stores the value in your template. This function requires the full name of the stack as it appears on the AWS Console.
+
+Example
+```
+# stackname::output
+
+<< stack_output anotherproject-vpc::vpcid >>
+```
+
+
+When using Deploy-Time functions the Template delimiters are different: `<< >>` Qaz identifies items wrapped in these as Deploy-Time functions and only executes them just for before deploying to AWS.
+
+--
+
 
 See `examples` folder for more on usage. More examples to come.
 
 ```
 $ qaz
 
-qaz is a simple wrapper around Cloudformation.
+  __ _   __ _  ____
+ / _` | / _` ||_  /
+| (_| || (_| | / /
+\__, | \__,_|/___|
+   |_|            
+
+--> Shut up & deploy my templates...!
 
 Usage:
-  qaz [flags]
-  qaz [command]
+qaz [flags]
+qaz [command]
 
 Available Commands:
-  check       Validates Cloudformation Templates
-  deploy      Deploys stack(s) to AWS
-  generate    Generates a JSON or YAML template
-  init        Creates a basic qaz project
-  outputs     Prints stack outputs/exports
-  status      Prints status of deployed/un-deployed stacks
-  terminate   Terminates stacks
-  update      Updates a given stack
+check       Validates Cloudformation Templates
+deploy      Deploys stack(s) to AWS
+exports     Prints stack exports
+generate    Generates template from configuration values
+init        Creates a basic qaz project
+invoke      Invoke AWS Lambda Functions
+outputs     Prints stack outputs
+status      Prints status of deployed/un-deployed stacks
+tail        Tail Real-Time AWS Cloudformation events
+terminate   Terminates stacks
+update      Updates a given stack
 
 Flags:
-  -p, --profile string   configured aws profile (default "default")
-      --version          print current/running version
+--debug            Run in debug mode...
+-p, --profile string   configured aws profile (default "default")
+--version          print current/running version
 
 Use "qaz [command] --help" for more information about a command.
+
 ```
 
 
@@ -234,6 +280,5 @@ qaz is in early development.
 *TODO:*
 
 - Implement Change-Set management
-- Implement proper logging, log-levels & debug
-- Restructure Code for better exception handling
 - More Comprehensive Documentation
+- Implement Lambda invoke for API and lambda based event hooks
