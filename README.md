@@ -150,7 +150,7 @@ $ qaz deploy -c path/to/config.yml -t "path/*"
 Quotes are required when using wildcards.
 
 
-## Built in Template Functions
+## Built-In Template Functions
 
 Template Functions expand the functionality of Go's Templating library by allowing you to execute external functions to retreive additional information for building your template.
 
