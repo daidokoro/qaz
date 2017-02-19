@@ -150,11 +150,20 @@ $ qaz deploy -c path/to/config.yml -t "path/*"
 Quotes are required when using wildcards.
 
 
-__Built in Template Functions__
+## Built in Template Functions
 
 Template Functions expand the functionality of Go's Templating library by allowing you to execute external functions to retreive additional information for building your template.
 
-Qaz supports all the Go Template functions as well as some custom ones. These include:
+Qaz supports all the Go Template functions as well as some custom ones.
+
+Qaz has two levels of custom template functions, these are Gen-Time functions and Deploy-Time functions.
+
+__Gen-Time Template Functions__
+
+Gen-Time functions are functions that are executed when a template is being generated. These are handy for reading files into a template or making API calls to fetch values.
+
+Currently there are 3 main Qaz Gen-Time functions, these are:
+
 
 __file:__
 
@@ -163,7 +172,9 @@ A template function for reading values from an external file into a template. Fo
 Example:
 
 
-_{{ myfile.txt | file }}_ # Returns the value of myfile.txt under the files directory
+`{{ myfile.txt | file }}` Or `{{ file myfile.txt }}`
+
+Returns the value of myfile.txt under the files directory
 
 
 __s3_read:__
@@ -173,7 +184,9 @@ As the name suggests, this function reads the content of a given s3 key and writ
 Example:
 
 
-_{{ "s3://mybucket/key" | s3_read }}_ # writes the contents of the object to the template
+`{{ "s3://mybucket/key" | s3_read }}` Or `{{ s3_read "s3://mybucket/key" }}`
+
+Writes the contents of the object to the template
 
 
 __GET:__
@@ -182,7 +195,14 @@ GET implements http GET requests on a given url, and writes the response to the 
 
 Example
 
-_{{ "http://localhost" | GET }}_
+`{{ "http://localhost" | GET }}` or `{{ GET "http://localhost" }}`
+
+Writes the string value of the GET response to the template
+
+
+__Gen-Time functions in Action__
+
+[![asciicast](https://asciinema.org/a/9ajsz8rs5tfqs5aie0lzalye1.png)](https://asciinema.org/a/9ajsz8rs5tfqs5aie0lzalye1?speed=1.5)
 
 
 --
