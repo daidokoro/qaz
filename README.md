@@ -158,6 +158,8 @@ Qaz supports all the Go Template functions as well as some custom ones.
 
 Qaz has two levels of custom template functions, these are Gen-Time functions and Deploy-Time functions.
 
+--
+
 __Gen-Time Template Functions__
 
 Gen-Time functions are functions that are executed when a template is being generated. These are handy for reading files into a template or making API calls to fetch values.
@@ -172,7 +174,7 @@ A template function for reading values from an external file into a template. Fo
 Example:
 
 
-`{{ myfile.txt | file }}` Or `{{ file myfile.txt }}`
+`{{ myfile.txt | file }}` _or_ `{{ file myfile.txt }}`
 
 Returns the value of myfile.txt under the files directory
 
@@ -184,7 +186,7 @@ As the name suggests, this function reads the content of a given s3 key and writ
 Example:
 
 
-`{{ "s3://mybucket/key" | s3_read }}` Or `{{ s3_read "s3://mybucket/key" }}`
+`{{ "s3://mybucket/key" | s3_read }}` _or_ `{{ s3_read "s3://mybucket/key" }}`
 
 Writes the contents of the object to the template
 
@@ -195,7 +197,7 @@ GET implements http GET requests on a given url, and writes the response to the 
 
 Example
 
-`{{ "http://localhost" | GET }}` or `{{ GET "http://localhost" }}`
+`{{ "http://localhost" | GET }}` _or_ `{{ GET "http://localhost" }}`
 
 Writes the string value of the GET response to the template
 
@@ -207,11 +209,14 @@ __Gen-Time functions in Action__
 
 --
 
-Qaz also supports Deploy-Time functions which are run just before the template is pushed to AWS. These include:
+__Deploy-Time Template Functions__
+
+Deploy-Time functions are run just before the template is pushed to AWS. These are handy for fetching values from dependency stacks or making API calls to pull values from resources built by preceeding stacks.
+
 
 __stack_output__
 
-stack_output fetches the output value of a given stack and stores the value in your template. This function using the stack name as defined in your project configuration
+stack_output fetches the output value of a given stack and stores the value in your template. This function uses the stack name as defined in your project configuration
 
 Example
 ```
@@ -232,12 +237,17 @@ Example
 ```
 
 
-When using Deploy-Time functions the Template delimiters are different: `<< >>` Qaz identifies items wrapped in these as Deploy-Time functions and only executes them just for before deploying to AWS.
+__Important:__ When using Deploy-Time functions the Template delimiters are different: `<< >>` Qaz identifies items wrapped in these as Deploy-Time functions and only executes them just for before deploying to AWS.
+
+
+__Deploy-Time Functions in action__
+
+[![asciicast](https://asciinema.org/a/0majlnrc679p2pkzuacefw9x5.png)](https://asciinema.org/a/0majlnrc679p2pkzuacefw9x5?speed=1.5)
 
 --
 
 
-See `examples` folder for more on usage. More examples to come.
+See `examples` folder for more examples of usage. More examples to come.
 
 ```
 $ qaz
@@ -286,3 +296,7 @@ qaz is in early development.
 - Implement Change-Set management
 - More Comprehensive Documentation
 - Implement Lambda invoke for API and lambda based event hooks
+
+--
+
+_Pull requests welcomed...._
