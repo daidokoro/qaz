@@ -296,6 +296,7 @@ qaz is in early development.
 - Implement Change-Set management
 - More Comprehensive Documentation
 - Implement Lambda invoke for API and lambda based event hooks
+- Qaz can already create Azure Templates, Once I get my head around Azure as a Platform, i'll add support for Deploying to Azure as well.
 
 --
 
