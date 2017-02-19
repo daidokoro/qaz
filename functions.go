@@ -111,4 +111,25 @@ var deployTimeFunctions = template.FuncMap{
 
 		return "", fmt.Errorf("Stack Output Not found - Stack:%s | Output:%s", req[0], req[1])
 	},
+
+	// Get get does an HTTP Get request of the given url and returns the output string
+	"GET": func(url string) (string, error) {
+		Log(fmt.Sprintln("Calling Template Function [GET] with arguments:", url), level.debug)
+		resp, err := Get(url)
+		if err != nil {
+			return "", err
+		}
+
+		return resp, nil
+	},
+
+	// S3Read reads content of file from s3 and returns string contents
+	"s3_read": func(url string) (string, error) {
+		Log(fmt.Sprintln("Calling Template Function [S3Read] with arguments:", url), level.debug)
+		resp, err := S3Read(url)
+		if err != nil {
+			return "", err
+		}
+		return resp, nil
+	},
 }
