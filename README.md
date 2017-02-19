@@ -3,9 +3,9 @@
 ![Go Report Card](https://goreportcard.com/badge/github.com/daidokoro/qaz)
 
 
-Qaz is a Fork of the Bora project by [@pkazmierczak](https://github.com/pkazmierczak) that aims to focus on simplifying the process of deploying infrastructure on AWS via Cloudformation by utilising the Go Templates Library and custom functions to generate diverse and configurable templates.
+__Qaz__ is a Fork of the Bora project by [@pkazmierczak](https://github.com/pkazmierczak) that aims to focus on simplifying the process of deploying infrastructure on AWS via Cloudformation by utilising the Go Templates Library and custom functions to generate diverse and configurable templates.
 
-Qaz focuses on minimal abstraction from the underlying AWS Cloudformation Platform. It instead enhances customisability and re-usability of templates through dynamic template generation via Go Templates and custom template functions.
+Qaz focuses on minimal abstraction from the underlying AWS Cloudformation Platform. It instead enhances customisability and re-usability of templates through dynamic template generation and logic.
 
 --
 
@@ -92,7 +92,7 @@ stacks:
         - public: 10.10.2.0/24
 ```
 
-Note: Config files do not need to be named config.yml
+Note: Config files do not need to be named `config.yml` Qaz will look for this filename by default if no config is specified. When config is named differently, you can specify the config file using the `-c --config` flags.
 
 --
 
