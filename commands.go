@@ -454,7 +454,12 @@ var invokeCmd = &cobra.Command{
 			f.payload = []byte(job.funcEvent)
 		}
 
-		f.Invoke(sess)
+		if err := f.Invoke(sess); err != nil {
+			handleError(err)
+			return
+		}
+
+		fmt.Println(f.response)
 
 	},
 }
