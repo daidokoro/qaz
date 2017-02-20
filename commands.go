@@ -336,6 +336,12 @@ var outputsCmd = &cobra.Command{
 		}
 
 		for _, s := range args {
+			// check if stack exists
+			if _, ok := stacks[s]; !ok {
+				handleError(fmt.Errorf("%s: does not Exist in Config", s))
+				continue
+			}
+
 			wg.Add(1)
 			go func(s string) {
 				outputs, err := StackOutputs(stacks[s].stackname, sess)
