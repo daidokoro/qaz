@@ -57,6 +57,25 @@ var genTimeFunctions = template.FuncMap{
 		}
 		return resp, nil
 	},
+
+	// invoke - invokes a lambda function
+	"invoke": func(name string, payload string) (string, error) {
+		f := function{name: name}
+		if payload != "" {
+			f.payload = []byte(payload)
+		}
+
+		sess, err := awsSession()
+		if err != nil {
+			return "", err
+		}
+
+		if err := f.Invoke(sess); err != nil {
+			return "", err
+		}
+
+		return f.response, nil
+	},
 }
 
 var deployTimeFunctions = template.FuncMap{
@@ -131,5 +150,24 @@ var deployTimeFunctions = template.FuncMap{
 			return "", err
 		}
 		return resp, nil
+	},
+
+	// invoke - invokes a lambda function
+	"invoke": func(name string, payload string) (string, error) {
+		f := function{name: name}
+		if payload != "" {
+			f.payload = []byte(payload)
+		}
+
+		sess, err := awsSession()
+		if err != nil {
+			return "", err
+		}
+
+		if err := f.Invoke(sess); err != nil {
+			return "", err
+		}
+
+		return f.response, nil
 	},
 }
