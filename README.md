@@ -199,7 +199,19 @@ Example
 
 `{{ "http://localhost" | GET }}` _or_ `{{ GET "http://localhost" }}`
 
-Writes the string value of the GET response to the template
+
+
+__invoke:__
+
+Invokes a Lambda function and stores the returned value with the template.
+
+Example
+
+```
+{{ invoke "function_name" `{"some_json":"some_value"}` }}
+```
+
+_Note:_ JSON passed to Gen-Time functions needs to be wrapped in back-ticks.
 
 
 __Gen-Time functions in Action__
@@ -239,6 +251,14 @@ Example
 
 __Important:__ When using Deploy-Time functions the Template delimiters are different: `<< >>` Qaz identifies items wrapped in these as Deploy-Time functions and only executes them just for before deploying to AWS.
 
+--
+
+The following are also accessible as Deploy-Time functions:
+ - file
+ - s3_read
+ - invoke
+ - GET
+
 
 __Deploy-Time Functions in action__
 
@@ -246,6 +266,12 @@ __Deploy-Time Functions in action__
 
 --
 
+
+__New Deploy/Gen-Time Function - Lambda Invoke__
+
+[![asciicast](https://asciinema.org/a/3ypatju41o90332nl31dnnoof.png)](https://asciinema.org/a/3ypatju41o90332nl31dnnoof?speed=1.5)
+
+--
 
 See `examples` folder for more examples of usage. More examples to come.
 
