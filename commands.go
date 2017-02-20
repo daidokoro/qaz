@@ -24,7 +24,7 @@ var job = struct {
 	version      bool
 	request      string
 	debug        bool
-	funcName     string
+	funcEvent    string
 }{}
 
 // Wait Group for handling goroutines
@@ -215,8 +215,6 @@ var updateCmd = &cobra.Command{
 			return
 		}
 
-		fmt.Println(source)
-
 		job.tplFile = source
 
 		err = configReader(job.cfgFile)
@@ -232,6 +230,11 @@ var updateCmd = &cobra.Command{
 		}
 
 		stacks[s].template = v
+
+		// resolve deploy time function
+		if err = stacks[s].deployTimeParser(); err != nil {
+			handleError(err)
+		}
 
 		// Update stack
 		sess, err := awsSession()
@@ -426,7 +429,27 @@ var invokeCmd = &cobra.Command{
 	Short: "Invoke AWS Lambda Functions",
 	Run: func(cmd *cobra.Command, args []string) {
 		job.request = "lambda_invoke"
-		fmt.Println(colorString("Coming Soon!", "magenta"))
+		// fmt.Println(colorString("Coming Soon!", "magenta"))
+
+		if len(args) < 1 {
+			fmt.Println("No Lambda Function specified")
+			return
+		}
+
+		sess, err := awsSession()
+		if err != nil {
+			handleError(err)
+			return
+		}
+
+		f := function{name: args[0]}
+
+		if job.funcEvent != "" {
+			f.payload = []byte(job.funcEvent)
+		}
+
+		f.Invoke(sess)
+
 	},
 }
 
