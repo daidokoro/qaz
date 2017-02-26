@@ -59,13 +59,18 @@ func (s *stack) deploy(session *session.Session) error {
 	Log(fmt.Sprintf("Updated Template:\n%s", s.template), level.debug)
 
 	svc := cloudformation.New(session)
-	capability := "CAPABILITY_IAM"
 
 	createParams := &cloudformation.CreateStackInput{
 		StackName:       aws.String(s.stackname),
 		DisableRollback: aws.Bool(true), // no rollback by default
 		TemplateBody:    aws.String(s.template),
-		Capabilities:    []*string{&capability},
+	}
+
+	// If IAM is bening touched, add Capabilities
+	if strings.Contains(s.template, "AWS::IAM") {
+		createParams.Capabilities = []*string{
+			aws.String(cloudformation.CapabilityCapabilityIam),
+		}
 	}
 
 	Log(fmt.Sprintln("Calling [CreateStack] with parameters:", createParams), level.debug)
