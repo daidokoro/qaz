@@ -81,9 +81,6 @@ func (s *stack) deploy(session *session.Session) error {
 
 	Log(fmt.Sprintln("Calling [WaitUntilStackCreateComplete] with parameters:", describeStacksInput), level.debug)
 	if err := svc.WaitUntilStackCreateComplete(describeStacksInput); err != nil {
-		// FIXME this works in so far that we wait until the stack is
-		// completed and capture errors, but it doesn't really tail
-		// cloudroamtion events.
 		return err
 	}
 
@@ -118,9 +115,6 @@ func (s *stack) update(session *session.Session) error {
 		}
 		Log(fmt.Sprintln("Calling [WaitUntilStackUpdateComplete] with parameters:", describeStacksInput), level.debug)
 		if err := svc.WaitUntilStackUpdateComplete(describeStacksInput); err != nil {
-			// FIXME this works in so far that we wait until the stack is
-			// completed and capture errors, but it doesn't really tail
-			// cloudroamtion events.
 			return err
 		}
 
@@ -152,9 +146,6 @@ func (s *stack) terminate(session *session.Session) error {
 
 	Log(fmt.Sprintln("Calling [WaitUntilStackDeleteComplete] with parameters:", describeStacksInput), level.debug)
 	if err := svc.WaitUntilStackDeleteComplete(describeStacksInput); err != nil {
-		// FIXME this works in so far that we wait until the stack is
-		// completed and capture errors, but it doesn't really tail
-		// cloudroamtion events.
 		return err
 	}
 
