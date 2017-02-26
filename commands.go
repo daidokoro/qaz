@@ -187,6 +187,13 @@ var deployCmd = &cobra.Command{
 			if v, err := genTimeParser(f); err != nil {
 				handleError(err)
 			} else {
+
+				// Handle missing stacks
+				if stacks[s] == nil {
+					handleError(fmt.Errorf("Missing Stack in %s: [%s]", job.cfgFile, s))
+					return
+				}
+
 				stacks[s].template = v
 			}
 		}
@@ -226,6 +233,12 @@ var updateCmd = &cobra.Command{
 		v, err := genTimeParser(job.tplFile)
 		if err != nil {
 			handleError(err)
+			return
+		}
+
+		// Handle missing stacks
+		if stacks[s] == nil {
+			handleError(fmt.Errorf("Missing Stack in %s: [%s]", job.cfgFile, s))
 			return
 		}
 
