@@ -232,9 +232,9 @@ stack_output fetches the output value of a given stack and stores the value in y
 
 Example
 ```
-# stackname::output
+# internal-stackname::output
 
-<< stack_output vpc::vpcid >>
+<< stack_output "vpc::vpcid" >>
 ```
 
 __stack_output_ext__
@@ -243,9 +243,9 @@ stack_output_ext fetches the output value of a given stack that exists outside o
 
 Example
 ```
-# stackname::output
+# external-stackname::output
 
-<< stack_output_ext external-vpc::vpcid >>
+<< stack_output_ext "external-vpc::vpcid" >>
 ```
 
 
