@@ -36,7 +36,17 @@ If you have Golang installed:
 
 `go get github.com/daidokoro/qaz`
 
-Pre-build binaries for Darwin and Linux coming soon....
+On Mac or Linux:
+
+```
+curl https://raw.githubusercontent.com/daidokoro/qaz/master/install.sh | sh
+```
+
+Or, you may need _sudo_:
+
+```
+curl https://raw.githubusercontent.com/daidokoro/qaz/master/install.sh | sudo sh
+```
 
 ## Requirements
 qaz requires:
