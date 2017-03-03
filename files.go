@@ -178,7 +178,7 @@ func genTimeParser(source string) (string, error) {
 	}
 
 	// Create template
-	t, err := template.New("template").Funcs(genTimeFunctions).Parse(templ)
+	t, err := template.New("gen-template").Funcs(genTimeFunctions).Parse(templ)
 	if err != nil {
 		return "", err
 	}
@@ -193,7 +193,7 @@ func genTimeParser(source string) (string, error) {
 func (s *stack) deployTimeParser() error {
 
 	// Create template
-	t, err := template.New("template").Delims("<<", ">>").Funcs(deployTimeFunctions).Parse(s.template)
+	t, err := template.New("deploy-template").Delims("<<", ">>").Funcs(deployTimeFunctions).Parse(s.template)
 	if err != nil {
 		return err
 	}
