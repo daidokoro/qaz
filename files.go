@@ -9,6 +9,8 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/spf13/viper"
 )
 
@@ -20,6 +22,17 @@ var (
 	stacks    map[string]*stack
 	cfvars    map[string]interface{}
 )
+
+// used for stack keyword referencing
+var keyword = struct {
+	depends        string
+	parameters     string
+	cloudformation string
+}{
+	"depends_on",
+	"parameters",
+	"cf",
+}
 
 // fetchContent - checks the source type, url/s3/file and calls the corresponding function
 func fetchContent(source string) (string, error) {
@@ -102,9 +115,18 @@ func configReader(conf string) error {
 
 	Log(fmt.Sprintln("Keys identified in Config:", viper.AllKeys()), level.debug)
 
-	for _, val := range viper.Sub("stacks").AllKeys() {
-		s := strings.Split(val, ".")[0]
-		stacks[s] = &stack{}
+	// Get Stack Values
+	for _, item := range viper.Sub("stacks").AllKeys() {
+		s := strings.Split(item, ".")[0]
+
+		if _, ok := stacks[s]; !ok {
+			// initialise stack
+			stacks[s] = &stack{}
+			stacks[s].name = s
+			stacks[s].setStackName()
+			cfvars[s] = viper.Get(fmt.Sprintf("stacks.%s.cf", s))
+		}
+
 		key := "stacks." + s
 		Log(fmt.Sprintf("Evaluating: [%s] in config"+"\n", s), level.debug)
 
@@ -113,24 +135,35 @@ func configReader(conf string) error {
 			return fmt.Errorf("Key not found in config: %s", key)
 		}
 
-		for _, v := range viper.Sub(key).AllKeys() {
-			Log(fmt.Sprintln("Processing: ", v), level.debug)
-			// Using case statement for setting keyword values, added for scalability later.
-			switch v {
-			case "depends_on":
-				dept := viper.Get(fmt.Sprintf("stacks.%s.%s", s, v)).([]interface{})
-				Log(fmt.Sprintf("Found Dependency for [%s]: %s", s, dept), level.debug)
-				stacks[s].dependsOn = dept
-			default:
-				// TODO: Nothing for now - more built-in values to come... maybe
+		Log(fmt.Sprintln("Processing: ", item), level.debug)
+
+		switch item {
+
+		// Handle depends_on
+		case fmt.Sprintf("%s.%s", s, keyword.depends):
+			// Only needs to be set on the first iteration
+			dept := viper.Get(fmt.Sprintf("stacks.%s.%s", s, keyword.depends)).([]interface{})
+			Log(fmt.Sprintf("Found Dependency for [%s]: %s", s, dept), level.debug)
+			stacks[s].dependsOn = dept
+
+		// Handle parameters
+		case fmt.Sprintf("%s.%s", s, keyword.parameters):
+			params := viper.Get(fmt.Sprintf("stacks.%s.%s", s, keyword.parameters)).([]interface{})
+			if len(params) > 0 {
+				for _, p := range params {
+					for k, v := range p.(map[interface{}]interface{}) {
+						stacks[s].parameters = append(stacks[s].parameters, &cloudformation.Parameter{
+							ParameterKey:   aws.String(k.(string)),
+							ParameterValue: aws.String(v.(string)),
+						})
+					}
+				}
 			}
 
-			// Get Cloudformation values
-			cfvars[s] = viper.Get(fmt.Sprintf("stacks.%s.cf", s))
+		default:
+			// TODO: no default yet..
 		}
 
-		stacks[s].name = s
-		stacks[s].setStackName()
 	}
 
 	return nil
