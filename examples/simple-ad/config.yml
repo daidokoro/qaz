@@ -11,7 +11,12 @@ project: "ad"
 
 
 stacks:
+  # simple ad stack
   simple:
+    parameters:
+      # Administrator credentials
+      - password: Password123@!
+
     cf:
       # SSH Keyname
       key_name: <your key>
@@ -22,7 +27,7 @@ stacks:
       # NetBIOS name of the domain (upto 15 characters) for users of earlier versions of Windows e.g. CORP
       domain_netbios_name: exp
 
-      # Administrator credentials
+
       password: Password123@!
 
       # Directory Size: Small | Large

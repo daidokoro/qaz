@@ -1,4 +1,10 @@
 
+Parameters:
+  password:
+    Type: String
+    Description: Simple Password
+    NoEcho: true
+
 # Define resources
 Resources:
   VPC:
@@ -32,12 +38,11 @@ Resources:
       AllocationId: !GetAtt EIP.AllocationId
       SubnetId: !Ref privateSubnet
 
-
-{{ range $index, $value := .simple.subnets }}
+{{- range $index, $value := .simple.subnets }}
   {{ range $access, $cidr := $value }}
 
 
-  {{ $access }}Subnet:
+  {{- $access }}Subnet:
     Type: "AWS::EC2::Subnet"
     Properties:
       AvailabilityZone: eu-west-1{{ if eq $access `public` }}a{{ else }}b{{ end }}
@@ -69,7 +74,7 @@ Resources:
       {{ if eq $access `public` }}GatewayId: !Ref IGW{{ else }}NatGatewayId: !Ref NAT{{ end }}
 
   {{ end }}
-{{ end }}
+{{- end }}
 
   SimpleAD:
     Type: "AWS::DirectoryService::SimpleAD"
@@ -77,7 +82,7 @@ Resources:
       CreateAlias: true
       Description: "A Simple AD"
       Name: {{ .simple.fdqn }}
-      Password: {{ .simple.password }}
+      Password: !Ref password
       ShortName: {{ .simple.domain_netbios_name }}
       Size: {{ .simple.ad_size }}
       VpcSettings:
