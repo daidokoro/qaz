@@ -109,7 +109,7 @@ stacks:
 
   # database stack
   database:
-    # Note: Qaz support passing parameters to stacks,
+    # Note: Qaz supports passing parameters to stacks,
     # this is handy for sensitive items that should not
     # be shared within the template
     parameters:
