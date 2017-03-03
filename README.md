@@ -77,7 +77,7 @@ region: "eu-west-1"
 # identifier on the Cloudformation platform
 project: "daidokoro"
 
-# Optional: global values, accisible accross
+# Optional: global values, accessible across
 # all stacks can be define under global
 global:
 
@@ -86,12 +86,15 @@ global:
 # under the "stacks" keyword below.
 
 stacks:
+
+  # vpc stack
   vpc:
     # Note: "cf" is a required keyword, which tells
     # qaz when to start reading in template values.
     cf:
       cidr: 10.10.0.0/16
 
+  # subnet stack
   subnet:
     # Note: the "depends_on" keyword is used to list
     # stack dependencies. Any amount can be listed.
@@ -103,6 +106,21 @@ stacks:
       subnets:
         - private: 10.10.0.0/24
         - public: 10.10.2.0/24
+
+  # database stack
+  database:
+    # Note: Qaz support passing parameters to stacks,
+    # this is handy for sensitive items that should not
+    # be shared within the template
+    parameters:
+      - dbpassword: password123
+
+    depends_on:
+      - vpc
+
+    cf:
+
+
 ```
 
 Note: Config files do not need to be named `config.yml` Qaz will look for this filename by default if no config is specified. When config is named differently, you can specify the config file using the `-c --config` flags.
@@ -165,7 +183,7 @@ Quotes are required when using wildcards.
 
 ## Built-In Template Functions
 
-Template Functions expand the functionality of Go's Templating library by allowing you to execute external functions to retreive additional information for building your template.
+Template Functions expand the functionality of Go's Templating library by allowing you to execute external functions to retrieve additional information for building your template.
 
 Qaz supports all the Go Template functions as well as some custom ones.
 
@@ -236,7 +254,7 @@ __Gen-Time functions in Action__
 
 __Deploy-Time Template Functions__
 
-Deploy-Time functions are run just before the template is pushed to AWS. These are handy for fetching values from dependency stacks or making API calls to pull values from resources built by preceeding stacks.
+Deploy-Time functions are run just before the template is pushed to AWS. These are handy for fetching values from dependency stacks or making API calls to pull values from resources built by preceding stacks.
 
 
 __stack_output__
@@ -318,7 +336,7 @@ update      Updates a given stack
 
 Flags:
 --debug            Run in debug mode...
--p, --profile string   configured aws profile (default "default")
+-p, --profile string   configured AWS profile (default "default")
 --version          print current/running version
 
 Use "qaz [command] --help" for more information about a command.
@@ -328,13 +346,12 @@ Use "qaz [command] --help" for more information about a command.
 
 --
 ## Roadmap and status
-qaz is in early development.
+Qaz is in early development.
 
 *TODO:*
 
 - Implement Change-Set management
 - More Comprehensive Documentation
-- Implement Lambda invoke for API and lambda based event hooks
 - Qaz can already create Azure Templates, Once I get my head around Azure as a Platform, i'll add support for Deploying to Azure as well.
 
 --
