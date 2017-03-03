@@ -20,6 +20,7 @@ type stack struct {
 	dependsOn    []interface{}
 	dependents   []interface{}
 	stackoutputs *cloudformation.DescribeStacksOutput
+	parameters   []*cloudformation.Parameter
 }
 
 // State - struct for handling stack deploy/terminate statuses
@@ -66,6 +67,11 @@ func (s *stack) deploy(session *session.Session) error {
 		TemplateBody:    aws.String(s.template),
 	}
 
+	// NOTE: Add parameters flag here if params set
+	if len(s.parameters) > 0 {
+		createParams.Parameters = s.parameters
+	}
+
 	// If IAM is bening touched, add Capabilities
 	if strings.Contains(s.template, "AWS::IAM") {
 		createParams.Capabilities = []*string{
@@ -101,6 +107,11 @@ func (s *stack) update(session *session.Session) error {
 		StackName:    aws.String(s.stackname),
 		TemplateBody: aws.String(s.template),
 		Capabilities: []*string{&capability},
+	}
+
+	// NOTE: Add parameters flag here if params set
+	if len(s.parameters) > 0 {
+		updateParams.Parameters = s.parameters
 	}
 
 	if s.stackExists(session) {
