@@ -125,6 +125,61 @@ stacks:
 
 Note: Config files do not need to be named `config.yml` Qaz will look for this filename by default if no config is specified. When config is named differently, you can specify the config file using the `-c --config` flags.
 
+### Keywords:
+
+When stacks Qaz utilises special keywords for defining additional functionality.
+
+__parameters__:
+
+Stack parameters to pass when deploying can be listed under this keyword. Read more on AWS Cloudformation Stack Parameters [See Here](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/parameters-section-structure.html)
+
+Example:
+```yaml
+stackname:
+  parameters:
+    - password: password123
+```
+
+__depends_on__:
+
+Use this keyword to define a dependency chain by listing stack dependencies. With this keyword, you can explicitly say one stack relies on another or several others.
+
+Example:
+```yaml
+elb-stack:
+  depends_on:
+    - vpc-stack
+    - securitygroup-stack
+```
+
+__cf__:
+
+All Cloudformation values are defined under this keyword. There is no limitation on how values should be structured as long as they adjere to YAML syntax.
+
+Example:
+```yaml
+stacks:
+  vpc-stack:
+    cf:
+      cidr: 10.10.0.0/16
+      subnets:
+        - 10.10.10.0/24
+```
+
+__stacks__:
+
+All Cloudformation Stacks are defined under this value, keywords such as __depends_on__, __parameters__ & __cf__ will only work under stacks followed by the stackname.
+
+Example:
+```yaml
+stacks:
+  vpc:
+    depends_on:
+    paramters:
+    cf:
+```
+
+
 --
 
 ## Templates (Getting those values!)
