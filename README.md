@@ -127,7 +127,7 @@ Note: Config files do not need to be named `config.yml` Qaz will look for this f
 
 ### Keywords:
 
-When stacks Qaz utilises special keywords for defining additional functionality.
+When deploying stacks Qaz utilises special keywords for defining additional functionality.
 
 __parameters__:
 
