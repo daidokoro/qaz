@@ -1,4 +1,5 @@
-# qaz—A CLI tool for Templating & Managing stacks in AWS Cloudformation  ![Release](https://img.shields.io/github/release/daidokoro/qaz.svg)
+# qaz—A CLI tool for Templating & Managing stacks in AWS Cloudformation  
+[![GitHub stars](https://img.shields.io/github/stars/daidokoro/qaz.svg)](https://github.com/daidokoro/qaz/stargazers)
 [![Build Status](https://travis-ci.org/daidokoro/qaz.svg)](https://travis-ci.org/daidokoro/qaz)
 ![Go Report Card](https://goreportcard.com/badge/github.com/daidokoro/qaz)
 
@@ -36,7 +37,19 @@ If you have Golang installed:
 
 `go get github.com/daidokoro/qaz`
 
-Pre-build binaries for Darwin and Linux coming soon....
+On Mac or Linux:
+
+```
+curl https://raw.githubusercontent.com/daidokoro/qaz/master/install.sh | sh
+```
+
+Or, you may need _sudo_:
+
+```
+curl https://raw.githubusercontent.com/daidokoro/qaz/master/install.sh | sudo sh
+```
+
+Windows EXE _coming soon_....
 
 ## Requirements
 qaz requires:
@@ -232,9 +245,9 @@ stack_output fetches the output value of a given stack and stores the value in y
 
 Example
 ```
-# stackname::output
+# internal-stackname::output
 
-<< stack_output vpc::vpcid >>
+<< stack_output "vpc::vpcid" >>
 ```
 
 __stack_output_ext__
@@ -243,9 +256,9 @@ stack_output_ext fetches the output value of a given stack that exists outside o
 
 Example
 ```
-# stackname::output
+# external-stackname::output
 
-<< stack_output_ext external-vpc::vpcid >>
+<< stack_output_ext "external-vpc::vpcid" >>
 ```
 
 
