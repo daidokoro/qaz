@@ -1,4 +1,6 @@
 # qaz—A CLI tool for Templating & Managing stacks in AWS Cloudformation  
+
+[![Join the chat at https://gitter.im/qaz-go/Lobby](https://badges.gitter.im/qaz-go/Lobby.svg)](https://gitter.im/qaz-go/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![GitHub stars](https://img.shields.io/github/stars/daidokoro/qaz.svg)](https://github.com/daidokoro/qaz/stargazers)
 [![Build Status](https://travis-ci.org/daidokoro/qaz.svg)](https://travis-ci.org/daidokoro/qaz)
 ![Go Report Card](https://goreportcard.com/badge/github.com/daidokoro/qaz)
@@ -109,7 +111,7 @@ stacks:
 
   # database stack
   database:
-    # Note: Qaz support passing parameters to stacks,
+    # Note: Qaz supports passing parameters to stacks,
     # this is handy for sensitive items that should not
     # be shared within the template
     parameters:
@@ -154,7 +156,7 @@ elb-stack:
 
 __cf__:
 
-All Cloudformation values are defined under this keyword. There is no limitation on how values should be structured as long as they adjere to YAML syntax.
+All Cloudformation values are defined under this keyword. There is no limitation on how values should be structured as long as they adhere to YAML syntax.
 
 Example:
 ```yaml
@@ -242,7 +244,7 @@ Template Functions expand the functionality of Go's Templating library by allowi
 
 Qaz supports all the Go Template functions as well as some custom ones.
 
-Qaz has two levels of custom template functions, these are Gen-Time functions and Deploy-Time functions.
+Qaz has two levels of custom template functions, these are __Gen-Time__ functions and __Deploy-Time__ functions.
 
 --
 
@@ -250,17 +252,17 @@ __Gen-Time Template Functions__
 
 Gen-Time functions are functions that are executed when a template is being generated. These are handy for reading files into a template or making API calls to fetch values.
 
-Currently there are 3 main Qaz Gen-Time functions, these are:
+Here are some of the Gen-Time functions available... more to come:
 
 
 __file:__
 
-A template function for reading values from an external file into a template. For now the file needs to be in the `files` directory in the rood of the project folder.
+A template function for reading values from an external file into a template. For now the file needs to be in the `files` directory in the root of the project folder.
 
 Example:
 
 
-`{{ myfile.txt | file }}` _or_ `{{ file myfile.txt }}`
+`{{ "myfile.txt" | file }}` _or_ `{{ file "myfile.txt" }}`
 
 Returns the value of myfile.txt under the files directory
 
@@ -309,8 +311,12 @@ __Gen-Time functions in Action__
 
 __Deploy-Time Template Functions__
 
-Deploy-Time functions are run just before the template is pushed to AWS. These are handy for fetching values from dependency stacks or making API calls to pull values from resources built by preceding stacks.
+Deploy-Time functions are run just before the template is pushed to AWS Cloudformation. These are handy for:
+- Fetching values from dependency stacks
+- Making API calls to pull values from resources built by preceding stacks
+- Triggering events via an API call and adjusting the template based on the response.
 
+Here are some of the Deploy-Time functions available... more to come:
 
 __stack_output__
 
@@ -335,7 +341,7 @@ Example
 ```
 
 
-__Important:__ When using Deploy-Time functions the Template delimiters are different: `<< >>` Qaz identifies items wrapped in these as Deploy-Time functions and only executes them just for before deploying to AWS.
+__Important!:__ When using Deploy-Time functions the Template delimiters are different: `<< >>` Qaz identifies items wrapped in these as Deploy-Time functions and only executes them just for before deploying to AWS.
 
 --
 
@@ -353,7 +359,7 @@ __Deploy-Time Functions in action__
 --
 
 
-__New Deploy/Gen-Time Function - Lambda Invoke__
+__Deploy/Gen-Time Function - Lambda Invoke__
 
 [![asciicast](https://asciinema.org/a/3ypatju41o90332nl31dnnoof.png)](https://asciinema.org/a/3ypatju41o90332nl31dnnoof?speed=1.5)
 
