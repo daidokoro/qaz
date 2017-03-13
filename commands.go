@@ -432,13 +432,17 @@ var checkCmd = &cobra.Command{
 			return
 		}
 
+		stk := stack{name: s}
+		stk.setStackName()
+		stk.template = tpl
+
 		sess, err := awsSession()
 		if err != nil {
 			handleError(err)
 			return
 		}
 
-		if err := Check(tpl, sess); err != nil {
+		if err := stk.check(sess); err != nil {
 			handleError(err)
 			return
 		}
@@ -507,13 +511,5 @@ var tailCmd = &cobra.Command{
 		}
 
 		wg.Wait() // Will probably wait forevery
-	},
-}
-
-var costCmd = &cobra.Command{
-	Use:   "cost",
-	Short: "Estimate stack/project Cost based on templates",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(colorString("Coming Soon....", "magenta"))
 	},
 }

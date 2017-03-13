@@ -344,3 +344,47 @@ func (s *stack) change(session *session.Session, req string) error {
 
 	return nil
 }
+
+func (s *stack) cost(session *session.Session) error {
+	svc := cloudformation.New(session)
+
+	params := &cloudformation.EstimateTemplateCostInput{
+		TemplateBody: aws.String(s.template),
+	}
+
+	// NOTE: Add parameters flag here if params set
+	if len(s.parameters) > 0 {
+		params.Parameters = s.parameters
+	}
+
+	resp, err := svc.EstimateTemplateCost(params)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(resp.GoString())
+
+	return nil
+}
+
+func (s *stack) check(session *session.Session) error {
+	svc := cloudformation.New(session)
+
+	params := &cloudformation.ValidateTemplateInput{
+		TemplateBody: aws.String(s.template),
+	}
+
+	Log(fmt.Sprintf("Calling [ValidateTemplate] with parameters:\n%s"+"\n--\n", params), level.debug)
+	resp, err := svc.ValidateTemplate(params)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf(
+		"%s\n\n%s"+"\n",
+		colorString("Valid!", "green"),
+		resp.GoString(),
+	)
+
+	return nil
+}

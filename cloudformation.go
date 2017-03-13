@@ -72,28 +72,6 @@ func Exports(session *session.Session) error {
 	return nil
 }
 
-// Check - Validates Cloudformation Templates
-func Check(template string, session *session.Session) error {
-	svc := cloudformation.New(session)
-	params := &cloudformation.ValidateTemplateInput{
-		TemplateBody: aws.String(template),
-	}
-
-	Log(fmt.Sprintf("Calling [ValidateTemplate] with parameters:\n%s"+"\n--\n", params), level.debug)
-	resp, err := svc.ValidateTemplate(params)
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf(
-		"%s\n\n%s"+"\n",
-		colorString("Valid!", "green"),
-		resp.GoString(),
-	)
-
-	return nil
-}
-
 // DeployHandler - Handles deploying stacks in the corrcet order
 func DeployHandler() {
 	// status -  pending, failed, completed

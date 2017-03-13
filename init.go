@@ -51,32 +51,14 @@ func Log(msg, lvl string) {
 
 func init() {
 
-	// Define Generate Flags
-	generateCmd.Flags().StringVarP(&job.cfgFile, "config", "c", "config.yml", "path to config file")
-	generateCmd.Flags().StringVarP(&job.tplFile, "template", "t", "template", "path to template file Or stack::url")
-
 	// Define Deploy Flags
-	deployCmd.Flags().StringVarP(&job.cfgFile, "config", "c", "config.yml", "path to config file")
 	deployCmd.Flags().StringArrayVarP(&job.tplFiles, "template", "t", []string{`./templates/*`}, "path to template file(s) Or stack::url")
 
 	// Define Terminate Flags
-	terminateCmd.Flags().StringVarP(&job.cfgFile, "config", "c", "config.yml", "path to config file")
 	terminateCmd.Flags().BoolVarP(&job.terminateAll, "all", "A", false, "terminate all stacks")
 
-	// Define Status Flags
-	statusCmd.Flags().StringVarP(&job.cfgFile, "config", "c", "config.yml", "path to config file")
-
 	// Define Output Flags
-	outputsCmd.Flags().StringVarP(&job.cfgFile, "config", "c", "config.yml", "path. to config file")
 	outputsCmd.Flags().StringVarP(&job.profile, "profile", "p", "default", "configured aws profile")
-
-	// Define Update Flags
-	updateCmd.Flags().StringVarP(&job.cfgFile, "config", "c", "config.yml", "path to config file")
-	updateCmd.Flags().StringVarP(&job.tplFile, "template", "t", "", "path to template file Or stack::url [Required]")
-
-	// Define Check Flags
-	checkCmd.Flags().StringVarP(&job.cfgFile, "config", "c", "config.yml", "path to config file")
-	checkCmd.Flags().StringVarP(&job.tplFile, "template", "t", "template", "path to template file Or stack::url")
 
 	// Define Exports Flags
 	exportsCmd.Flags().StringVarP(&region, "region", "r", "eu-west-1", "AWS Region")
@@ -85,9 +67,6 @@ func init() {
 	rootCmd.Flags().BoolVarP(&job.version, "version", "", false, "print current/running version")
 	rootCmd.PersistentFlags().StringVarP(&job.profile, "profile", "p", "default", "configured aws profile")
 	rootCmd.PersistentFlags().BoolVarP(&job.debug, "debug", "", false, "Run in debug mode...")
-
-	// Define Tail Flags
-	tailCmd.Flags().StringVarP(&job.cfgFile, "config", "c", "config.yml", "path to config file")
 
 	// Define Invoke Flags
 	invokeCmd.Flags().StringVarP(&region, "region", "r", "eu-west-1", "AWS Region")
@@ -98,6 +77,16 @@ func init() {
 		list, execute,
 		desc,
 	)
+
+	// Add Config --config common flag
+	for _, cmd := range []interface{}{tailCmd, checkCmd, updateCmd, outputsCmd, statusCmd, terminateCmd, generateCmd, deployCmd} {
+		cmd.(*cobra.Command).Flags().StringVarP(&job.cfgFile, "config", "c", "config.yml", "path to config file")
+	}
+
+	// Add Template --template common flag
+	for _, cmd := range []interface{}{generateCmd, updateCmd, checkCmd} {
+		cmd.(*cobra.Command).Flags().StringVarP(&job.tplFile, "template", "t", "template", "path to template file Or stack::url")
+	}
 
 	for _, cmd := range []interface{}{create, list, rm, execute, desc} {
 		cmd.(*cobra.Command).Flags().StringVarP(&job.cfgFile, "config", "c", "config.yml", "path to config file [Required]")
@@ -112,7 +101,6 @@ func init() {
 		statusCmd, outputsCmd, initCmd,
 		updateCmd, checkCmd, exportsCmd,
 		invokeCmd, tailCmd, changeCmd,
-		costCmd,
 	)
 
 	// Setup logging
