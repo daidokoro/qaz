@@ -6,9 +6,9 @@
 ![Go Report Card](https://goreportcard.com/badge/github.com/daidokoro/qaz)
 
 
-__Qaz__ is a Fork of the Bora project by [@pkazmierczak](https://github.com/pkazmierczak) that aims to focus on simplifying the process of deploying infrastructure on AWS via Cloudformation by utilising the Go Templates Library and custom functions to generate diverse and configurable templates.
+__Qaz__ is a Fork of the Bora project by [@pkazmierczak](https://github.com/pkazmierczak)that focuses on simplifying the process of deploying infrastructure on AWS via Cloudformation by utilising the Go Templates Library and custom functions to generate diverse and configurable templates.
 
-Qaz focuses on minimal abstraction from the underlying AWS Cloudformation Platform. It instead enhances customisability and re-usability of templates through dynamic template generation and logic.
+Qaz emphasizes minimal abstraction from the underlying AWS Cloudformation Platform. It instead enhances customisability and re-usability of templates through dynamic template generation and logic.
 
 --
 
@@ -411,9 +411,9 @@ Qaz is in early development.
 
 *TODO:*
 
-- Implement Change-Set management
+- Implement Cost Estimation
 - More Comprehensive Documentation
-- Qaz can already create Azure Templates, Once I get my head around Azure as a Platform, i'll add support for Deploying to Azure as well.
+- Qaz can already create Azure Templates, Once I get my head around Azure as a Platform, i'll add support for Deploying to Azure as well..... Maybe
 
 --
 
