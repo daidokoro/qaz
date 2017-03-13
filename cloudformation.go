@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -11,17 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 )
-
-// stack - holds all meaningful information about a particular stack.
-type stack struct {
-	name         string
-	stackname    string
-	template     string
-	dependsOn    []interface{}
-	dependents   []interface{}
-	stackoutputs *cloudformation.DescribeStacksOutput
-	parameters   []*cloudformation.Parameter
-}
 
 // State - struct for handling stack deploy/terminate statuses
 var state = struct {
@@ -43,188 +31,6 @@ func updateState(statusMap map[string]string, name string, status string) {
 	mutex.Lock()
 	statusMap[name] = status
 	mutex.Unlock()
-}
-
-// setStackName - sets the stackname with struct
-func (s *stack) setStackName() {
-	s.stackname = fmt.Sprintf("%s-%s", project, s.name)
-}
-
-func (s *stack) deploy(session *session.Session) error {
-
-	err := s.deployTimeParser()
-	if err != nil {
-		return err
-	}
-
-	Log(fmt.Sprintf("Updated Template:\n%s", s.template), level.debug)
-
-	svc := cloudformation.New(session)
-
-	createParams := &cloudformation.CreateStackInput{
-		StackName:       aws.String(s.stackname),
-		DisableRollback: aws.Bool(true), // no rollback by default
-		TemplateBody:    aws.String(s.template),
-	}
-
-	// NOTE: Add parameters flag here if params set
-	if len(s.parameters) > 0 {
-		createParams.Parameters = s.parameters
-	}
-
-	// If IAM is bening touched, add Capabilities
-	if strings.Contains(s.template, "AWS::IAM") {
-		createParams.Capabilities = []*string{
-			aws.String(cloudformation.CapabilityCapabilityIam),
-		}
-	}
-
-	Log(fmt.Sprintln("Calling [CreateStack] with parameters:", createParams), level.debug)
-	if _, err := svc.CreateStack(createParams); err != nil {
-		return errors.New(fmt.Sprintln("Deploying failed: ", err.Error()))
-
-	}
-
-	go verbose(s.stackname, "CREATE", session)
-	describeStacksInput := &cloudformation.DescribeStacksInput{
-		StackName: aws.String(s.stackname),
-	}
-
-	Log(fmt.Sprintln("Calling [WaitUntilStackCreateComplete] with parameters:", describeStacksInput), level.debug)
-	if err := svc.WaitUntilStackCreateComplete(describeStacksInput); err != nil {
-		return err
-	}
-
-	Log(fmt.Sprintf("Deployment successful: [%s]", s.stackname), "info")
-
-	return nil
-}
-
-func (s *stack) update(session *session.Session) error {
-	svc := cloudformation.New(session)
-	capability := "CAPABILITY_IAM"
-	updateParams := &cloudformation.UpdateStackInput{
-		StackName:    aws.String(s.stackname),
-		TemplateBody: aws.String(s.template),
-		Capabilities: []*string{&capability},
-	}
-
-	// NOTE: Add parameters flag here if params set
-	if len(s.parameters) > 0 {
-		updateParams.Parameters = s.parameters
-	}
-
-	if s.stackExists(session) {
-		Log("Stack exists, updating...", "info")
-
-		Log(fmt.Sprintln("Calling [UpdateStack] with parameters:", updateParams), level.debug)
-		_, err := svc.UpdateStack(updateParams)
-
-		if err != nil {
-			return errors.New(fmt.Sprintln("Update failed: ", err))
-		}
-
-		go verbose(s.stackname, "UPDATE", session)
-
-		describeStacksInput := &cloudformation.DescribeStacksInput{
-			StackName: aws.String(s.stackname),
-		}
-		Log(fmt.Sprintln("Calling [WaitUntilStackUpdateComplete] with parameters:", describeStacksInput), level.debug)
-		if err := svc.WaitUntilStackUpdateComplete(describeStacksInput); err != nil {
-			return err
-		}
-
-		Log(fmt.Sprintf("Stack update successful: [%s]", s.stackname), "info")
-
-	}
-	return nil
-}
-
-func (s *stack) terminate(session *session.Session) error {
-	svc := cloudformation.New(session)
-
-	params := &cloudformation.DeleteStackInput{
-		StackName: aws.String(s.stackname),
-	}
-
-	Log(fmt.Sprintln("Calling [DeleteStack] with parameters:", params), level.debug)
-	_, err := svc.DeleteStack(params)
-
-	go verbose(s.stackname, "DELETE", session)
-
-	if err != nil {
-		return errors.New(fmt.Sprintln("Deleting failed: ", err))
-	}
-
-	describeStacksInput := &cloudformation.DescribeStacksInput{
-		StackName: aws.String(s.stackname),
-	}
-
-	Log(fmt.Sprintln("Calling [WaitUntilStackDeleteComplete] with parameters:", describeStacksInput), level.debug)
-	if err := svc.WaitUntilStackDeleteComplete(describeStacksInput); err != nil {
-		return err
-	}
-
-	Log(fmt.Sprintf("Deletion successful: [%s]", s.stackname), "info")
-	return nil
-}
-
-func (s *stack) stackExists(session *session.Session) bool {
-	svc := cloudformation.New(session)
-
-	describeStacksInput := &cloudformation.DescribeStacksInput{
-		StackName: aws.String(s.stackname),
-	}
-
-	Log(fmt.Sprintln("Calling [DescribeStacks] with parameters:", describeStacksInput), level.debug)
-	_, err := svc.DescribeStacks(describeStacksInput)
-
-	if err == nil {
-		return true
-	}
-
-	return false
-}
-
-func (s *stack) status(session *session.Session) error {
-	svc := cloudformation.New(session)
-
-	describeStacksInput := &cloudformation.DescribeStacksInput{
-		StackName: aws.String(s.stackname),
-	}
-
-	Log(fmt.Sprintln("Calling [UpdateStack] with parameters:", describeStacksInput), level.debug)
-	status, err := svc.DescribeStacks(describeStacksInput)
-
-	if err != nil {
-		if strings.Contains(strings.ToLower(err.Error()), "exist") {
-			fmt.Printf("create_pending -> %s [%s]"+"\n", s.name, s.stackname)
-			return nil
-		}
-		return err
-	}
-
-	// Define time flag
-	stat := *status.Stacks[0].StackStatus
-	var timeflag time.Time
-	switch strings.Split(stat, "_")[0] {
-	case "UPDATE":
-		timeflag = *status.Stacks[0].LastUpdatedTime
-	default:
-		timeflag = *status.Stacks[0].CreationTime
-	}
-
-	// Print Status
-	fmt.Printf(
-		"%s%s - %s --> %s - [%s]"+"\n",
-		colorString(`@`, "magenta"),
-		timeflag.Format(time.RFC850),
-		strings.ToLower(colorMap(*status.Stacks[0].StackStatus)),
-		s.name,
-		s.stackname,
-	)
-
-	return nil
 }
 
 // StackOutputs - Returns outputs of given stackname
@@ -266,30 +72,6 @@ func Exports(session *session.Session) error {
 	return nil
 }
 
-func (s *stack) state(session *session.Session) (string, error) {
-	svc := cloudformation.New(session)
-
-	describeStacksInput := &cloudformation.DescribeStacksInput{
-		StackName: aws.String(s.stackname),
-	}
-
-	Log(fmt.Sprintln("Calling [DescribeStacks] with parameters: ", describeStacksInput), level.debug)
-	status, err := svc.DescribeStacks(describeStacksInput)
-	if err != nil {
-		if strings.Contains(err.Error(), "not exist") {
-			return state.pending, nil
-		}
-		return "", err
-	}
-
-	if strings.Contains(strings.ToLower(status.GoString()), "complete") {
-		return state.complete, nil
-	} else if strings.Contains(strings.ToLower(status.GoString()), "fail") {
-		return state.failed, nil
-	}
-	return "", nil
-}
-
 // Check - Validates Cloudformation Templates
 func Check(template string, session *session.Session) error {
 	svc := cloudformation.New(session)
@@ -310,7 +92,6 @@ func Check(template string, session *session.Session) error {
 	)
 
 	return nil
-
 }
 
 // DeployHandler - Handles deploying stacks in the corrcet order

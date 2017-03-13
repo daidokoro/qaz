@@ -4,6 +4,7 @@ package main
 
 import (
 	log "github.com/Sirupsen/logrus"
+	"github.com/spf13/cobra"
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 )
 
@@ -90,13 +91,28 @@ func init() {
 
 	// Define Invoke Flags
 	invokeCmd.Flags().StringVarP(&region, "region", "r", "eu-west-1", "AWS Region")
-	invokeCmd.Flags().StringVarP(&job.funcEvent, "event", "e", "", "Lambda JSON event Data")
+
+	// Define Changes Command
+	changeCmd.AddCommand(
+		create, rm,
+		list, execute,
+		desc,
+	)
+
+	for _, cmd := range []interface{}{create, list, rm, execute, desc} {
+		cmd.(*cobra.Command).Flags().StringVarP(&job.cfgFile, "config", "c", "config.yml", "path to config file [Required]")
+		cmd.(*cobra.Command).Flags().StringVarP(&job.stackName, "stack", "s", "", "Qaz local project Stack Name [Required]")
+	}
+
+	create.Flags().StringVarP(&job.tplFile, "template", "t", "template", "path to template file Or stack::url")
+	changeCmd.Flags().StringVarP(&job.cfgFile, "config", "c", "config.yml", "path to config file")
 
 	rootCmd.AddCommand(
 		generateCmd, deployCmd, terminateCmd,
 		statusCmd, outputsCmd, initCmd,
 		updateCmd, checkCmd, exportsCmd,
-		invokeCmd, tailCmd,
+		invokeCmd, tailCmd, changeCmd,
+		costCmd,
 	)
 
 	// Setup logging

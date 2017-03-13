@@ -25,6 +25,8 @@ var job = struct {
 	request      string
 	debug        bool
 	funcEvent    string
+	changeName   string
+	stackName    string
 }{}
 
 // Wait Group for handling goroutines
@@ -505,5 +507,13 @@ var tailCmd = &cobra.Command{
 		}
 
 		wg.Wait() // Will probably wait forevery
+	},
+}
+
+var costCmd = &cobra.Command{
+	Use:   "cost",
+	Short: "Estimate stack/project Cost based on templates",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println(colorString("Coming Soon....", "magenta"))
 	},
 }
