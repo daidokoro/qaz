@@ -53,13 +53,13 @@ Outputs:
 
 ```
 
-Note that this will only work for me, the Cipher Text Blob being used is linked to my AWS Account. You can encrypt your own values via KMS and switch the `.vpc.cipher` key in config to run your own tests.
+Note that this will only work for me, the Cipher Text Blob being used is linked to my AWS Account. You can encrypt your own values via KMS and switch the `.vpc.cipher` key in config to run tests.
 
 
 In the above a Deploy-Time `<< .vpc.cidr >>` resolver is used to populate the values from config to the template after the Gen-Time function decrypts it. With this, what we have is a fully encrypted template being decrypted and dynamically populated upon deployment to AWS.
 
 
-This can be stored here in Github without worry as any attempts to deploy this outside of the AWS Acount the Cipher belongs to results in the follow:
+This can be stored here in Github without worry as any attempts to deploy this outside of the AWS Acount the Cipher belongs to result in the followinh:
 
 ```
 [Mar 15 23:20:44] ERROR AccessDeniedException: The ciphertext refers to a customer master key that does not exist, does not exist in this region, or you are not allowed to access.
