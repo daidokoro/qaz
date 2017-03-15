@@ -1,0 +1,20 @@
+
+region: eu-west-1
+
+project: encrypt
+
+global:
+
+stacks:
+  kms-lambda:
+    cf:
+
+  custom:
+    depends_on:
+      - kms-lambda
+
+    parameters:
+      - Secret: password123
+    cf:
+      kms_kid: <your kms key id here>
+      lambda_arn: "!ImportValue lambdaEncryptArn"

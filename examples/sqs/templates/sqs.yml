@@ -19,8 +19,13 @@ Outputs:
   WebsiteURL:
     Value: !GetAtt S3Bucket.WebsiteURL
     Description: URL for the website hosted on S3
+    Export:
+      Name: bucketuri
+
   S3BucketSecureURL:
     Value: !Sub
         - https://${Domain}
         - Domain: !GetAtt S3Bucket.DomainName
     Description: Name of the S3 bucket to hold website content
+    Export:
+      Name: bucketuriSecure

@@ -1,0 +1,21 @@
+Parameters:
+  Secret:
+    Description: Some password or other thing that has to be secure
+    Type: String
+    NoEcho: true
+
+Resources:
+  encryptedSecret:
+    Type: AWS::CloudFormation::CustomResource
+    Version: 1.0
+    Properties:
+      ServiceToken:  {{ .custom.lambda_arn }}
+      KeyId:  {{ .custom.kms_kid }}
+      PlainText: !Ref Secret
+
+Outputs:
+  EncryptedSuperSecretThing:
+    Value: !GetAtt encryptedSecret.CipherText
+    Description: KMS encrypted value of SuperSecretThing (Base64 encoded)
+    Export:
+      Name: SecretCipher
