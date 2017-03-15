@@ -54,6 +54,7 @@ func (s *stack) deploy(session *session.Session) error {
 	if strings.Contains(s.template, "AWS::IAM") {
 		createParams.Capabilities = []*string{
 			aws.String(cloudformation.CapabilityCapabilityIam),
+			aws.String(cloudformation.CapabilityCapabilityNamedIam),
 		}
 	}
 
@@ -249,6 +250,15 @@ func (s *stack) change(session *session.Session, req string) error {
 		Log(fmt.Sprintf("Updated Template:\n%s", s.template), level.debug)
 
 		params.TemplateBody = aws.String(s.template)
+
+		// If IAM is bening touched, add Capabilities
+		if strings.Contains(s.template, "AWS::IAM") {
+			params.Capabilities = []*string{
+				aws.String(cloudformation.CapabilityCapabilityIam),
+				aws.String(cloudformation.CapabilityCapabilityNamedIam),
+			}
+		}
+
 		if _, err = svc.CreateChangeSet(params); err != nil {
 			return err
 		}
@@ -341,28 +351,6 @@ func (s *stack) change(session *session.Session, req string) error {
 
 		fmt.Printf("%s\n", o)
 	}
-
-	return nil
-}
-
-func (s *stack) cost(session *session.Session) error {
-	svc := cloudformation.New(session)
-
-	params := &cloudformation.EstimateTemplateCostInput{
-		TemplateBody: aws.String(s.template),
-	}
-
-	// NOTE: Add parameters flag here if params set
-	if len(s.parameters) > 0 {
-		params.Parameters = s.parameters
-	}
-
-	resp, err := svc.EstimateTemplateCost(params)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(resp.GoString())
 
 	return nil
 }
