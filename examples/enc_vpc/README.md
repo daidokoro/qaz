@@ -66,3 +66,10 @@ This can be stored here in Github without worry as any attempts to deploy this o
 	status code: 400, request id: 03654822-09d6-11e7-8beb-91d09effe97e request=generate
 
 ```
+
+
+--
+
+# Important
+
+There is a __4Kb__ size limit on strings that can be Encrypted using this method, as such it's not recommended to try to use this method for large stacks but rather on more sensitive bits of data.
