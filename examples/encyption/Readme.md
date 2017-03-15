@@ -1,4 +1,4 @@
-# Encryption Stack Outputs via KMS
+# Encrypting Stack Outputs via KMS
 
 This example shows how to encrypt stack outputs/exports using a Cloudformation Custom Resource backed by a Lambda Function.
 
