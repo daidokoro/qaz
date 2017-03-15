@@ -411,8 +411,8 @@ Qaz is in early development.
 
 *TODO:*
 
-- Implement Cost Estimation
 - More Comprehensive Documentation
+- More Deploy/Gen-Time Functions
 - Qaz can already create Azure Templates, Once I get my head around Azure as a Platform, i'll add support for Deploying to Azure as well..... Maybe
 
 --
