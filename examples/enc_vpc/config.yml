@@ -1,0 +1,11 @@
+
+region: eu-west-1
+
+project: encrypted
+
+stacks:
+  vpc:
+    cf:
+      cidr: 10.10.10.0/24
+      cipher: |
+        AQECAHiRNqIipUDpE+4nWEQGRLKB9ci5sQlpanWth9zQlQi4NQAAASQwggEgBgkqhkiG9w0BBwagggERMIIBDQIBADCCAQYGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMlFcCZUM1IiCidbDDAgEQgIHYj8EJNqPYSdGv5ZN7hlG+xu2ohckp8QOveOem3vosdn/hfJrBy1nGD+O2u0nZoKIJNkr4ko8Az5CwHATjviul2Zoy3IdT+KDl1fFGvuV4gAnAXH0wEqT5Y0ehhqrdSrDGSJVCxXTkWjq+L/jrXwR6xlT5gG7FX3tUDXGCIpRh7KcNdioDD4y7+7rI2TtfOdNgL1gA6iF8jwNLTNHdEYx+vE4qekZkbtpopPdSmJSdAIwqFoIAHcVziZNJ6tL0D0t4ctbSRereLXcF0gygU2kyWFTFLfLPFnkp
