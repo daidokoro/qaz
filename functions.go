@@ -6,9 +6,108 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	"encoding/base64"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/kms"
 )
 
-// Go Template Function Map here
+// Common Functions - Both Deploy/Gen
+
+var kmsEncrypt = func(kid string, text string) (string, error) {
+	sess, err := awsSession()
+	if err != nil {
+		Log(err.Error(), level.err)
+		return "", err
+	}
+
+	svc := kms.New(sess)
+
+	params := &kms.EncryptInput{
+		KeyId:     aws.String(kid),
+		Plaintext: []byte(text),
+	}
+
+	resp, err := svc.Encrypt(params)
+	if err != nil {
+		Log(err.Error(), level.err)
+		return "", err
+	}
+
+	return base64.StdEncoding.EncodeToString(resp.CiphertextBlob), nil
+}
+
+var kmsDecrypt = func(cipher string) (string, error) {
+	sess, err := awsSession()
+	if err != nil {
+		Log(err.Error(), level.err)
+		return "", err
+	}
+
+	svc := kms.New(sess)
+
+	ciph, err := base64.StdEncoding.DecodeString(cipher)
+	if err != nil {
+		Log(err.Error(), level.err)
+		return "", err
+	}
+
+	params := &kms.DecryptInput{
+		CiphertextBlob: []byte(ciph),
+	}
+
+	resp, err := svc.Decrypt(params)
+	if err != nil {
+		Log(err.Error(), level.err)
+		return "", err
+	}
+
+	return string(resp.Plaintext), nil
+}
+
+var httpGet = func(url string) (interface{}, error) {
+	Log(fmt.Sprintln("Calling Template Function [GET] with arguments:", url), level.debug)
+	resp, err := Get(url)
+	if err != nil {
+		Log(err.Error(), level.err)
+		return "", err
+	}
+
+	return resp, nil
+}
+
+var s3Read = func(url string) (string, error) {
+	Log(fmt.Sprintln("Calling Template Function [S3Read] with arguments:", url), level.debug)
+	resp, err := S3Read(url)
+	if err != nil {
+		Log(err.Error(), level.err)
+		return "", err
+	}
+	return resp, nil
+}
+
+var lambdaInvoke = func(name string, payload string) (interface{}, error) {
+	f := function{name: name}
+	if payload != "" {
+		f.payload = []byte(payload)
+	}
+
+	sess, err := awsSession()
+	if err != nil {
+		Log(err.Error(), level.err)
+		return "", err
+	}
+
+	if err := f.Invoke(sess); err != nil {
+		Log(err.Error(), level.err)
+		return "", err
+	}
+
+	return f.response, nil
+}
+
+// template function maps
 
 var genTimeFunctions = template.FuncMap{
 	// simple additon function useful for counters in loops
@@ -29,53 +128,28 @@ var genTimeFunctions = template.FuncMap{
 		Log(fmt.Sprintln("Calling Template Function [File] with arguments:", filename), level.debug)
 		p := job.tplFiles[0]
 		f := filepath.Join(filepath.Dir(p), "..", "files", filename)
-		fmt.Println(f)
 		b, err := ioutil.ReadFile(f)
 		if err != nil {
+			Log(err.Error(), level.err)
 			return "", err
 		}
 		return string(b), nil
 	},
 
 	// Get get does an HTTP Get request of the given url and returns the output string
-	"GET": func(url string) (string, error) {
-		Log(fmt.Sprintln("Calling Template Function [GET] with arguments:", url), level.debug)
-		resp, err := Get(url)
-		if err != nil {
-			return "", err
-		}
-
-		return resp, nil
-	},
+	"GET": httpGet,
 
 	// S3Read reads content of file from s3 and returns string contents
-	"s3_read": func(url string) (string, error) {
-		Log(fmt.Sprintln("Calling Template Function [S3Read] with arguments:", url), level.debug)
-		resp, err := S3Read(url)
-		if err != nil {
-			return "", err
-		}
-		return resp, nil
-	},
+	"s3_read": s3Read,
 
 	// invoke - invokes a lambda function
-	"invoke": func(name string, payload string) (string, error) {
-		f := function{name: name}
-		if payload != "" {
-			f.payload = []byte(payload)
-		}
+	"invoke": lambdaInvoke,
 
-		sess, err := awsSession()
-		if err != nil {
-			return "", err
-		}
+	// kms-encrypt - Encrypts PlainText using KMS key
+	"kms_encrypt": kmsEncrypt,
 
-		if err := f.Invoke(sess); err != nil {
-			return "", err
-		}
-
-		return f.response, nil
-	},
+	// kms-decrypt - Descrypts CipherText
+	"kms_decrypt": kmsDecrypt,
 }
 
 var deployTimeFunctions = template.FuncMap{
@@ -85,6 +159,7 @@ var deployTimeFunctions = template.FuncMap{
 		req := strings.Split(target, "::")
 		sess, err := awsSession()
 		if err != nil {
+			Log(err.Error(), level.err)
 			return "", nil
 		}
 
@@ -111,6 +186,7 @@ var deployTimeFunctions = template.FuncMap{
 		req := strings.Split(target, "::")
 		sess, err := awsSession()
 		if err != nil {
+			Log(err.Error(), level.err)
 			return "", nil
 		}
 
@@ -132,42 +208,17 @@ var deployTimeFunctions = template.FuncMap{
 	},
 
 	// Get get does an HTTP Get request of the given url and returns the output string
-	"GET": func(url string) (string, error) {
-		Log(fmt.Sprintln("Calling Template Function [GET] with arguments:", url), level.debug)
-		resp, err := Get(url)
-		if err != nil {
-			return "", err
-		}
-
-		return resp, nil
-	},
+	"GET": httpGet,
 
 	// S3Read reads content of file from s3 and returns string contents
-	"s3_read": func(url string) (string, error) {
-		Log(fmt.Sprintln("Calling Template Function [S3Read] with arguments:", url), level.debug)
-		resp, err := S3Read(url)
-		if err != nil {
-			return "", err
-		}
-		return resp, nil
-	},
+	"s3_read": s3Read,
 
 	// invoke - invokes a lambda function
-	"invoke": func(name string, payload string) (string, error) {
-		f := function{name: name}
-		if payload != "" {
-			f.payload = []byte(payload)
-		}
+	"invoke": lambdaInvoke,
 
-		sess, err := awsSession()
-		if err != nil {
-			return "", err
-		}
+	// kms-encrypt - Encrypts PlainText using KMS key
+	"kms_encrypt": kmsEncrypt,
 
-		if err := f.Invoke(sess); err != nil {
-			return "", err
-		}
-
-		return f.response, nil
-	},
+	// kms-decrypt - Descrypts CipherText
+	"kms_decrypt": kmsDecrypt,
 }
