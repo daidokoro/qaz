@@ -44,6 +44,8 @@ func Log(msg, lvl string) {
 		l.Debugln(msg)
 	case "warn":
 		l.Warnln(msg)
+	case "error":
+		l.Errorln(msg)
 	default:
 		l.Infoln(msg)
 	}
@@ -72,11 +74,7 @@ func init() {
 	invokeCmd.Flags().StringVarP(&region, "region", "r", "eu-west-1", "AWS Region")
 
 	// Define Changes Command
-	changeCmd.AddCommand(
-		create, rm,
-		list, execute,
-		desc,
-	)
+	changeCmd.AddCommand(create, rm, list, execute, desc)
 
 	// Add Config --config common flag
 	for _, cmd := range []interface{}{tailCmd, checkCmd, updateCmd, outputsCmd, statusCmd, terminateCmd, generateCmd, deployCmd} {
