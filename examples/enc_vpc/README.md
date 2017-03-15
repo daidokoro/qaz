@@ -37,7 +37,7 @@ The `vpc.yml` stack template file only has a single line which calls the `kms_de
 
 Running `qaz generate -t template/vpc.yml` will return.
 
-```
+```yaml
 Resources:
   VPC:
     Type: "AWS::EC2::VPC"
