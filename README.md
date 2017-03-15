@@ -255,7 +255,7 @@ Gen-Time functions are functions that are executed when a template is being gene
 Here are some of the Gen-Time functions available... more to come:
 
 
-__file:__
+__file__
 
 A template function for reading values from an external file into a template. For now the file needs to be in the `files` directory in the root of the project folder.
 
@@ -267,7 +267,7 @@ Example:
 Returns the value of myfile.txt under the files directory
 
 
-__s3_read:__
+__s3_read__
 
 As the name suggests, this function reads the content of a given s3 key and writes it to the template.
 
@@ -279,7 +279,7 @@ Example:
 Writes the contents of the object to the template
 
 
-__GET:__
+__GET__
 
 GET implements http GET requests on a given url, and writes the response to the template.
 
@@ -289,7 +289,7 @@ Example
 
 
 
-__invoke:__
+__invoke__
 
 Invokes a Lambda function and stores the returned value with the template.
 
@@ -300,6 +300,32 @@ Example
 ```
 
 _Note:_ JSON passed to Gen-Time functions needs to be wrapped in back-ticks.
+
+
+__kms_encrypt__
+
+Generates an encrypted Cipher Text blob using AWS KMS
+
+Example
+
+```
+{{ kms_encrypt kms.keyid "Text to Encrypt!" }}
+```
+
+
+__kms_decrypt__
+
+Decrypts a given Cipher Text blob using AWS KMS
+
+Example
+
+```
+{{ kms_decrypt "CipherTextBlob" }}
+```
+
+Note: The encryption functionality does require some understanding of AWS KMS. The kms_encrypt creates a Cipher Text Blob from the given text. The Cipher holds metadata that allows it to be decrypted without giving the Key ID. It can however, only be decrypted using an AWS profile with access to the Key ID used to encrypt.
+[See Here](http://docs.aws.amazon.com/kms/latest/developerguide/crypto-intro.html) for more information on KMS CipherTextBlob.
+
 
 
 __Gen-Time functions in Action__
@@ -350,6 +376,8 @@ The following are also accessible as Deploy-Time functions:
  - s3_read
  - invoke
  - GET
+ - kms_decrypt
+ - kms_encrypt
 
 
 __Deploy-Time Functions in action__
