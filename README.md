@@ -60,7 +60,7 @@ qaz requires:
 
 - AWS credentials, you can read about how to set these up [here](http://blogs.aws.amazon.com/security/post/Tx3D6U6WSFGOK2H/A-New-and-Standardized-Way-to-Manage-Credentials-in-the-AWS-SDKs)
 
-## Initalize Project
+## Initialize Project
 
 [![asciicast](https://asciinema.org/a/6d27ij32ev7ztarkfmrq5s0zg.png)](https://asciinema.org/a/6d27ij32ev7ztarkfmrq5s0zg?speed=2)
 
