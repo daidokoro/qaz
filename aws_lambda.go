@@ -25,6 +25,7 @@ func (f *function) Invoke(sess *session.Session) error {
 		params.Payload = f.payload
 	}
 
+	Log(fmt.Sprintln("Calling [Invoke] with parameters:", params), level.debug)
 	resp, err := svc.Invoke(params)
 
 	if err != nil {
