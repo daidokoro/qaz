@@ -1,12 +1,10 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 )
@@ -31,23 +29,6 @@ func updateState(statusMap map[string]string, name string, status string) {
 	mutex.Lock()
 	statusMap[name] = status
 	mutex.Unlock()
-}
-
-// StackOutputs - Returns outputs of given stackname
-func StackOutputs(name string, session *session.Session) (*cloudformation.DescribeStacksOutput, error) {
-
-	svc := cloudformation.New(session)
-	outputParams := &cloudformation.DescribeStacksInput{
-		StackName: aws.String(name),
-	}
-
-	Log(fmt.Sprintln("Calling [DescribeStacks] with parameters:", outputParams), level.debug)
-	outputs, err := svc.DescribeStacks(outputParams)
-	if err != nil {
-		return &cloudformation.DescribeStacksOutput{}, errors.New(fmt.Sprintln("Unable to reach stack", err.Error()))
-	}
-
-	return outputs, nil
 }
 
 // Exports - prints all cloudformation exports
