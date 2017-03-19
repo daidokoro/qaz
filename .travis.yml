@@ -17,4 +17,4 @@ before_install:
 install:
   - go get -t -v github.com/daidokoro/qaz
 
-script: go test -v -cover ./src/...
+script: go test -v -cover
