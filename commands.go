@@ -474,6 +474,9 @@ var invokeCmd = &cobra.Command{
 		}
 
 		if err := f.Invoke(sess); err != nil {
+			if strings.Contains(err.Error(), "Unhandled") {
+				handleError(fmt.Errorf("Unhandled Exception: Potential Issue with Lambda Function Logic for %s...\n", f.name))
+			}
 			handleError(err)
 			return
 		}

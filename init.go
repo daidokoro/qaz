@@ -72,6 +72,7 @@ func init() {
 
 	// Define Invoke Flags
 	invokeCmd.Flags().StringVarP(&region, "region", "r", "eu-west-1", "AWS Region")
+	invokeCmd.Flags().StringVarP(&job.funcEvent, "event", "e", "", "JSON Event data for AWS Lambda invoke")
 
 	// Define Changes Command
 	changeCmd.AddCommand(create, rm, list, execute, desc)
