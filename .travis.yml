@@ -10,9 +10,9 @@ matrix:
     - go: tip
 
 before_install:
-- eval export AWS_ACCESS_KEY_ID=\$${TRAVIS_BRANCH}_aws_access_key_id
-- eval export AWS_SECRET_ACCESS_KEY=\$${TRAVIS_BRANCH}_aws_secret_access_key
-- eval export AWS_REGION=\$${TRAVIS_BRANCH}_aws_region
+- eval export AWS_ACCESS_KEY_ID=\$master_aws_access_key_id
+- eval export AWS_SECRET_ACCESS_KEY=\$master_aws_secret_access_key
+- eval export AWS_REGION=\$master_aws_region
 
 install:
   - go get -t -v github.com/daidokoro/qaz
