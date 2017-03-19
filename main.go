@@ -6,7 +6,7 @@ import (
 )
 
 // Version
-const version = "v0.37.9-alpha"
+const version = "v0.37.10-alpha"
 
 func main() {
 	if err := rootCmd.Execute(); err != nil {
