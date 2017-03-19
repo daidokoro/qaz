@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 
@@ -30,7 +29,7 @@ func awsSession() (*session.Session, error) {
 	})
 
 	if err != nil {
-		return &session.Session{}, errors.New(fmt.Sprintln("Failed establishing AWS session ", err))
+		return sess, err
 	}
 
 	return sess, nil
