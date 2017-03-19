@@ -362,6 +362,14 @@ var outputsCmd = &cobra.Command{
 				if err := stacks[s].outputs(sess); err != nil {
 					handleError(err)
 				}
+
+				for _, i := range stacks[s].output.Stacks {
+					fmt.Printf("\n"+"[%s]"+"\n", *i.StackName)
+					for _, o := range i.Outputs {
+						fmt.Printf("  Description: %s\n  %s: %s\n\n", *o.Description, colorString(*o.OutputKey, "magenta"), *o.OutputValue)
+					}
+				}
+
 				wg.Done()
 			}(s)
 		}

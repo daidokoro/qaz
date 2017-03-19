@@ -396,13 +396,6 @@ func (s *stack) outputs(session *session.Session) error {
 	// set stack outputs property
 	s.output = outputs
 
-	for _, i := range outputs.Stacks {
-		fmt.Printf("\n"+"[%s]"+"\n", *i.StackName)
-		for _, o := range i.Outputs {
-			fmt.Printf("  Description: %s\n  %s: %s\n\n", *o.Description, colorString(*o.OutputKey, "magenta"), *o.OutputValue)
-		}
-	}
-
 	return nil
 }
 
