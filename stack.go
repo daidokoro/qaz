@@ -23,6 +23,7 @@ type stack struct {
 	dependents   []interface{}
 	stackoutputs *cloudformation.DescribeStacksOutput
 	parameters   []*cloudformation.Parameter
+	output       *cloudformation.DescribeStacksOutput
 }
 
 // setStackName - sets the stackname with struct
@@ -375,6 +376,32 @@ func (s *stack) check(session *session.Session) error {
 		colorString("Valid!", "green"),
 		resp.GoString(),
 	)
+
+	return nil
+}
+
+func (s *stack) outputs(session *session.Session) error {
+
+	svc := cloudformation.New(session)
+	outputParams := &cloudformation.DescribeStacksInput{
+		StackName: aws.String(s.stackname),
+	}
+
+	Log(fmt.Sprintln("Calling [DescribeStacks] with parameters:", outputParams), level.debug)
+	outputs, err := svc.DescribeStacks(outputParams)
+	if err != nil {
+		return errors.New(fmt.Sprintln("Unable to reach stack", err.Error()))
+	}
+
+	// set stack outputs property
+	s.output = outputs
+
+	for _, i := range outputs.Stacks {
+		fmt.Printf("\n"+"[%s]"+"\n", *i.StackName)
+		for _, o := range i.Outputs {
+			fmt.Printf("  Description: %s\n  %s: %s\n\n", *o.Description, colorString(*o.OutputKey, "magenta"), *o.OutputValue)
+		}
+	}
 
 	return nil
 }

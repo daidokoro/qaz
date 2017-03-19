@@ -163,14 +163,14 @@ var deployTimeFunctions = template.FuncMap{
 			return "", nil
 		}
 
-		stkname := strings.Join([]string{project, req[0]}, "-")
-		outputs, err := StackOutputs(stkname, sess)
+		s := stack{name: req[0]}
+		s.setStackName()
 
-		if err != nil {
+		if err := s.outputs(sess); err != nil {
 			return "", err
 		}
 
-		for _, i := range outputs.Stacks {
+		for _, i := range s.output.Stacks {
 			for _, o := range i.Outputs {
 				if *o.OutputKey == req[1] {
 					return *o.OutputValue, nil
@@ -190,13 +190,13 @@ var deployTimeFunctions = template.FuncMap{
 			return "", nil
 		}
 
-		outputs, err := StackOutputs(req[0], sess)
+		s := stack{stackname: req[0]}
 
-		if err != nil {
+		if err := s.outputs(sess); err != nil {
 			return "", err
 		}
 
-		for _, i := range outputs.Stacks {
+		for _, i := range s.output.Stacks {
 			for _, o := range i.Outputs {
 				if *o.OutputKey == req[1] {
 					return *o.OutputValue, nil
