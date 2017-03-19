@@ -15,6 +15,6 @@ before_install:
 - eval export AWS_REGION=\$${TRAVIS_BRANCH}_aws_region
 
 install:
-  - go get -t ./...
+  - go get -t -v github.com/daidokoro/qaz
 
 script: go test -v -cover ./src/...
