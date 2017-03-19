@@ -32,6 +32,8 @@ Qaz emphasizes minimal abstraction from the underlying AWS Cloudformation Platfo
 
 - *Decoupled* stack management. Stacks can be launched individually from different locations and build consistently according to the dependency chain as long as the same configuration file is read.
 
+- *Encryption* & *Decryption* of template values & deployment of encrypted templates using AWS KMS.
+
 
 ## Installation
 
@@ -58,9 +60,9 @@ qaz requires:
 
 - AWS credentials, you can read about how to set these up [here](http://blogs.aws.amazon.com/security/post/Tx3D6U6WSFGOK2H/A-New-and-Standardized-Way-to-Manage-Credentials-in-the-AWS-SDKs)
 
-## Initalize Project
+## Initialize Project
 
-[![asciicast](https://asciinema.org/a/6d27ij32ev7ztarkfmrq5s0zg.png)](https://asciinema.org/a/6d27ij32ev7ztarkfmrq5s0zg?speed=1.5)
+[![asciicast](https://asciinema.org/a/6d27ij32ev7ztarkfmrq5s0zg.png)](https://asciinema.org/a/6d27ij32ev7ztarkfmrq5s0zg?speed=2)
 
 ## How It Works!
 
@@ -194,7 +196,7 @@ __Templating in Qaz__
 
 We'll run through some basics to get started.
 
-[![asciicast](https://asciinema.org/a/c1ep21ub0o0ppeh23ifvzu9fa.png)](https://asciinema.org/a/c1ep21ub0o0ppeh23ifvzu9fa?speed=1.5)
+[![asciicast](https://asciinema.org/a/c1ep21ub0o0ppeh23ifvzu9fa.png)](https://asciinema.org/a/c1ep21ub0o0ppeh23ifvzu9fa?speed=2)
 
 
 #### Deploying Stacks
@@ -213,7 +215,7 @@ $ qaz deploy -c s3://mybucket/super_config.yml -t vpc::http://someurl/vpc_dev.ym
 
 __Deploying via S3__
 
-[![asciicast](https://asciinema.org/a/64r2bgjbtdf9uzrym6dfc35dn.png)](https://asciinema.org/a/64r2bgjbtdf9uzrym6dfc35dn?speed=1.5)
+[![asciicast](https://asciinema.org/a/64r2bgjbtdf9uzrym6dfc35dn.png)](https://asciinema.org/a/64r2bgjbtdf9uzrym6dfc35dn?speed=2)
 
 The stack name must be specified using the syntax above. This tells Qaz what values to associate with this stack.
 
@@ -255,7 +257,7 @@ Gen-Time functions are functions that are executed when a template is being gene
 Here are some of the Gen-Time functions available... more to come:
 
 
-__file:__
+__file__
 
 A template function for reading values from an external file into a template. For now the file needs to be in the `files` directory in the root of the project folder.
 
@@ -267,7 +269,7 @@ Example:
 Returns the value of myfile.txt under the files directory
 
 
-__s3_read:__
+__s3_read__
 
 As the name suggests, this function reads the content of a given s3 key and writes it to the template.
 
@@ -279,7 +281,7 @@ Example:
 Writes the contents of the object to the template
 
 
-__GET:__
+__GET__
 
 GET implements http GET requests on a given url, and writes the response to the template.
 
@@ -289,7 +291,7 @@ Example
 
 
 
-__invoke:__
+__invoke__
 
 Invokes a Lambda function and stores the returned value with the template.
 
@@ -302,9 +304,36 @@ Example
 _Note:_ JSON passed to Gen-Time functions needs to be wrapped in back-ticks.
 
 
+__kms_encrypt__
+
+Generates an encrypted Cipher Text blob using AWS KMS
+
+Example
+
+```
+{{ kms_encrypt kms.keyid "Text to Encrypt!" }}
+```
+
+
+__kms_decrypt__
+
+Decrypts a given Cipher Text blob using AWS KMS
+
+Example
+
+```
+{{ kms_decrypt "CipherTextBlob" }}
+```
+
+_Note_: The encryption functionality does require some understanding of AWS KMS. The kms_encrypt creates a Cipher Text Blob from the given text. The Cipher holds metadata that allows it to be decrypted without giving the Key ID. It can however, only be decrypted using an AWS profile with access to the Key ID used to encrypt.
+
+[See Here](http://docs.aws.amazon.com/kms/latest/developerguide/crypto-intro.html) for more information on KMS CipherTextBlob and Encryption terminology.
+
+
+
 __Gen-Time functions in Action__
 
-[![asciicast](https://asciinema.org/a/9ajsz8rs5tfqs5aie0lzalye1.png)](https://asciinema.org/a/9ajsz8rs5tfqs5aie0lzalye1?speed=1.5)
+[![asciicast](https://asciinema.org/a/9ajsz8rs5tfqs5aie0lzalye1.png)](https://asciinema.org/a/9ajsz8rs5tfqs5aie0lzalye1?speed=2)
 
 
 --
@@ -314,7 +343,9 @@ __Deploy-Time Template Functions__
 Deploy-Time functions are run just before the template is pushed to AWS Cloudformation. These are handy for:
 - Fetching values from dependency stacks
 - Making API calls to pull values from resources built by preceding stacks
-- Triggering events via an API call and adjusting the template based on the response.
+- Triggering events via an API call and adjusting the template based on the response
+- Updating Values in a decrypted template
+
 
 Here are some of the Deploy-Time functions available... more to come:
 
@@ -346,22 +377,23 @@ __Important!:__ When using Deploy-Time functions the Template delimiters are dif
 --
 
 The following are also accessible as Deploy-Time functions:
- - file
  - s3_read
  - invoke
  - GET
+ - kms_decrypt
+ - kms_encrypt
 
 
 __Deploy-Time Functions in action__
 
-[![asciicast](https://asciinema.org/a/0majlnrc679p2pkzuacefw9x5.png)](https://asciinema.org/a/0majlnrc679p2pkzuacefw9x5?speed=1.5)
+[![asciicast](https://asciinema.org/a/0majlnrc679p2pkzuacefw9x5.png)](https://asciinema.org/a/0majlnrc679p2pkzuacefw9x5?speed=2)
 
 --
 
 
 __Deploy/Gen-Time Function - Lambda Invoke__
 
-[![asciicast](https://asciinema.org/a/3ypatju41o90332nl31dnnoof.png)](https://asciinema.org/a/3ypatju41o90332nl31dnnoof?speed=1.5)
+[![asciicast](https://asciinema.org/a/3ypatju41o90332nl31dnnoof.png)](https://asciinema.org/a/3ypatju41o90332nl31dnnoof?speed=2)
 
 --
 
@@ -369,36 +401,38 @@ See `examples` folder for more examples of usage. More examples to come.
 
 ```
 $ qaz
-
+                   
   __ _   __ _  ____
  / _` | / _` ||_  /
-| (_| || (_| | / /
-\__, | \__,_|/___|
-   |_|            
+| (_| || (_| | / / 
+ \__, | \__,_|/___|
+    |_|            
 
 --> Shut up & deploy my templates...!
 
 Usage:
-qaz [flags]
-qaz [command]
+  qaz [flags]
+  qaz [command]
 
 Available Commands:
-check       Validates Cloudformation Templates
-deploy      Deploys stack(s) to AWS
-exports     Prints stack exports
-generate    Generates template from configuration values
-init        Creates a basic qaz project
-invoke      Invoke AWS Lambda Functions
-outputs     Prints stack outputs
-status      Prints status of deployed/un-deployed stacks
-tail        Tail Real-Time AWS Cloudformation events
-terminate   Terminates stacks
-update      Updates a given stack
+  change      Change-Set management for AWS Stacks
+  check       Validates Cloudformation Templates
+  deploy      Deploys stack(s) to AWS
+  exports     Prints stack exports
+  generate    Generates template from configuration values
+  help        Help about any command
+  init        Creates a basic qaz project
+  invoke      Invoke AWS Lambda Functions
+  outputs     Prints stack outputs
+  status      Prints status of deployed/un-deployed stacks
+  tail        Tail Real-Time AWS Cloudformation events
+  terminate   Terminates stacks
+  update      Updates a given stack
 
 Flags:
---debug            Run in debug mode...
--p, --profile string   configured AWS profile (default "default")
---version          print current/running version
+      --debug            Run in debug mode...
+  -p, --profile string   configured aws profile (default "default")
+      --version          print current/running version
 
 Use "qaz [command] --help" for more information about a command.
 
