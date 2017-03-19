@@ -82,7 +82,6 @@ func getSource(s string) (string, string, error) {
 
 	name := filepath.Base(strings.Replace(s, filepath.Ext(s), "", -1))
 	return name, s, nil
-
 }
 
 // configReader parses the config YAML file with Viper
@@ -187,22 +186,4 @@ func genTimeParser(source string) (string, error) {
 	var doc bytes.Buffer
 	t.Execute(&doc, cfvars)
 	return doc.String(), nil
-}
-
-// deployTimeParser - Parses templates during deployment to resolve specfic Dependency functions like stackout...
-func (s *stack) deployTimeParser() error {
-
-	// Create template
-	t, err := template.New("deploy-template").Delims("<<", ">>").Funcs(deployTimeFunctions).Parse(s.template)
-	if err != nil {
-		return err
-	}
-
-	// so that we can write to string
-	var doc bytes.Buffer
-	t.Execute(&doc, cfvars)
-	s.template = doc.String()
-	Log(fmt.Sprintf("Deploy Time Template Generate:\n%s", s.template), level.debug)
-
-	return nil
 }

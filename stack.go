@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -373,6 +375,24 @@ func (s *stack) check(session *session.Session) error {
 		colorString("Valid!", "green"),
 		resp.GoString(),
 	)
+
+	return nil
+}
+
+// deployTimeParser - Parses templates during deployment to resolve specfic Dependency functions like stackout...
+func (s *stack) deployTimeParser() error {
+
+	// Create template
+	t, err := template.New("deploy-template").Delims("<<", ">>").Funcs(deployTimeFunctions).Parse(s.template)
+	if err != nil {
+		return err
+	}
+
+	// so that we can write to string
+	var doc bytes.Buffer
+	t.Execute(&doc, cfvars)
+	s.template = doc.String()
+	Log(fmt.Sprintf("Deploy Time Template Generate:\n%s", s.template), level.debug)
 
 	return nil
 }
