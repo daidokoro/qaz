@@ -3,7 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
-	"qaz/commands"
+
+	"github.com/daidokoro/qaz/commands"
 )
 
 func main() {
