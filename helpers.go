@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -57,6 +58,11 @@ stacks:
 // colorMap - Used to map a particular color to a cf status phrase - returns lowercase strings in color.
 func colorMap(s string) string {
 
+	// If Windows, disable colorS
+	if runtime.GOOS == "windows" {
+		return s
+	}
+
 	v := strings.Split(s, "_")[len(strings.Split(s, "_"))-1]
 
 	var result string
@@ -79,6 +85,12 @@ func colorMap(s string) string {
 
 // colorString - Returns colored string
 func colorString(s string, color string) string {
+
+	// If Windows, disable colorS
+	if runtime.GOOS == "windows" {
+		return s
+	}
+
 	var result string
 	switch strings.ToLower(color) {
 	case "green":
