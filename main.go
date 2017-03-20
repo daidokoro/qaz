@@ -3,13 +3,11 @@ package main
 import (
 	"fmt"
 	"os"
+	"qaz/commands"
 )
 
-// Version
-const version = "v0.37.10-alpha"
-
 func main() {
-	if err := rootCmd.Execute(); err != nil {
+	if err := commands.RootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
 	}

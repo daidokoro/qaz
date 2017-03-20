@@ -1,4 +1,4 @@
-package main
+package commands
 
 import (
 	"fmt"
@@ -33,8 +33,8 @@ var job = struct {
 // Wait Group for handling goroutines
 var wg sync.WaitGroup
 
-// root command (calls all other commands)
-var rootCmd = &cobra.Command{
+// RootCmd command (calls all other commands)
+var RootCmd = &cobra.Command{
 	Use:   "qaz",
 	Short: fmt.Sprintf("%s\n--> Shut up & deploy my templates...!", colorString(banner.PrintS("qaz"), "magenta")),
 	Run: func(cmd *cobra.Command, args []string) {

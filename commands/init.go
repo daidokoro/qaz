@@ -1,4 +1,4 @@
-package main
+package commands
 
 // Init & Logging sit here
 
@@ -67,9 +67,9 @@ func init() {
 	exportsCmd.Flags().StringVarP(&region, "region", "r", "eu-west-1", "AWS Region")
 
 	// Define Root Flags
-	rootCmd.Flags().BoolVarP(&job.version, "version", "", false, "print current/running version")
-	rootCmd.PersistentFlags().StringVarP(&job.profile, "profile", "p", "default", "configured aws profile")
-	rootCmd.PersistentFlags().BoolVarP(&job.debug, "debug", "", false, "Run in debug mode...")
+	RootCmd.Flags().BoolVarP(&job.version, "version", "", false, "print current/running version")
+	RootCmd.PersistentFlags().StringVarP(&job.profile, "profile", "p", "default", "configured aws profile")
+	RootCmd.PersistentFlags().BoolVarP(&job.debug, "debug", "", false, "Run in debug mode...")
 
 	// Define Invoke Flags
 	invokeCmd.Flags().StringVarP(&region, "region", "r", "eu-west-1", "AWS Region")
@@ -96,7 +96,7 @@ func init() {
 	create.Flags().StringVarP(&job.tplFile, "template", "t", "template", "path to template file Or stack::url")
 	changeCmd.Flags().StringVarP(&job.cfgFile, "config", "c", "config.yml", "path to config file")
 
-	rootCmd.AddCommand(
+	RootCmd.AddCommand(
 		generateCmd, deployCmd, terminateCmd,
 		statusCmd, outputsCmd, initCmd,
 		updateCmd, checkCmd, exportsCmd,
