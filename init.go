@@ -55,6 +55,7 @@ func init() {
 
 	// Define Deploy Flags
 	deployCmd.Flags().StringArrayVarP(&job.tplFiles, "template", "t", []string{`./templates/*`}, "path to template file(s) Or stack::url")
+	deployCmd.Flags().BoolVarP(&job.rollback, "rollback", "R", false, "Set Stack to rollback on deployment failures")
 
 	// Define Terminate Flags
 	terminateCmd.Flags().BoolVarP(&job.terminateAll, "all", "A", false, "terminate all stacks")

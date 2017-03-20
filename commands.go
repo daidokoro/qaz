@@ -27,6 +27,7 @@ var job = struct {
 	funcEvent    string
 	changeName   string
 	stackName    string
+	rollback     bool
 }{}
 
 // Wait Group for handling goroutines

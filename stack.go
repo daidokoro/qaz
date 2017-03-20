@@ -44,7 +44,7 @@ func (s *stack) deploy(session *session.Session) error {
 
 	createParams := &cloudformation.CreateStackInput{
 		StackName:       aws.String(s.stackname),
-		DisableRollback: aws.Bool(true), // no rollback by default
+		DisableRollback: aws.Bool(!job.rollback),
 		TemplateBody:    aws.String(s.template),
 	}
 
