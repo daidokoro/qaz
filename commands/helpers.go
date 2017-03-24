@@ -169,10 +169,10 @@ func all(a []string, s string) bool {
 }
 
 // stringIn - returns true if string in array
-func stringIn(s string, a []interface{}) bool {
+func stringIn(s string, a []string) bool {
 	Log(fmt.Sprintf("Checking If [%s] is in: %s", s, a), level.debug)
 	for _, str := range a {
-		if str.(string) == s {
+		if str == s {
 			return true
 		}
 	}

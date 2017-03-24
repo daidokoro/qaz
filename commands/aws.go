@@ -19,7 +19,7 @@ func awsSession() (*session.Session, error) {
 	once.Do(func() {
 		//define session options
 		options := session.Options{
-			Config:            aws.Config{Region: aws.String(region)},
+			Config:            aws.Config{Region: aws.String(config.Region)},
 			Profile:           job.profile,
 			SharedConfigState: session.SharedConfigEnable,
 		}

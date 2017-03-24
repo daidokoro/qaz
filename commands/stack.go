@@ -19,16 +19,17 @@ type stack struct {
 	name         string
 	stackname    string
 	template     string
-	dependsOn    []interface{}
+	dependsOn    []string
 	dependents   []interface{}
 	stackoutputs *cloudformation.DescribeStacksOutput
 	parameters   []*cloudformation.Parameter
 	output       *cloudformation.DescribeStacksOutput
+	policy       string
 }
 
 // setStackName - sets the stackname with struct
 func (s *stack) setStackName() {
-	s.stackname = fmt.Sprintf("%s-%s", project, s.name)
+	s.stackname = fmt.Sprintf("%s-%s", config.Project, s.name)
 }
 
 func (s *stack) deploy(session *session.Session) error {
@@ -410,7 +411,7 @@ func (s *stack) deployTimeParser() error {
 
 	// so that we can write to string
 	var doc bytes.Buffer
-	t.Execute(&doc, cfvars)
+	t.Execute(&doc, config.vars())
 	s.template = doc.String()
 	Log(fmt.Sprintf("Deploy Time Template Generate:\n%s", s.template), level.debug)
 

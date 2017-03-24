@@ -106,7 +106,7 @@ func DeployHandler() {
 				depts := []string{}
 				for _, dept := range s.dependsOn {
 					// Dependency wait
-					dp := &stack{name: dept.(string)}
+					dp := &stack{name: dept}
 					dp.setStackName()
 					chk, _ := dp.state(sess)
 
@@ -120,7 +120,7 @@ func DeployHandler() {
 					}
 
 					mutex.Lock()
-					depts = append(depts, status[dept.(string)])
+					depts = append(depts, status[dept])
 					mutex.Unlock()
 				}
 
