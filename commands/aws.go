@@ -17,9 +17,18 @@ func awsSession() (*session.Session, error) {
 
 	// Using sync.Once to ensure session is created only once.
 	once.Do(func() {
+		// set region
+		var r string
+		switch config.Region {
+		case "":
+			r = region
+		default:
+			r = config.Region
+		}
+
 		//define session options
 		options := session.Options{
-			Config:            aws.Config{Region: aws.String(config.Region)},
+			Config:            aws.Config{Region: &r},
 			Profile:           job.profile,
 			SharedConfigState: session.SharedConfigEnable,
 		}
