@@ -517,3 +517,51 @@ var tailCmd = &cobra.Command{
 		wg.Wait() // Will probably wait forevery
 	},
 }
+
+var policyCmd = &cobra.Command{
+	Use:     "set-policy",
+	Short:   "Set Stack Policies based on configured value",
+	Example: "qaz set-policy <stack name>",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		job.request = "set-policy"
+
+		if len(args) == 0 {
+			handleError(fmt.Errorf("Please specify stack name..."))
+			return
+		}
+
+		err := configReader(job.cfgFile)
+		if err != nil {
+			handleError(err)
+			return
+		}
+
+		sess, err := awsSession()
+		if err != nil {
+			handleError(err)
+		}
+
+		for _, s := range args {
+			wg.Add(1)
+			go func(s string, sess *session.Session) {
+
+				if _, ok := stacks[s]; !ok {
+					handleError(fmt.Errorf("Stack [%s] not found in config", s))
+
+				} else {
+					if err := stacks[s].stackPolicy(sess); err != nil {
+						handleError(err)
+					}
+				}
+
+				wg.Done()
+				return
+
+			}(s, sess)
+		}
+
+		wg.Wait()
+
+	},
+}
