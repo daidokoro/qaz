@@ -137,7 +137,7 @@ __parameters__:
 
 Stack parameters to pass when deploying can be listed under this keyword. Read more on AWS Cloudformation Stack Parameters [See Here](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/parameters-section-structure.html)
 
-Example:
+_Example:_
 ```yaml
 stackname:
   parameters:
@@ -148,7 +148,7 @@ __depends_on__:
 
 Use this keyword to define a dependency chain by listing stack dependencies. With this keyword, you can explicitly say one stack relies on another or several others.
 
-Example:
+_Example_:
 ```yaml
 elb-stack:
   depends_on:
@@ -156,11 +156,23 @@ elb-stack:
     - securitygroup-stack
 ```
 
+__policy__:
+
+The _policy_ keyword is used to set the stack update policy when deploying a stack. If this value is empty or not set, then the stack is created without an update policy.
+
+_Example:_
+```yaml
+stacks:
+  vpc:
+    # stack policy - url or raw json can be specified here
+    policy: https://s3-eu-west-1.amazonaws.com/daidokoro-dev/policies/stack.json
+```
+
 __cf__:
 
 All Cloudformation values are defined under this keyword. There is no limitation on how values should be structured as long as they adhere to YAML syntax.
 
-Example:
+_Example:_
 ```yaml
 stacks:
   vpc-stack:
@@ -174,12 +186,13 @@ __stacks__:
 
 All Cloudformation Stacks are defined under this value, keywords such as __depends_on__, __parameters__ & __cf__ will only work under stacks followed by the stackname.
 
-Example:
+_Example:_
 ```yaml
 stacks:
   vpc:
     depends_on:
     paramters:
+    policy:
     cf:
 ```
 
@@ -261,7 +274,7 @@ __file__
 
 A template function for reading values from an external file into a template. For now the file needs to be in the `files` directory in the root of the project folder.
 
-Example:
+_Example:_
 
 
 `{{ "myfile.txt" | file }}` _or_ `{{ file "myfile.txt" }}`
