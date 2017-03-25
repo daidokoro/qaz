@@ -437,8 +437,8 @@ Available Commands:
   init        Creates a basic qaz project
   invoke      Invoke AWS Lambda Functions
   outputs     Prints stack outputs
+  set-policy  Set Stack Policies based on configured value
   status      Prints status of deployed/un-deployed stacks
-  tail        Tail Real-Time AWS Cloudformation events
   terminate   Terminates stacks
   update      Updates a given stack
 
@@ -448,6 +448,7 @@ Flags:
       --version          print current/running version
 
 Use "qaz [command] --help" for more information about a command.
+
 
 ```
 
