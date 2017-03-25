@@ -16,7 +16,6 @@ var (
 	project   string
 	stackname string
 	stacks    map[string]*stack
-	// cfvars    map[string]interface{}
 )
 
 // used for stack keyword referencing
