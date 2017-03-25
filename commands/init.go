@@ -79,7 +79,7 @@ func init() {
 	changeCmd.AddCommand(create, rm, list, execute, desc)
 
 	// Add Config --config common flag
-	for _, cmd := range []interface{}{tailCmd, checkCmd, updateCmd, outputsCmd, statusCmd, terminateCmd, generateCmd, deployCmd} {
+	for _, cmd := range []interface{}{tailCmd, checkCmd, updateCmd, outputsCmd, statusCmd, terminateCmd, generateCmd, deployCmd, policyCmd} {
 		cmd.(*cobra.Command).Flags().StringVarP(&job.cfgFile, "config", "c", "config.yml", "path to config file")
 	}
 
@@ -101,6 +101,7 @@ func init() {
 		statusCmd, outputsCmd, initCmd,
 		updateCmd, checkCmd, exportsCmd,
 		invokeCmd, tailCmd, changeCmd,
+		policyCmd,
 	)
 
 	// Setup logging
