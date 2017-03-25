@@ -49,6 +49,14 @@ func (s *stack) deploy(session *session.Session) error {
 		TemplateBody:    aws.String(s.template),
 	}
 
+	if s.policy != "" {
+		if strings.HasPrefix(s.policy, "http://") || strings.HasPrefix(s.policy, "https://") {
+			createParams.StackPolicyURL = &s.policy
+		} else {
+			createParams.StackPolicyBody = &s.policy
+		}
+	}
+
 	// NOTE: Add parameters flag here if params set
 	if len(s.parameters) > 0 {
 		createParams.Parameters = s.parameters
@@ -396,6 +404,36 @@ func (s *stack) outputs(session *session.Session) error {
 
 	// set stack outputs property
 	s.output = outputs
+
+	return nil
+}
+
+func (s *stack) stackPolicy(session *session.Session) error {
+
+	if s.policy == "" {
+		return fmt.Errorf("Empty Stack Policy value detected...")
+	}
+
+	svc := cloudformation.New(session)
+
+	params := &cloudformation.SetStackPolicyInput{
+		StackName: &s.stackname,
+	}
+
+	// Check if source is a URL
+	if strings.HasPrefix(s.policy, `http://`) || strings.HasPrefix(s.policy, `https://`) {
+		params.StackPolicyURL = &s.policy
+	} else {
+		params.StackPolicyBody = &s.policy
+	}
+
+	Log(fmt.Sprintln("Calling SetStackPolicy with params: ", params), level.debug)
+	resp, err := svc.SetStackPolicy(params)
+	if err != nil {
+		return err
+	}
+
+	Log(fmt.Sprintf("Stack Policy applied: [%s] - %s", s.stackname, resp.GoString()), level.info)
 
 	return nil
 }
