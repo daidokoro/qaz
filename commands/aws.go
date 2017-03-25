@@ -9,7 +9,7 @@ import (
 )
 
 // Declaring single global session.
-var sess *session.Session
+var conn *session.Session
 var once sync.Once
 
 func awsSession() (*session.Session, error) {
@@ -25,12 +25,12 @@ func awsSession() (*session.Session, error) {
 		}
 
 		Log(fmt.Sprintf("Creating AWS Session with options: Regioin: %s, Profile: %s ", region, job.profile), level.debug)
-		sess, err = session.NewSessionWithOptions(options)
+		conn, err = session.NewSessionWithOptions(options)
 	})
 
 	if err != nil {
-		return sess, err
+		return conn, err
 	}
 
-	return sess, nil
+	return conn, nil
 }
