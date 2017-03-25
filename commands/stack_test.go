@@ -122,9 +122,9 @@ func TestDeploy(t *testing.T) {
 	}
 
 	// Test Set Stack Policy
-	if err := teststack.stackPolicy(sess); err != nil {
-		t.Errorf("%s - [%s]", err, teststack.policy)
-	}
+	// if err := teststack.stackPolicy(sess); err != nil {
+	// 	t.Errorf("%s - [%s]", err, teststack.policy)
+	// }
 
 	// Test Terminate Stack
 	if err := teststack.terminate(sess); err != nil {
