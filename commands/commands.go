@@ -487,37 +487,6 @@ var invokeCmd = &cobra.Command{
 	},
 }
 
-var tailCmd = &cobra.Command{
-	Use:     "tail",
-	Short:   "Tail Real-Time AWS Cloudformation events",
-	Example: "qaz tail -r eu-west-1",
-	Run: func(cmd *cobra.Command, args []string) {
-		job.request = "tail"
-
-		err := configReader(job.cfgFile)
-		if err != nil {
-			handleError(err)
-			return
-		}
-
-		sess, err := awsSession()
-		if err != nil {
-			handleError(err)
-		}
-
-		// Tail each stack on it's own goroutine.
-		for _, s := range stacks {
-			wg.Add(1)
-			go func(s *stack, sess *session.Session) {
-				verbose(s.stackname, "", sess)
-				wg.Done()
-			}(s, sess)
-		}
-
-		wg.Wait() // Will probably wait forevery
-	},
-}
-
 var policyCmd = &cobra.Command{
 	Use:     "set-policy",
 	Short:   "Set Stack Policies based on configured value",
