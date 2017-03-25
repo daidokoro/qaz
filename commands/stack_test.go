@@ -84,6 +84,7 @@ func TestStack(t *testing.T) {
 			t.Error(err)
 		}
 	}
+
 }
 
 // TestDeploy - test deploy and terminate stack.
@@ -118,6 +119,11 @@ func TestDeploy(t *testing.T) {
 	// Test Deploy Stack
 	if err := teststack.deploy(sess); err != nil {
 		t.Error(err)
+	}
+
+	// Test Set Stack Policy
+	if err := teststack.stackPolicy(sess); err != nil {
+		t.Errorf("%s - [%s]", err, teststack.policy)
 	}
 
 	// Test Terminate Stack
