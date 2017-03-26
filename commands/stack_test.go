@@ -125,6 +125,7 @@ func TestDeploy(t *testing.T) {
 	}
 
 	// Test Set Stack Policy
+	teststack.policy = stacks[teststack.name].policy
 	if err := teststack.stackPolicy(sess); err != nil {
 		t.Errorf("%s - [%s]", err, teststack.policy)
 	}
