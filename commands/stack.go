@@ -40,7 +40,7 @@ func (s *stack) deploy(session *session.Session) error {
 	}
 
 	Log(fmt.Sprintf("Updated Template:\n%s", s.template), level.debug)
-
+	done := make(chan bool)
 	svc := cloudformation.New(session)
 
 	createParams := &cloudformation.CreateStackInput{
@@ -62,7 +62,7 @@ func (s *stack) deploy(session *session.Session) error {
 		createParams.Parameters = s.parameters
 	}
 
-	// If IAM is bening touched, add Capabilities
+	// If IAM is being touched, add Capabilities
 	if strings.Contains(s.template, "AWS::IAM") {
 		createParams.Capabilities = []*string{
 			aws.String(cloudformation.CapabilityCapabilityIam),
@@ -76,7 +76,7 @@ func (s *stack) deploy(session *session.Session) error {
 
 	}
 
-	go verbose(s.stackname, "CREATE", session)
+	go s.tail("CREATE", done, session)
 	describeStacksInput := &cloudformation.DescribeStacksInput{
 		StackName: aws.String(s.stackname),
 	}
@@ -88,21 +88,29 @@ func (s *stack) deploy(session *session.Session) error {
 
 	Log(fmt.Sprintf("Deployment successful: [%s]", s.stackname), "info")
 
+	done <- true
 	return nil
 }
 
 func (s *stack) update(session *session.Session) error {
+	done := make(chan bool)
 	svc := cloudformation.New(session)
-	capability := "CAPABILITY_IAM"
 	updateParams := &cloudformation.UpdateStackInput{
 		StackName:    aws.String(s.stackname),
 		TemplateBody: aws.String(s.template),
-		Capabilities: []*string{&capability},
 	}
 
 	// NOTE: Add parameters flag here if params set
 	if len(s.parameters) > 0 {
 		updateParams.Parameters = s.parameters
+	}
+
+	// If IAM is being touched, add Capabilities
+	if strings.Contains(s.template, "AWS::IAM") {
+		updateParams.Capabilities = []*string{
+			aws.String(cloudformation.CapabilityCapabilityIam),
+			aws.String(cloudformation.CapabilityCapabilityNamedIam),
+		}
 	}
 
 	if s.stackExists(session) {
@@ -115,7 +123,7 @@ func (s *stack) update(session *session.Session) error {
 			return errors.New(fmt.Sprintln("Update failed: ", err))
 		}
 
-		go verbose(s.stackname, "UPDATE", session)
+		go s.tail("UPDATE", done, session)
 
 		describeStacksInput := &cloudformation.DescribeStacksInput{
 			StackName: aws.String(s.stackname),
@@ -128,10 +136,18 @@ func (s *stack) update(session *session.Session) error {
 		Log(fmt.Sprintf("Stack update successful: [%s]", s.stackname), "info")
 
 	}
+	done <- true
 	return nil
 }
 
 func (s *stack) terminate(session *session.Session) error {
+
+	if !s.stackExists(session) {
+		Log(fmt.Sprintf("%s: does not exist...", s.name), level.info)
+		return nil
+	}
+
+	done := make(chan bool)
 	svc := cloudformation.New(session)
 
 	params := &cloudformation.DeleteStackInput{
@@ -141,22 +157,35 @@ func (s *stack) terminate(session *session.Session) error {
 	Log(fmt.Sprintln("Calling [DeleteStack] with parameters:", params), level.debug)
 	_, err := svc.DeleteStack(params)
 
-	go verbose(s.stackname, "DELETE", session)
+	go s.tail("DELETE", done, session)
 
 	if err != nil {
 		return errors.New(fmt.Sprintln("Deleting failed: ", err))
 	}
 
-	describeStacksInput := &cloudformation.DescribeStacksInput{
-		StackName: aws.String(s.stackname),
-	}
+	// describeStacksInput := &cloudformation.DescribeStacksInput{
+	// 	StackName: aws.String(s.stackname),
+	// }
+	//
+	// Log(fmt.Sprintln("Calling [WaitUntilStackDeleteComplete] with parameters:", describeStacksInput), level.debug)
+	//
+	// if err := svc.WaitUntilStackDeleteComplete(describeStacksInput); err != nil {
+	// 	return err
+	// }
 
-	Log(fmt.Sprintln("Calling [WaitUntilStackDeleteComplete] with parameters:", describeStacksInput), level.debug)
-	if err := svc.WaitUntilStackDeleteComplete(describeStacksInput); err != nil {
-		return err
+	// NOTE: The [WaitUntilStackDeleteComplete] api call suddenly stopped playing nice.
+	// Implemented this crude loop as a patch fix for now
+	for {
+		if !s.stackExists(session) {
+			done <- true
+			break
+		}
+
+		time.Sleep(time.Second * 1)
 	}
 
 	Log(fmt.Sprintf("Deletion successful: [%s]", s.stackname), "info")
+
 	return nil
 }
 
@@ -325,6 +354,7 @@ func (s *stack) change(session *session.Session, req string) error {
 		// }
 
 	case "execute":
+		done := make(chan bool)
 		params := &cloudformation.ExecuteChangeSetInput{
 			StackName:     aws.String(s.stackname),
 			ChangeSetName: aws.String(job.changeName),
@@ -338,12 +368,14 @@ func (s *stack) change(session *session.Session, req string) error {
 			StackName: aws.String(s.stackname),
 		}
 
-		go verbose(s.stackname, "UPDATE", session)
+		go s.tail("UPDATE", done, session)
 
 		Log(fmt.Sprintln("Calling [WaitUntilStackUpdateComplete] with parameters:", describeStacksInput), level.debug)
 		if err := svc.WaitUntilStackUpdateComplete(describeStacksInput); err != nil {
 			return err
 		}
+
+		done <- true
 
 	case "desc":
 		params := &cloudformation.DescribeChangeSetInput{
@@ -454,4 +486,64 @@ func (s *stack) deployTimeParser() error {
 	Log(fmt.Sprintf("Deploy Time Template Generate:\n%s", s.template), level.debug)
 
 	return nil
+}
+
+// tail - tracks the progress during stack updates. c - command Type
+func (s *stack) tail(c string, done <-chan bool, session *session.Session) {
+	svc := cloudformation.New(session)
+
+	params := &cloudformation.DescribeStackEventsInput{
+		StackName: aws.String(s.stackname),
+	}
+
+	// used to track what lines have already been printed, to prevent dubplicate output
+	printed := make(map[string]interface{})
+
+	for {
+		select {
+		case <-done:
+			Log("Tail Job Completed", level.debug)
+			return
+		default:
+			// If channel is not populated, run verbose cf print
+			Log(fmt.Sprintf("Calling [DescribeStackEvents] with parameters: %s", params), level.debug)
+			stackevents, err := svc.DescribeStackEvents(params)
+			if err != nil {
+				Log(fmt.Sprintln("Error when tailing events: ", err.Error()), level.debug)
+				// Sleep 2 seconds before next check - eep going until done signal
+				time.Sleep(time.Duration(2 * time.Second))
+				continue
+			}
+
+			Log(fmt.Sprintln("Response:", stackevents), level.debug)
+
+			for _, event := range stackevents.StackEvents {
+
+				statusReason := ""
+				if strings.Contains(*event.ResourceStatus, "FAILED") {
+					statusReason = *event.ResourceStatusReason
+				}
+
+				line := strings.Join([]string{
+					colorMap(*event.ResourceStatus),
+					*event.StackName,
+					*event.ResourceType,
+					*event.LogicalResourceId,
+					statusReason,
+				}, " - ")
+
+				if _, ok := printed[line]; !ok {
+					if strings.Split(*event.ResourceStatus, "_")[0] == c || c == "" {
+						Log(strings.Trim(line, "- "), level.info)
+					}
+
+					printed[line] = nil
+				}
+			}
+
+			// Sleep 2 seconds before next check
+			time.Sleep(time.Duration(2 * time.Second))
+		}
+
+	}
 }
