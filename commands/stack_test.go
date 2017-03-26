@@ -85,10 +85,13 @@ func TestStack(t *testing.T) {
 		}
 	}
 
+	return
+
 }
 
 // TestDeploy - test deploy and terminate stack.
 func TestDeploy(t *testing.T) {
+	job.debug = true
 	teststack := stack{
 		name: "vpc",
 	}
@@ -122,12 +125,14 @@ func TestDeploy(t *testing.T) {
 	}
 
 	// Test Set Stack Policy
-	// if err := teststack.stackPolicy(sess); err != nil {
-	// 	t.Errorf("%s - [%s]", err, teststack.policy)
-	// }
+	if err := teststack.stackPolicy(sess); err != nil {
+		t.Errorf("%s - [%s]", err, teststack.policy)
+	}
 
 	// Test Terminate Stack
 	if err := teststack.terminate(sess); err != nil {
 		t.Error(err)
 	}
+
+	return
 }
