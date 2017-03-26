@@ -11,7 +11,7 @@ stacks:
   vpc:
     policy: https://s3-eu-west-1.amazonaws.com/daidokoro-dev/policies/stack.json
     cf:
-      cidr: 10.11.0.0/16
+      cidr: 10.10.0.0/16
 
   subnet:
     depends_on:
