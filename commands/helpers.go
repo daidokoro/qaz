@@ -16,8 +16,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/ttacon/chalk"
 )
@@ -92,55 +90,6 @@ func colorString(s string, color string) string {
 	}
 
 	return result
-}
-
-// verbose - Takes a stackname and tracks the progress of creating the stack. s - stackname, c - command Type
-func verbose(s string, c string, session *session.Session) {
-	svc := cloudformation.New(session)
-
-	params := &cloudformation.DescribeStackEventsInput{
-		StackName: aws.String(s),
-	}
-
-	// used to track what lines have already been printed, to prevent dubplicate output
-	printed := make(map[string]interface{})
-
-	for {
-		Log(fmt.Sprintf("Calling [DescribeStackEvents] with parameters: %s", params), level.debug)
-		stackevents, err := svc.DescribeStackEvents(params)
-		if err != nil {
-			Log(fmt.Sprintln("Error when tailing events: ", err.Error()), level.debug)
-		}
-
-		Log(fmt.Sprintln("Response:", stackevents), level.debug)
-
-		for _, event := range stackevents.StackEvents {
-
-			statusReason := ""
-			if strings.Contains(*event.ResourceStatus, "FAILED") {
-				statusReason = *event.ResourceStatusReason
-			}
-
-			line := strings.Join([]string{
-				colorMap(*event.ResourceStatus),
-				*event.StackName,
-				*event.ResourceType,
-				*event.LogicalResourceId,
-				statusReason,
-			}, " - ")
-
-			if _, ok := printed[line]; !ok {
-				if strings.Split(*event.ResourceStatus, "_")[0] == c || c == "" {
-					Log(strings.Trim(line, "- "), level.info)
-				}
-
-				printed[line] = nil
-			}
-		}
-
-		// Sleep 2 seconds before next check
-		time.Sleep(time.Duration(2 * time.Second))
-	}
 }
 
 // all - returns true if all items in array the same as the given string
