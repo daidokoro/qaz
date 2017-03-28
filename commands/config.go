@@ -15,11 +15,13 @@ var config Config
 type Config struct {
 	Region  string                 `yaml:"region,omitempty"`
 	Project string                 `yaml:"project"`
+	Bucket  string                 `yaml:"bucket"`
 	Global  map[string]interface{} `yaml:"global,omitempty"`
 	Stacks  map[string]struct {
 		DependsOn  []string               `yaml:"depends_on,omitempty"`
 		Parameters []map[string]string    `yaml:"parameters,omitempty"`
 		Policy     string                 `yaml:"policy,omitempty"`
+		Profile    string                 `yaml:"profile,omitempty"`
 		CF         map[string]interface{} `yaml:"cf"`
 	} `yaml:"stacks"`
 }
@@ -79,6 +81,15 @@ func configReader(conf string) error {
 		stacks[s].setStackName()
 		stacks[s].dependsOn = v.DependsOn
 		stacks[s].policy = v.Policy
+		stacks[s].profile = v.Profile
+
+		// set session
+		sess, err := manager.GetSess(stacks[s].profile)
+		if err != nil {
+			return err
+		}
+
+		stacks[s].session = sess
 
 		// set parameters, if any
 		config.parameters(stacks[s])

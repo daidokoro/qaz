@@ -158,7 +158,7 @@ func Get(url string) (string, error) {
 // S3Read - Reads the content of a given s3 url endpoint and returns the content string.
 func S3Read(url string) (string, error) {
 
-	sess, err := awsSession()
+	sess, err := manager.GetSess(job.profile)
 	if err != nil {
 		return "", err
 	}

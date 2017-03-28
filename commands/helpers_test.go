@@ -14,7 +14,8 @@ func TestGetSource(t *testing.T) {
 
 // TestAwsSession - tests this awsSession function
 func TestAwsSession(t *testing.T) {
-	if _, err := awsSession(); err != nil {
+
+	if _, err := manager.GetSess("default"); err != nil {
 		t.Error(err.Error())
 	}
 }
@@ -26,7 +27,7 @@ func TestInvoke(t *testing.T) {
 		payload: []byte(`{"name":"qaz"}`),
 	}
 
-	sess, err := awsSession()
+	sess, err := manager.GetSess("default")
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -38,7 +39,7 @@ func TestInvoke(t *testing.T) {
 
 // TestExports - test Excport function
 func TestExports(t *testing.T) {
-	sess, err := awsSession()
+	sess, err := manager.GetSess("default")
 	if err != nil {
 		t.Error(err.Error())
 	}

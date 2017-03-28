@@ -61,14 +61,7 @@ var create = &cobra.Command{
 			handleError(err)
 		}
 
-		// create session
-		sess, err := awsSession()
-		if err != nil {
-			handleError(err)
-			return
-		}
-
-		if err := stacks[s].change(sess, "create"); err != nil {
+		if err := stacks[s].change("create"); err != nil {
 			handleError(err)
 		}
 
@@ -102,14 +95,7 @@ var rm = &cobra.Command{
 		s := &stack{name: job.stackName}
 		s.setStackName()
 
-		// create session
-		sess, err := awsSession()
-		if err != nil {
-			handleError(err)
-			return
-		}
-
-		if err := s.change(sess, "rm"); err != nil {
+		if err := s.change("rm"); err != nil {
 			handleError(err)
 		}
 
@@ -136,14 +122,7 @@ var list = &cobra.Command{
 		s := &stack{name: job.stackName}
 		s.setStackName()
 
-		// create session
-		sess, err := awsSession()
-		if err != nil {
-			handleError(err)
-			return
-		}
-
-		if err := s.change(sess, "list"); err != nil {
+		if err := s.change("list"); err != nil {
 			handleError(err)
 		}
 	},
@@ -176,14 +155,7 @@ var execute = &cobra.Command{
 		s := &stack{name: job.stackName}
 		s.setStackName()
 
-		// create session
-		sess, err := awsSession()
-		if err != nil {
-			handleError(err)
-			return
-		}
-
-		if err := s.change(sess, "execute"); err != nil {
+		if err := s.change("execute"); err != nil {
 			handleError(err)
 		}
 	},
@@ -217,13 +189,13 @@ var desc = &cobra.Command{
 		s.setStackName()
 
 		// create session
-		sess, err := awsSession()
+		s.session, err = manager.GetSess(s.profile)
 		if err != nil {
 			handleError(err)
 			return
 		}
 
-		if err := s.change(sess, "desc"); err != nil {
+		if err := s.change("desc"); err != nil {
 			handleError(err)
 		}
 	},

@@ -2,44 +2,46 @@ package commands
 
 import (
 	"fmt"
-	"sync"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 )
 
-// Declaring single global session.
-var conn *session.Session
-var once sync.Once
+// SessionManager - handles AWS Sessions
+type sessionManager struct {
+	region   string
+	sessions map[string]*session.Session
+}
 
-func awsSession() (*session.Session, error) {
-	var err error
+// GetSess - Returns aws session based on given profile
+func (s *sessionManager) GetSess(p string) (*session.Session, error) {
 
-	// Using sync.Once to ensure session is created only once.
-	once.Do(func() {
-		// set region
-		var r string
-		switch config.Region {
-		case "":
-			r = region
-		default:
-			r = config.Region
-		}
+	var sess *session.Session
 
-		//define session options
-		options := session.Options{
-			Config:            aws.Config{Region: &r},
-			Profile:           job.profile,
-			SharedConfigState: session.SharedConfigEnable,
-		}
-
-		Log(fmt.Sprintf("Creating AWS Session with options: Regioin: %s, Profile: %s ", region, job.profile), level.debug)
-		conn, err = session.NewSessionWithOptions(options)
-	})
-
-	if err != nil {
-		return conn, err
+	// Set P to default or command input if stack input is empty
+	if p == "" {
+		p = job.profile
 	}
 
-	return conn, nil
+	if _, ok := s.sessions[p]; ok {
+		fmt.Println("Session:", ok)
+		return s.sessions[p], nil
+	}
+
+	options := session.Options{
+		Config:            aws.Config{Region: &s.region},
+		Profile:           p,
+		SharedConfigState: session.SharedConfigEnable,
+	}
+
+	Log(fmt.Sprintf("Creating AWS Session with options: Regioin: %s, Profile: %s ", region, job.profile), level.debug)
+	sess, err := session.NewSessionWithOptions(options)
+	if err != nil {
+		return sess, err
+	}
+
+	s.sessions[p] = sess
+	return sess, nil
 }
+
+var manager = sessionManager{sessions: make(map[string]*session.Session)}
