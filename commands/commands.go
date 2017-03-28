@@ -36,7 +36,7 @@ var wg sync.WaitGroup
 // RootCmd command (calls all other commands)
 var RootCmd = &cobra.Command{
 	Use:   "qaz",
-	Short: fmt.Sprintf("%s\n--> Shut up & deploy my templates...!", colorString(banner.PrintS("qaz"), "magenta")),
+	Short: fmt.Sprintf("\n"),
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if job.version {
@@ -66,7 +66,7 @@ var initCmd = &cobra.Command{
 		}
 
 		// Get Project & AWS Region
-		project = getInput("-> Enter your Project name", "MyqazProject")
+		project = getInput("-> Enter your Project name", "qaz-project")
 		region = getInput("-> Enter AWS Region", "eu-west-1")
 
 		// set target paths
