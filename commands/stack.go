@@ -162,6 +162,7 @@ func (s *stack) terminate() error {
 	go s.tail("DELETE", done)
 
 	if err != nil {
+		done <- true
 		return errors.New(fmt.Sprintln("Deleting failed: ", err))
 	}
 
