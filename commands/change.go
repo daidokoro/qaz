@@ -92,8 +92,11 @@ var rm = &cobra.Command{
 			return
 		}
 
-		s := &stack{name: job.stackName}
-		s.setStackName()
+		if _, ok := stacks[job.stackName]; !ok {
+			handleError(fmt.Errorf("Stack not found: [%s]", job.stackName))
+		}
+
+		s := stacks[job.stackName]
 
 		if err := s.change("rm"); err != nil {
 			handleError(err)
@@ -119,8 +122,11 @@ var list = &cobra.Command{
 			return
 		}
 
-		s := &stack{name: job.stackName}
-		s.setStackName()
+		if _, ok := stacks[job.stackName]; !ok {
+			handleError(fmt.Errorf("Stack not found: [%s]", job.stackName))
+		}
+
+		s := stacks[job.stackName]
 
 		if err := s.change("list"); err != nil {
 			handleError(err)
@@ -152,8 +158,11 @@ var execute = &cobra.Command{
 			return
 		}
 
-		s := &stack{name: job.stackName}
-		s.setStackName()
+		if _, ok := stacks[job.stackName]; !ok {
+			handleError(fmt.Errorf("Stack not found: [%s]", job.stackName))
+		}
+
+		s := stacks[job.stackName]
 
 		if err := s.change("execute"); err != nil {
 			handleError(err)
@@ -185,15 +194,11 @@ var desc = &cobra.Command{
 			return
 		}
 
-		s := &stack{name: job.stackName}
-		s.setStackName()
-
-		// create session
-		s.session, err = manager.GetSess(s.profile)
-		if err != nil {
-			handleError(err)
-			return
+		if _, ok := stacks[job.stackName]; !ok {
+			handleError(fmt.Errorf("Stack not found: [%s]", job.stackName))
 		}
+
+		s := stacks[job.stackName]
 
 		if err := s.change("desc"); err != nil {
 			handleError(err)
