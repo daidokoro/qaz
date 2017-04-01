@@ -23,33 +23,18 @@ import (
 // configTemplate - Returns template byte string for init() function
 func configTemplate(project string, region string) []byte {
 	return []byte(fmt.Sprintf(`
-# Specify the AWS region code
-# qaz will attempt to get it from AWS configuration
-# or from the environment. This setting overrides
-# every other.
-
+# AWS Region
 region: %s
 
-# Required: specify the name of the Project
-# (qaz will prepend this value to the stack
-# names defined below.
-
+# Project Name
 project: %s
 
-# Optional: global values accisible accross
-# all stacks can be define under global
-
+# Global Stack Variables
 global:
 
-# Stack-specific variables and
-# arbitrary keys cab be defined here,
-# Under the [stacks] key word,
-
+# Stacks
 stacks:
-  # Note that the stack name must match the file name of the template file. The extension does not need to be specified.
-  your_stack_name_here:
-    cf:
-      your_key/value_pairs_here:
+
 `, region, project))
 }
 
@@ -173,7 +158,7 @@ func Get(url string) (string, error) {
 // S3Read - Reads the content of a given s3 url endpoint and returns the content string.
 func S3Read(url string) (string, error) {
 
-	sess, err := awsSession()
+	sess, err := manager.GetSess(job.profile)
 	if err != nil {
 		return "", err
 	}

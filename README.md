@@ -6,7 +6,7 @@
 ![Go Report Card](https://goreportcard.com/badge/github.com/daidokoro/qaz)
 
 
-__Qaz__ is a Fork of the Bora project by [@pkazmierczak](https://github.com/pkazmierczak)that focuses on simplifying the process of deploying infrastructure on AWS via Cloudformation by utilising the Go Templates Library and custom functions to generate diverse and configurable templates.
+__Qaz__ is a AWS Cloudformation Template Management CLI tool inspired by the Bora project by [@pkazmierczak](https://github.com/pkazmierczak) that focuses on simplifying the process of deploying infrastructure on AWS via Cloudformation by utilising the Go Templates Library and custom functions to generate diverse and configurable templates.
 
 Qaz emphasizes minimal abstraction from the underlying AWS Cloudformation Platform. It instead enhances customisability and re-usability of templates through dynamic template generation and logic.
 
@@ -34,6 +34,7 @@ Qaz emphasizes minimal abstraction from the underlying AWS Cloudformation Platfo
 
 - *Encryption* & *Decryption* of template values & deployment of encrypted templates using AWS KMS.
 
+- Simultaneous Cross-Account Stack Deployments.
 
 ## Installation
 
@@ -414,14 +415,6 @@ See `examples` folder for more examples of usage. More examples to come.
 
 ```
 $ qaz
-                   
-  __ _   __ _  ____
- / _` | / _` ||_  /
-| (_| || (_| | / / 
- \__, | \__,_|/___|
-    |_|            
-
---> Shut up & deploy my templates...!
 
 Usage:
   qaz [flags]
@@ -449,7 +442,6 @@ Flags:
 
 Use "qaz [command] --help" for more information about a command.
 
-
 ```
 
 
@@ -464,5 +456,9 @@ Qaz is in early development.
 - Qaz can already create Azure Templates, Once I get my head around Azure as a Platform, i'll add support for Deploying to Azure as well..... Maybe
 
 --
+
+# Contributing
+
+Fork -> Patch -> Push -> Pull Request
 
 _Pull requests welcomed...._

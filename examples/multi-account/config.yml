@@ -1,0 +1,22 @@
+
+# AWS Region
+region: eu-west-1
+
+# Project Name
+project: multi
+
+# Global Stack Variables
+global:
+
+# Stacks
+stacks:
+  mainVPC:
+    depends_on:
+      - labVPC
+
+    cf:
+      cidr: 10.10.0.0/24
+
+  labVPC:
+    # specify profile based on aws credentials/config file
+    profile: lab

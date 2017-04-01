@@ -9,7 +9,6 @@ import (
 	"sync"
 
 	"github.com/CrowdSurge/banner"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/spf13/cobra"
 )
 
@@ -36,7 +35,7 @@ var wg sync.WaitGroup
 // RootCmd command (calls all other commands)
 var RootCmd = &cobra.Command{
 	Use:   "qaz",
-	Short: fmt.Sprintf("%s\n--> Shut up & deploy my templates...!", colorString(banner.PrintS("qaz"), "magenta")),
+	Short: fmt.Sprintf("\n"),
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if job.version {
@@ -66,7 +65,7 @@ var initCmd = &cobra.Command{
 		}
 
 		// Get Project & AWS Region
-		project = getInput("-> Enter your Project name", "MyqazProject")
+		project = getInput("-> Enter your Project name", "qaz-project")
 		region = getInput("-> Enter AWS Region", "eu-west-1")
 
 		// set target paths
@@ -252,13 +251,7 @@ var updateCmd = &cobra.Command{
 			handleError(err)
 		}
 
-		// Update stack
-		sess, err := awsSession()
-		if err != nil {
-			handleError(err)
-			return
-		}
-		stacks[s].update(sess)
+		stacks[s].update()
 
 	},
 }
@@ -306,16 +299,10 @@ var statusCmd = &cobra.Command{
 			return
 		}
 
-		sess, err := awsSession()
-		if err != nil {
-			handleError(err)
-			return
-		}
-
 		for _, v := range stacks {
 			wg.Add(1)
 			go func(s *stack) {
-				if err := s.status(sess); err != nil {
+				if err := s.status(); err != nil {
 					handleError(err)
 				}
 				wg.Done()
@@ -345,12 +332,6 @@ var outputsCmd = &cobra.Command{
 			return
 		}
 
-		sess, err := awsSession()
-		if err != nil {
-			handleError(err)
-			return
-		}
-
 		for _, s := range args {
 			// check if stack exists
 			if _, ok := stacks[s]; !ok {
@@ -360,7 +341,7 @@ var outputsCmd = &cobra.Command{
 
 			wg.Add(1)
 			go func(s string) {
-				if err := stacks[s].outputs(sess); err != nil {
+				if err := stacks[s].outputs(); err != nil {
 					handleError(err)
 				}
 
@@ -387,7 +368,7 @@ var exportsCmd = &cobra.Command{
 
 		job.request = "exports"
 
-		sess, err := awsSession()
+		sess, err := manager.GetSess(job.profile)
 		if err != nil {
 			handleError(err)
 			return
@@ -437,13 +418,13 @@ var checkCmd = &cobra.Command{
 		stk.setStackName()
 		stk.template = tpl
 
-		sess, err := awsSession()
+		stk.session, err = manager.GetSess(stk.profile)
 		if err != nil {
 			handleError(err)
 			return
 		}
 
-		if err := stk.check(sess); err != nil {
+		if err := stk.check(); err != nil {
 			handleError(err)
 			return
 		}
@@ -462,7 +443,7 @@ var invokeCmd = &cobra.Command{
 			return
 		}
 
-		sess, err := awsSession()
+		sess, err := manager.GetSess(job.profile)
 		if err != nil {
 			handleError(err)
 			return
@@ -506,20 +487,15 @@ var policyCmd = &cobra.Command{
 			return
 		}
 
-		sess, err := awsSession()
-		if err != nil {
-			handleError(err)
-		}
-
 		for _, s := range args {
 			wg.Add(1)
-			go func(s string, sess *session.Session) {
+			go func(s string) {
 
 				if _, ok := stacks[s]; !ok {
 					handleError(fmt.Errorf("Stack [%s] not found in config", s))
 
 				} else {
-					if err := stacks[s].stackPolicy(sess); err != nil {
+					if err := stacks[s].stackPolicy(); err != nil {
 						handleError(err)
 					}
 				}
@@ -527,7 +503,7 @@ var policyCmd = &cobra.Command{
 				wg.Done()
 				return
 
-			}(s, sess)
+			}(s)
 		}
 
 		wg.Wait()

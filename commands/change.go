@@ -61,14 +61,7 @@ var create = &cobra.Command{
 			handleError(err)
 		}
 
-		// create session
-		sess, err := awsSession()
-		if err != nil {
-			handleError(err)
-			return
-		}
-
-		if err := stacks[s].change(sess, "create"); err != nil {
+		if err := stacks[s].change("create"); err != nil {
 			handleError(err)
 		}
 
@@ -99,17 +92,13 @@ var rm = &cobra.Command{
 			return
 		}
 
-		s := &stack{name: job.stackName}
-		s.setStackName()
-
-		// create session
-		sess, err := awsSession()
-		if err != nil {
-			handleError(err)
-			return
+		if _, ok := stacks[job.stackName]; !ok {
+			handleError(fmt.Errorf("Stack not found: [%s]", job.stackName))
 		}
 
-		if err := s.change(sess, "rm"); err != nil {
+		s := stacks[job.stackName]
+
+		if err := s.change("rm"); err != nil {
 			handleError(err)
 		}
 
@@ -133,17 +122,13 @@ var list = &cobra.Command{
 			return
 		}
 
-		s := &stack{name: job.stackName}
-		s.setStackName()
-
-		// create session
-		sess, err := awsSession()
-		if err != nil {
-			handleError(err)
-			return
+		if _, ok := stacks[job.stackName]; !ok {
+			handleError(fmt.Errorf("Stack not found: [%s]", job.stackName))
 		}
 
-		if err := s.change(sess, "list"); err != nil {
+		s := stacks[job.stackName]
+
+		if err := s.change("list"); err != nil {
 			handleError(err)
 		}
 	},
@@ -173,17 +158,13 @@ var execute = &cobra.Command{
 			return
 		}
 
-		s := &stack{name: job.stackName}
-		s.setStackName()
-
-		// create session
-		sess, err := awsSession()
-		if err != nil {
-			handleError(err)
-			return
+		if _, ok := stacks[job.stackName]; !ok {
+			handleError(fmt.Errorf("Stack not found: [%s]", job.stackName))
 		}
 
-		if err := s.change(sess, "execute"); err != nil {
+		s := stacks[job.stackName]
+
+		if err := s.change("execute"); err != nil {
 			handleError(err)
 		}
 	},
@@ -213,17 +194,13 @@ var desc = &cobra.Command{
 			return
 		}
 
-		s := &stack{name: job.stackName}
-		s.setStackName()
-
-		// create session
-		sess, err := awsSession()
-		if err != nil {
-			handleError(err)
-			return
+		if _, ok := stacks[job.stackName]; !ok {
+			handleError(fmt.Errorf("Stack not found: [%s]", job.stackName))
 		}
 
-		if err := s.change(sess, "desc"); err != nil {
+		s := stacks[job.stackName]
+
+		if err := s.change("desc"); err != nil {
 			handleError(err)
 		}
 	},

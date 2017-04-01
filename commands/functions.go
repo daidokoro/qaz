@@ -16,7 +16,7 @@ import (
 // Common Functions - Both Deploy/Gen
 
 var kmsEncrypt = func(kid string, text string) (string, error) {
-	sess, err := awsSession()
+	sess, err := manager.GetSess(job.profile)
 	if err != nil {
 		Log(err.Error(), level.err)
 		return "", err
@@ -39,7 +39,7 @@ var kmsEncrypt = func(kid string, text string) (string, error) {
 }
 
 var kmsDecrypt = func(cipher string) (string, error) {
-	sess, err := awsSession()
+	sess, err := manager.GetSess(job.profile)
 	if err != nil {
 		Log(err.Error(), level.err)
 		return "", err
@@ -93,7 +93,7 @@ var lambdaInvoke = func(name string, payload string) (interface{}, error) {
 		f.payload = []byte(payload)
 	}
 
-	sess, err := awsSession()
+	sess, err := manager.GetSess(job.profile)
 	if err != nil {
 		Log(err.Error(), level.err)
 		return "", err
@@ -157,16 +157,10 @@ var deployTimeFunctions = template.FuncMap{
 	"stack_output": func(target string) (string, error) {
 		Log(fmt.Sprintf("Deploy-Time function resolving: %s", target), level.debug)
 		req := strings.Split(target, "::")
-		sess, err := awsSession()
-		if err != nil {
-			Log(err.Error(), level.err)
-			return "", nil
-		}
 
-		s := stack{name: req[0]}
-		s.setStackName()
+		s := stacks[req[0]]
 
-		if err := s.outputs(sess); err != nil {
+		if err := s.outputs(); err != nil {
 			return "", err
 		}
 
@@ -184,15 +178,19 @@ var deployTimeFunctions = template.FuncMap{
 	"stack_output_ext": func(target string) (string, error) {
 		Log(fmt.Sprintf("Deploy-Time function resolving: %s", target), level.debug)
 		req := strings.Split(target, "::")
-		sess, err := awsSession()
+
+		sess, err := manager.GetSess(job.profile)
 		if err != nil {
 			Log(err.Error(), level.err)
 			return "", nil
 		}
 
-		s := stack{stackname: req[0]}
+		s := stack{
+			stackname: req[0],
+			session:   sess,
+		}
 
-		if err := s.outputs(sess); err != nil {
+		if err := s.outputs(); err != nil {
 			return "", err
 		}
 
