@@ -24,7 +24,7 @@ func (s *sessionManager) GetSess(p string) (*session.Session, error) {
 	}
 
 	if _, ok := s.sessions[p]; ok {
-		fmt.Println("Session:", ok)
+		Log(fmt.Sprintf("Session Detected: [%s]", p), level.debug)
 		return s.sessions[p], nil
 	}
 
