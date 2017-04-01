@@ -15,7 +15,7 @@ stacks:
       - labVPC
 
     cf:
-      cidr: 10.0.0.0/24
+      cidr: 10.10.0.0/24
 
   labVPC:
     # specify profile based on aws credentials/config file
