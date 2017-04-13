@@ -106,6 +106,18 @@ var lambdaInvoke = func(name string, payload string) (interface{}, error) {
 	return f.response, nil
 }
 
+var prefix = func(s string, pre string) bool {
+	return strings.HasPrefix(s, pre)
+}
+
+var suffix = func(s string, suf string) bool {
+	return strings.HasSuffix(s, suf)
+}
+
+var contains = func(s string, con string) bool {
+	return strings.Contains(s, con)
+}
+
 // template function maps
 
 var genTimeFunctions = template.FuncMap{
@@ -132,6 +144,15 @@ var genTimeFunctions = template.FuncMap{
 		}
 		return string(b), nil
 	},
+
+	// suffix - returns true if string starts with given suffix
+	"suffix": suffix,
+
+	// prefix - returns true if string starts with given prefix
+	"prefix": prefix,
+
+	// contains - returns true if string contains
+	"contains": contains,
 
 	// Get get does an HTTP Get request of the given url and returns the output string
 	"GET": httpGet,
@@ -201,6 +222,15 @@ var deployTimeFunctions = template.FuncMap{
 
 		return "", fmt.Errorf("Stack Output Not found - Stack:%s | Output:%s", req[0], req[1])
 	},
+
+	// suffix - returns true if string starts with given suffix
+	"suffix": suffix,
+
+	// prefix - returns true if string starts with given prefix
+	"prefix": prefix,
+
+	// contains - returns true if string contains
+	"contains": contains,
 
 	// Get get does an HTTP Get request of the given url and returns the output string
 	"GET": httpGet,
