@@ -1,13 +1,10 @@
 package commands
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"path/filepath"
 	"strings"
-	"text/template"
 )
 
 // global variables
@@ -64,37 +61,12 @@ func fetchContent(source string) (string, error) {
 }
 
 // getName  - Checks if arg is url or file and returns stack name and filepath/url
-func getSource(s string) (string, string, error) {
-	if strings.Contains(s, "::") {
-		vals := strings.Split(s, "::")
-		if len(vals) < 2 {
-			return "", "", errors.New(`Error, invalid url format --> Example: stackname::http://someurl OR stackname::s3://bucket/key`)
-		}
+func getSource(src string) (string, string, error) {
 
-		return vals[0], vals[1], nil
-
+	vals := strings.Split(src, "::")
+	if len(vals) < 2 {
+		return "", "", errors.New(`Error, invalid format - Usage: stackname::http://someurl OR stackname::path/to/template`)
 	}
 
-	name := filepath.Base(strings.Replace(s, filepath.Ext(s), "", -1))
-	return name, s, nil
-}
-
-// genTimeParser - Parses templates before deploying them...
-func genTimeParser(source string) (string, error) {
-
-	templ, err := fetchContent(source)
-	if err != nil {
-		return "", err
-	}
-
-	// Create template
-	t, err := template.New("gen-template").Funcs(genTimeFunctions).Parse(templ)
-	if err != nil {
-		return "", err
-	}
-
-	// so that we can write to string
-	var doc bytes.Buffer
-	t.Execute(&doc, config.vars())
-	return doc.String(), nil
+	return vals[0], vals[1], nil
 }
