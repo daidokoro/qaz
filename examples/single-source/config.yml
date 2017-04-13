@@ -1,0 +1,22 @@
+
+# AWS Region
+region: eu-west-1
+
+# Project Name
+project: single-source
+
+# Stacks
+stacks:
+  vpc:
+    source: source.yml
+    cf:
+      cidr: 10.10.0.0/16
+
+  subnets:
+    source: source.yml
+    depends_on:
+      - vpc
+    cf:
+      subnets:
+        - private: 10.10.1.0/24
+        - public: 10.10.2.0/24
