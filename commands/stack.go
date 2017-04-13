@@ -27,6 +27,7 @@ type stack struct {
 	policy       string
 	session      *session.Session
 	profile      string
+	source       string
 }
 
 // setStackName - sets the stackname with struct
@@ -95,6 +96,12 @@ func (s *stack) deploy() error {
 }
 
 func (s *stack) update() error {
+
+	err := s.deployTimeParser()
+	if err != nil {
+		return err
+	}
+
 	done := make(chan bool)
 	svc := cloudformation.New(s.session)
 	updateParams := &cloudformation.UpdateStackInput{
@@ -484,10 +491,43 @@ func (s *stack) deployTimeParser() error {
 
 	// so that we can write to string
 	var doc bytes.Buffer
-	t.Execute(&doc, config.vars())
+	values := config.vars()
+
+	// Add metadata specific to the stack we're working with to the parser
+	values["stack"] = s.name
+	values["parameters"] = s.parameters
+
+	t.Execute(&doc, values)
 	s.template = doc.String()
 	Log(fmt.Sprintf("Deploy Time Template Generate:\n%s", s.template), level.debug)
 
+	return nil
+}
+
+// genTimeParser - Parses templates before deploying them...
+func (s *stack) genTimeParser() error {
+
+	templ, err := fetchContent(s.source)
+	if err != nil {
+		return err
+	}
+
+	// Create template
+	t, err := template.New("gen-template").Funcs(genTimeFunctions).Parse(templ)
+	if err != nil {
+		return err
+	}
+
+	// so that we can write to string
+	var doc bytes.Buffer
+	values := config.vars()
+
+	// Add metadata specific to the stack we're working with to the parser
+	values["stack"] = s.name
+	values["parameters"] = s.parameters
+
+	t.Execute(&doc, values)
+	s.template = doc.String()
 	return nil
 }
 

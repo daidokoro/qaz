@@ -54,11 +54,12 @@ func Log(msg, lvl string) {
 func init() {
 
 	// Define Deploy Flags
-	deployCmd.Flags().StringArrayVarP(&job.tplFiles, "template", "t", []string{`./templates/*`}, "path to template file(s) Or stack::url")
+	deployCmd.Flags().StringArrayVarP(&job.tplSources, "template", "t", []string{}, "path to template file(s) Or stack::url")
 	deployCmd.Flags().BoolVarP(&job.rollback, "rollback", "R", false, "Set Stack to rollback on deployment failures")
+	deployCmd.Flags().BoolVarP(&job.all, "all", "A", false, "deploy all stacks with defined Sources in config")
 
 	// Define Terminate Flags
-	terminateCmd.Flags().BoolVarP(&job.terminateAll, "all", "A", false, "terminate all stacks")
+	terminateCmd.Flags().BoolVarP(&job.all, "all", "A", false, "terminate all stacks")
 
 	// Define Output Flags
 	outputsCmd.Flags().StringVarP(&job.profile, "profile", "p", "default", "configured aws profile")
@@ -85,7 +86,7 @@ func init() {
 
 	// Add Template --template common flag
 	for _, cmd := range []interface{}{generateCmd, updateCmd, checkCmd} {
-		cmd.(*cobra.Command).Flags().StringVarP(&job.tplFile, "template", "t", "template", "path to template file Or stack::url")
+		cmd.(*cobra.Command).Flags().StringVarP(&job.tplSource, "template", "t", "", "path to template source Or stack::source")
 	}
 
 	for _, cmd := range []interface{}{create, list, rm, execute, desc} {
@@ -93,7 +94,7 @@ func init() {
 		cmd.(*cobra.Command).Flags().StringVarP(&job.stackName, "stack", "s", "", "Qaz local project Stack Name [Required]")
 	}
 
-	create.Flags().StringVarP(&job.tplFile, "template", "t", "template", "path to template file Or stack::url")
+	create.Flags().StringVarP(&job.tplSource, "template", "t", "", "path to template file Or stack::url")
 	changeCmd.Flags().StringVarP(&job.cfgFile, "config", "c", "config.yml", "path to config file")
 
 	RootCmd.AddCommand(
