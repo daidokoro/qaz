@@ -81,7 +81,7 @@ func init() {
 
 	// Add Config --config common flag
 	for _, cmd := range []interface{}{checkCmd, updateCmd, outputsCmd, statusCmd, terminateCmd, generateCmd, deployCmd, policyCmd} {
-		cmd.(*cobra.Command).Flags().StringVarP(&job.cfgFile, "config", "c", "config.yml", "path to config file")
+		cmd.(*cobra.Command).Flags().StringVarP(&job.cfgSource, "config", "c", defaultConfig(), "path to config file")
 	}
 
 	// Add Template --template common flag
@@ -90,12 +90,12 @@ func init() {
 	}
 
 	for _, cmd := range []interface{}{create, list, rm, execute, desc} {
-		cmd.(*cobra.Command).Flags().StringVarP(&job.cfgFile, "config", "c", "config.yml", "path to config file [Required]")
+		cmd.(*cobra.Command).Flags().StringVarP(&job.cfgSource, "config", "c", defaultConfig(), "path to config file [Required]")
 		cmd.(*cobra.Command).Flags().StringVarP(&job.stackName, "stack", "s", "", "Qaz local project Stack Name [Required]")
 	}
 
 	create.Flags().StringVarP(&job.tplSource, "template", "t", "", "path to template file Or stack::url")
-	changeCmd.Flags().StringVarP(&job.cfgFile, "config", "c", "config.yml", "path to config file")
+	changeCmd.Flags().StringVarP(&job.cfgSource, "config", "c", defaultConfig(), "path to config file")
 
 	RootCmd.AddCommand(
 		generateCmd, deployCmd, terminateCmd,

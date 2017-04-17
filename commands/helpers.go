@@ -186,3 +186,12 @@ func S3Read(url string) (string, error) {
 	buf.ReadFrom(resp.Body)
 	return buf.String(), nil
 }
+
+// defaultConfig - sets config based on ENV variable or default config.yml
+func defaultConfig() string {
+	env := os.Getenv(configENV)
+	if env == "" {
+		return "config.yml"
+	}
+	return env
+}
