@@ -9,14 +9,14 @@ For this example, here's my aws config:
 
 ```toml
 [profile default]
-aws_secret_access_key = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-aws_access_key_id = xxxxxxxxxxxxxxxxxxxxxx
-region = eu-west-1
+aws_secret_access_key = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+aws_access_key_id = "xxxxxxxxxxxxxxxxxxxxxx"
+region = "eu-west-1"
 
 [profile lab]
-aws_secret_access_key = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-aws_access_key_id = xxxxxxxxxxxxxxxxxxxxxx
-region = eu-west-1
+aws_secret_access_key = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+aws_access_key_id = xxxxxxxx"xxxxxxxxxxxxxx
+region = "eu-west-1"
 ```
 
 --
