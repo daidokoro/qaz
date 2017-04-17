@@ -10,6 +10,7 @@ global:
 stacks:
   vpc:
     policy: https://s3-eu-west-1.amazonaws.com/daidokoro-dev/policies/stack.json
+    source: https://raw.githubusercontent.com/daidokoro/qaz/master/examples/vpc/templates/vpc.yml
     cf:
       cidr: 10.10.0.0/16
 
