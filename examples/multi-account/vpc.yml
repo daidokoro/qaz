@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
 Description: |
-  This is an example VPC deployed via Qaz!
+  This is an example VPC deployed via Qaz for {{ .stack }}
 
 Resources:
   VPC:
@@ -10,8 +10,17 @@ Resources:
       CidrBlock: {{ .mainVPC.cidr }}
 
 Outputs:
+
   vpcid:
     Description: VPC ID
     Value:  !Ref VPC
     Export:
       Name: !Sub "${AWS::StackName}-vpcid"
+
+{{ if eq .stack "mainVPC" }}
+  vpcid:
+    Description: VPC ID
+    Value:  << stack_output "labVPC::vpcid" >>
+    Export:
+      Name: lap-vpc-id
+{{ end }}
