@@ -11,12 +11,17 @@ global:
 # Stacks
 stacks:
   mainVPC:
+    source: https://raw.githubusercontent.com/daidokoro/qaz/master/examples/multi-account/vpc.yml
     depends_on:
       - labVPC
 
     cf:
+      env: main
       cidr: 10.10.0.0/24
 
   labVPC:
+    source: https://raw.githubusercontent.com/daidokoro/qaz/master/examples/multi-account/vpc.yml
     # specify profile based on aws credentials/config file
     profile: lab
+    cf:
+      env: lab
