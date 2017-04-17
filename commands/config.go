@@ -21,7 +21,7 @@ type Config struct {
 		Parameters []map[string]string    `yaml:"parameters,omitempty"`
 		Policy     string                 `yaml:"policy,omitempty"`
 		Profile    string                 `yaml:"profile,omitempty"`
-		Source     string                 `yaml:"source"`
+		Source     string                 `yaml:"source,omitempty"`
 		CF         map[string]interface{} `yaml:"cf"`
 	} `yaml:"stacks"`
 }

@@ -13,9 +13,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// config environment variable
+const configENV = "QAZ_CONFIG"
+
 // job var used as a central point for command data
 var job = struct {
-	cfgFile    string
+	cfgSource  string
 	tplSource  string
 	profile    string
 	tplSources []string
@@ -121,7 +124,7 @@ var generateCmd = &cobra.Command{
 		var s string
 		var source string
 
-		err := configReader(job.cfgFile)
+		err := configReader(job.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
@@ -173,7 +176,7 @@ var deployCmd = &cobra.Command{
 
 		job.request = "deploy"
 
-		err := configReader(job.cfgFile)
+		err := configReader(job.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
@@ -222,7 +225,7 @@ var deployCmd = &cobra.Command{
 
 				// Handle missing stacks
 				if stacks[s] == nil {
-					handleError(fmt.Errorf("Missing Stack in %s: [%s]", job.cfgFile, s))
+					handleError(fmt.Errorf("Missing Stack in %s: [%s]", job.cfgSource, s))
 					return
 				}
 			}
@@ -248,7 +251,7 @@ var updateCmd = &cobra.Command{
 		var s string
 		var source string
 
-		err := configReader(job.cfgFile)
+		err := configReader(job.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
@@ -284,7 +287,7 @@ var updateCmd = &cobra.Command{
 
 		// Handle missing stacks
 		if stacks[s] == nil {
-			handleError(fmt.Errorf("Missing Stack in %s: [%s]", job.cfgFile, s))
+			handleError(fmt.Errorf("Missing Stack in %s: [%s]", job.cfgSource, s))
 			return
 		}
 
@@ -310,7 +313,7 @@ var checkCmd = &cobra.Command{
 		var s string
 		var source string
 
-		err := configReader(job.cfgFile)
+		err := configReader(job.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
@@ -372,7 +375,7 @@ var terminateCmd = &cobra.Command{
 			}
 		}
 
-		err := configReader(job.cfgFile)
+		err := configReader(job.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
@@ -390,7 +393,7 @@ var statusCmd = &cobra.Command{
 
 		job.request = "status"
 
-		err := configReader(job.cfgFile)
+		err := configReader(job.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
@@ -423,7 +426,7 @@ var outputsCmd = &cobra.Command{
 			return
 		}
 
-		err := configReader(job.cfgFile)
+		err := configReader(job.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
@@ -440,12 +443,15 @@ var outputsCmd = &cobra.Command{
 			go func(s string) {
 				if err := stacks[s].outputs(); err != nil {
 					handleError(err)
+					wg.Done()
+					return
 				}
 
 				for _, i := range stacks[s].output.Stacks {
 					m, err := json.MarshalIndent(i.Outputs, "", "  ")
 					if err != nil {
 						handleError(err)
+
 					}
 
 					fmt.Println(string(m))
@@ -483,7 +489,6 @@ var invokeCmd = &cobra.Command{
 	Short: "Invoke AWS Lambda Functions",
 	Run: func(cmd *cobra.Command, args []string) {
 		job.request = "lambda_invoke"
-		// fmt.Println(colorString("Coming Soon!", "magenta"))
 
 		if len(args) < 1 {
 			fmt.Println("No Lambda Function specified")
@@ -528,7 +533,7 @@ var policyCmd = &cobra.Command{
 			return
 		}
 
-		err := configReader(job.cfgFile)
+		err := configReader(job.cfgSource)
 		if err != nil {
 			handleError(err)
 			return

@@ -30,7 +30,7 @@ var create = &cobra.Command{
 
 		job.changeName = args[0]
 
-		err := configReader(job.cfgFile)
+		err := configReader(job.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
@@ -89,7 +89,7 @@ var rm = &cobra.Command{
 
 		job.changeName = args[0]
 
-		err := configReader(job.cfgFile)
+		err := configReader(job.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
@@ -119,7 +119,7 @@ var list = &cobra.Command{
 			return
 		}
 
-		err := configReader(job.cfgFile)
+		err := configReader(job.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
@@ -155,7 +155,7 @@ var execute = &cobra.Command{
 
 		job.changeName = args[0]
 
-		err := configReader(job.cfgFile)
+		err := configReader(job.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
@@ -191,7 +191,7 @@ var desc = &cobra.Command{
 
 		job.changeName = args[0]
 
-		err := configReader(job.cfgFile)
+		err := configReader(job.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
