@@ -29,9 +29,12 @@ func (s *sessionManager) GetSess(p string) (*session.Session, error) {
 	}
 
 	options := session.Options{
-		Config:            aws.Config{Region: &s.region},
 		Profile:           p,
 		SharedConfigState: session.SharedConfigEnable,
+	}
+
+	if s.region != "" {
+		options.Config = aws.Config{Region: &s.region}
 	}
 
 	Log(fmt.Sprintf("Creating AWS Session with options: Regioin: %s, Profile: %s ", region, job.profile), level.debug)
