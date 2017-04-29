@@ -13,17 +13,18 @@ var config Config
 
 // Config type for handling yaml config files
 type Config struct {
-	Region  string                 `yaml:"region,omitempty"`
-	Project string                 `yaml:"project"`
-	Global  map[string]interface{} `yaml:"global,omitempty"`
+	Region  string                 `yaml:"region,omitempty",json:"region,omitempty"`
+	Project string                 `yaml:"project",json:"project,omitempty"`
+	Global  map[string]interface{} `yaml:"global,omitempty",json:"global,omitempty"`
 	Stacks  map[string]struct {
-		DependsOn  []string               `yaml:"depends_on,omitempty"`
-		Parameters []map[string]string    `yaml:"parameters,omitempty"`
-		Policy     string                 `yaml:"policy,omitempty"`
-		Profile    string                 `yaml:"profile,omitempty"`
-		Source     string                 `yaml:"source,omitempty"`
-		CF         map[string]interface{} `yaml:"cf"`
-	} `yaml:"stacks"`
+		DependsOn  []string               `yaml:"depends_on,omitempty",json:"depends_on,omitempty"`
+		Parameters []map[string]string    `yaml:"parameters,omitempty",json:"parameters,omitempty"`
+		Policy     string                 `yaml:"policy,omitempty",json:"policy,omitempty"`
+		Profile    string                 `yaml:"profile,omitempty",json:"profile,omitempty"`
+		Source     string                 `yaml:"source,omitempty",json:"source,omitempty"`
+		Bucket     string                 `yaml:"bucket,omitempty",json:"bucket,omitempty"`
+		CF         map[string]interface{} `yaml:"cf",json:"cf,omitempty"`
+	} `yaml:"stacks",json:"stacks"`
 }
 
 // Returns map string of config values
@@ -88,6 +89,7 @@ func configReader(conf string) error {
 		stacks[s].policy = v.Policy
 		stacks[s].profile = v.Profile
 		stacks[s].source = v.Source
+		stacks[s].bucket = v.Bucket
 
 		// set session
 		sess, err := manager.GetSess(stacks[s].profile)
