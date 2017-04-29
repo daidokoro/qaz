@@ -348,7 +348,34 @@ func (s *stack) change(req string) error {
 
 		Log(fmt.Sprintf("Updated Template:\n%s", s.template), level.debug)
 
-		params.TemplateBody = aws.String(s.template)
+		// If bucket - upload to s3
+		var (
+			exists bool
+			url    string
+		)
+
+		if s.bucket != "" {
+			exists, err = BucketExists(s.bucket, s.session)
+			if err != nil {
+				Log(fmt.Sprintf("Received Error when checking if [%s] exists: %s", s.bucket, err.Error()), level.warn)
+			}
+
+			if !exists {
+				Log(fmt.Sprintf(("Creating Bucket [%s]"), s.bucket), level.info)
+				if err = CreateBucket(s.bucket, s.session); err != nil {
+					return err
+				}
+			}
+			t := time.Now()
+			tStamp := fmt.Sprintf("%d-%d-%d_%d%d", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute())
+			url, err = S3write(s.bucket, fmt.Sprintf("%s_%s.template", s.stackname, tStamp), s.template, s.session)
+			if err != nil {
+				return err
+			}
+			params.TemplateURL = &url
+		} else {
+			params.TemplateBody = &s.template
+		}
 
 		// If IAM is bening touched, add Capabilities
 		if strings.Contains(s.template, "AWS::IAM") {
