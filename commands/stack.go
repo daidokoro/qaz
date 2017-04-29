@@ -558,8 +558,11 @@ func (s *stack) stackPolicy() error {
 // deployTimeParser - Parses templates during deployment to resolve specfic Dependency functions like stackout...
 func (s *stack) deployTimeParser() error {
 
+	// define Delims
+	left, right := config.delims("gen")
+
 	// Create template
-	t, err := template.New("deploy-template").Delims("<<", ">>").Funcs(deployTimeFunctions).Parse(s.template)
+	t, err := template.New("deploy-template").Delims(left, right).Funcs(deployTimeFunctions).Parse(s.template)
 	if err != nil {
 		return err
 	}
@@ -587,8 +590,11 @@ func (s *stack) genTimeParser() error {
 		return err
 	}
 
-	// Create template
-	t, err := template.New("gen-template").Funcs(genTimeFunctions).Parse(templ)
+	// define Delims
+	left, right := config.delims("gen")
+
+	// create template
+	t, err := template.New("gen-template").Delims(left, right).Funcs(genTimeFunctions).Parse(templ)
 	if err != nil {
 		return err
 	}
