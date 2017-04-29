@@ -28,6 +28,7 @@ type stack struct {
 	session      *session.Session
 	profile      string
 	source       string
+	bucket       string
 }
 
 // setStackName - sets the stackname with struct
@@ -49,7 +50,6 @@ func (s *stack) deploy() error {
 	createParams := &cloudformation.CreateStackInput{
 		StackName:       aws.String(s.stackname),
 		DisableRollback: aws.Bool(!job.rollback),
-		TemplateBody:    aws.String(s.template),
 	}
 
 	if s.policy != "" {
@@ -71,6 +71,30 @@ func (s *stack) deploy() error {
 			aws.String(cloudformation.CapabilityCapabilityIam),
 			aws.String(cloudformation.CapabilityCapabilityNamedIam),
 		}
+	}
+
+	// If bucket - upload to s3
+	if s.bucket != "" {
+		exists, err := BucketExists(s.bucket, s.session)
+		if err != nil {
+			Log(fmt.Sprintf("Received Error when checking if [%s] exists: %s", s.bucket, err.Error()), level.warn)
+		}
+
+		if !exists {
+			Log(fmt.Sprintf(("Creating Bucket [%s]"), s.bucket), level.info)
+			if err = CreateBucket(s.bucket, s.session); err != nil {
+				return err
+			}
+		}
+		t := time.Now()
+		tStamp := fmt.Sprintf("%d-%d-%d_%d%d", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute())
+		url, err := S3write(s.bucket, fmt.Sprintf("%s_%s.template", s.stackname, tStamp), s.template, s.session)
+		if err != nil {
+			return err
+		}
+		createParams.TemplateURL = &url
+	} else {
+		createParams.TemplateBody = &s.template
 	}
 
 	Log(fmt.Sprintln("Calling [CreateStack] with parameters:", createParams), level.debug)
@@ -107,6 +131,30 @@ func (s *stack) update() error {
 	updateParams := &cloudformation.UpdateStackInput{
 		StackName:    aws.String(s.stackname),
 		TemplateBody: aws.String(s.template),
+	}
+
+	// If bucket - upload to s3
+	if s.bucket != "" {
+		exists, err := BucketExists(s.bucket, s.session)
+		if err != nil {
+			Log(fmt.Sprintf("Received Error when checking if [%s] exists: %s", s.bucket, err.Error()), level.warn)
+		}
+
+		if !exists {
+			Log(fmt.Sprintf(("Creating Bucket [%s]"), s.bucket), level.info)
+			if err = CreateBucket(s.bucket, s.session); err != nil {
+				return err
+			}
+		}
+		t := time.Now()
+		tStamp := fmt.Sprintf("%d-%d-%d_%d%d", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute())
+		url, err := S3write(s.bucket, fmt.Sprintf("%s_%s.template", s.stackname, tStamp), s.template, s.session)
+		if err != nil {
+			return err
+		}
+		updateParams.TemplateURL = &url
+	} else {
+		updateParams.TemplateBody = &s.template
 	}
 
 	// NOTE: Add parameters flag here if params set
