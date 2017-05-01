@@ -20,6 +20,8 @@ var create = &cobra.Command{
 	Short: "Create Changet-Set",
 	Run: func(cmd *cobra.Command, args []string) {
 		job.request = "change-set create"
+		var s string
+		var source string
 
 		if len(args) < 1 {
 			fmt.Println("Please provide Change-Set Name...")
@@ -28,41 +30,42 @@ var create = &cobra.Command{
 
 		job.changeName = args[0]
 
-		s, source, err := getSource(job.tplFile)
+		err := configReader(job.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
 		}
 
-		job.tplFile = source
+		if job.tplSource != "" {
+			s, source, err = getSource(job.tplSource)
+			if err != nil {
+				handleError(err)
+				return
+			}
+		}
 
-		err = configReader(job.cfgFile)
-		if err != nil {
-			handleError(err)
+		if len(args) > 0 {
+			s = args[0]
+		}
+
+		// check if stack exists in config
+		if _, ok := stacks[s]; !ok {
+			handleError(fmt.Errorf("Stack [%s] not found in config", s))
 			return
 		}
 
-		v, err := genTimeParser(job.tplFile)
-		if err != nil {
-			handleError(err)
-			return
+		if stacks[s].source == "" {
+			stacks[s].source = source
 		}
 
-		// Handle missing stacks
-		if stacks[s] == nil {
-			handleError(fmt.Errorf("Missing Stack in %s: [%s]", job.cfgFile, s))
-			return
-		}
-
-		stacks[s].template = v
-
-		// resolve deploy time function
-		if err = stacks[s].deployTimeParser(); err != nil {
+		if err = stacks[s].genTimeParser(); err != nil {
 			handleError(err)
+			return
 		}
 
 		if err := stacks[s].change("create"); err != nil {
 			handleError(err)
+			return
 		}
 
 	},
@@ -86,7 +89,7 @@ var rm = &cobra.Command{
 
 		job.changeName = args[0]
 
-		err := configReader(job.cfgFile)
+		err := configReader(job.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
@@ -116,7 +119,7 @@ var list = &cobra.Command{
 			return
 		}
 
-		err := configReader(job.cfgFile)
+		err := configReader(job.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
@@ -152,7 +155,7 @@ var execute = &cobra.Command{
 
 		job.changeName = args[0]
 
-		err := configReader(job.cfgFile)
+		err := configReader(job.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
@@ -188,7 +191,7 @@ var desc = &cobra.Command{
 
 		job.changeName = args[0]
 
-		err := configReader(job.cfgFile)
+		err := configReader(job.cfgSource)
 		if err != nil {
 			handleError(err)
 			return

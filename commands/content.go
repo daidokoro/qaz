@@ -1,13 +1,11 @@
 package commands
 
 import (
-	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"path/filepath"
 	"strings"
-	"text/template"
 )
 
 // global variables
@@ -53,6 +51,33 @@ func fetchContent(source string) (string, error) {
 			return "", err
 		}
 		return resp, nil
+	case "lambda":
+		Log(fmt.Sprintln("Source Type: [lambda] Detected, Fetching Source: ", source), level.debug)
+		lambdaSrc := strings.Split(strings.Replace(source, "lambda:", "", -1), "@")
+
+		var raw interface{}
+		if err := json.Unmarshal([]byte(lambdaSrc[0]), &raw); err != nil {
+			return "", err
+		}
+
+		event, err := json.Marshal(raw)
+		if err != nil {
+			return "", err
+		}
+
+		f := function{
+			name:    lambdaSrc[1],
+			payload: event,
+		}
+
+		// using default profile
+		sess := manager.sessions[job.profile]
+		if err := f.Invoke(sess); err != nil {
+			return "", err
+		}
+
+		return f.response, nil
+
 	default:
 		Log(fmt.Sprintln("Source Type: [file] Detected, Fetching Source: ", source), level.debug)
 		b, err := ioutil.ReadFile(source)
@@ -64,37 +89,12 @@ func fetchContent(source string) (string, error) {
 }
 
 // getName  - Checks if arg is url or file and returns stack name and filepath/url
-func getSource(s string) (string, string, error) {
-	if strings.Contains(s, "::") {
-		vals := strings.Split(s, "::")
-		if len(vals) < 2 {
-			return "", "", errors.New(`Error, invalid url format --> Example: stackname::http://someurl OR stackname::s3://bucket/key`)
-		}
+func getSource(src string) (string, string, error) {
 
-		return vals[0], vals[1], nil
-
+	vals := strings.Split(src, "::")
+	if len(vals) < 2 {
+		return "", "", errors.New(`Error, invalid format - Usage: stackname::http://someurl OR stackname::path/to/template`)
 	}
 
-	name := filepath.Base(strings.Replace(s, filepath.Ext(s), "", -1))
-	return name, s, nil
-}
-
-// genTimeParser - Parses templates before deploying them...
-func genTimeParser(source string) (string, error) {
-
-	templ, err := fetchContent(source)
-	if err != nil {
-		return "", err
-	}
-
-	// Create template
-	t, err := template.New("gen-template").Funcs(genTimeFunctions).Parse(templ)
-	if err != nil {
-		return "", err
-	}
-
-	// so that we can write to string
-	var doc bytes.Buffer
-	t.Execute(&doc, config.vars())
-	return doc.String(), nil
+	return vals[0], vals[1], nil
 }

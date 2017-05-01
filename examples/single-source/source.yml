@@ -1,0 +1,39 @@
+{{- if eq .stack "subnets" -}}
+
+Description: Test Subnet Stack deployed by qaz
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  {{- range $index, $value := .subnets.subnets }} {{- range $access, $cidr := $value }}
+
+  {{ $access }}Subnet:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone: eu-west-1{{ if eq $access `public` }}a{{ else }}b{{ end }}
+      CidrBlock: {{ $cidr }}
+      VpcId: !ImportValue single-source-vpcid
+      Tags:
+        - Key: Name
+          Value: {{ $access }}subnet
+
+  {{- end -}}{{- end -}}
+{{- end -}}
+
+
+{{- if eq .stack "vpc" -}}
+AWSTemplateFormatVersion: '2010-09-09'
+Description: |
+  This is an example VPC deployed via Qaz!
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: {{ .vpc.cidr }}
+
+Outputs:
+  vpcid:
+    Description: VPC ID
+    Value:  !Ref VPC
+    Export:
+      Name: single-source-vpcid
+{{- end -}}

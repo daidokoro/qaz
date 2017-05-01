@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"strings"
 
 	yaml "gopkg.in/yaml.v2"
 
@@ -13,17 +14,20 @@ var config Config
 
 // Config type for handling yaml config files
 type Config struct {
-	Region  string                 `yaml:"region,omitempty"`
-	Project string                 `yaml:"project"`
-	Bucket  string                 `yaml:"bucket"`
-	Global  map[string]interface{} `yaml:"global,omitempty"`
-	Stacks  map[string]struct {
-		DependsOn  []string               `yaml:"depends_on,omitempty"`
-		Parameters []map[string]string    `yaml:"parameters,omitempty"`
-		Policy     string                 `yaml:"policy,omitempty"`
-		Profile    string                 `yaml:"profile,omitempty"`
-		CF         map[string]interface{} `yaml:"cf"`
-	} `yaml:"stacks"`
+	Region            string                 `yaml:"region,omitempty",json:"region,omitempty"`
+	Project           string                 `yaml:"project",json:"project,omitempty"`
+	GenerateDelimiter string                 `yaml:"gen_time,omitempty",json:"gen_time,omitempty"`
+	DeployDelimiter   string                 `yaml:"deploy_time,omitempty",json:"deploy,omitempty"`
+	Global            map[string]interface{} `yaml:"global,omitempty",json:"global,omitempty"`
+	Stacks            map[string]struct {
+		DependsOn  []string               `yaml:"depends_on,omitempty",json:"depends_on,omitempty"`
+		Parameters []map[string]string    `yaml:"parameters,omitempty",json:"parameters,omitempty"`
+		Policy     string                 `yaml:"policy,omitempty",json:"policy,omitempty"`
+		Profile    string                 `yaml:"profile,omitempty",json:"profile,omitempty"`
+		Source     string                 `yaml:"source,omitempty",json:"source,omitempty"`
+		Bucket     string                 `yaml:"bucket,omitempty",json:"bucket,omitempty"`
+		CF         map[string]interface{} `yaml:"cf",json:"cf,omitempty"`
+	} `yaml:"stacks",json:"stacks"`
 }
 
 // Returns map string of config values
@@ -58,6 +62,32 @@ func (c *Config) parameters(s *stack) {
 	}
 }
 
+// Read template source and sets the template value in given stack
+func (c *Config) getSource(s *stack) error {
+	return nil
+}
+
+// delims - Returns left/righ delimiters in a list where string is the deploy level - gen/deploy time
+func (c *Config) delims(level string) (string, string) {
+
+	if level == "deploy" {
+		if config.DeployDelimiter != "" {
+			delims := strings.Split(config.GenerateDelimiter, ":")
+			return delims[0], delims[1]
+		}
+		// default
+		return "<<", ">>"
+	}
+
+	if config.GenerateDelimiter != "" {
+		delims := strings.Split(config.GenerateDelimiter, ":")
+		return delims[0], delims[1]
+	}
+	// default
+	return "{{", "}}"
+
+}
+
 // configReader parses the config YAML file with Viper
 func configReader(conf string) error {
 
@@ -82,6 +112,8 @@ func configReader(conf string) error {
 		stacks[s].dependsOn = v.DependsOn
 		stacks[s].policy = v.Policy
 		stacks[s].profile = v.Profile
+		stacks[s].source = v.Source
+		stacks[s].bucket = v.Bucket
 
 		// set session
 		sess, err := manager.GetSess(stacks[s].profile)

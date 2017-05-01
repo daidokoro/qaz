@@ -35,9 +35,15 @@ func TestStack(t *testing.T) {
 		t.Errorf("StackName Failed, Expected: github-release-sqs, Received: %s", teststack.stackname)
 	}
 
-	// Get Stack template - test s3Read
-	teststack.template, err = genTimeParser(testTemplateSrc)
+	// set template source
+	teststack.source = testTemplateSrc
+	teststack.template, err = fetchContent(teststack.source)
 	if err != nil {
+		t.Error(err)
+	}
+
+	// Get Stack template - test s3Read
+	if err := teststack.genTimeParser(); err != nil {
 		t.Error(err)
 	}
 
@@ -116,9 +122,17 @@ func TestDeploy(t *testing.T) {
 
 	teststack.setStackName()
 
-	// Get Stack template - test s3Read
-	teststack.template, err = genTimeParser(deployTemplateSrc)
+	// Set source
+	teststack.source = deployTemplateSrc
+	resp, err := fetchContent(teststack.source)
 	if err != nil {
+		t.Error(err)
+	}
+
+	teststack.template = resp
+
+	// Get Stack template - test s3Read
+	if err = teststack.genTimeParser(); err != nil {
 		t.Error(err)
 	}
 

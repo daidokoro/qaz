@@ -3,7 +3,6 @@ package commands
 import (
 	"fmt"
 	"io/ioutil"
-	"path/filepath"
 	"strings"
 	"text/template"
 
@@ -107,34 +106,53 @@ var lambdaInvoke = func(name string, payload string) (interface{}, error) {
 	return f.response, nil
 }
 
+var prefix = func(s string, pre string) bool {
+	return strings.HasPrefix(s, pre)
+}
+
+var suffix = func(s string, suf string) bool {
+	return strings.HasSuffix(s, suf)
+}
+
+var contains = func(s string, con string) bool {
+	return strings.Contains(s, con)
+}
+
 // template function maps
 
 var genTimeFunctions = template.FuncMap{
 	// simple additon function useful for counters in loops
 	"add": func(a int, b int) int {
-		Log(fmt.Sprintln("Calling Template Function [Add] with arguments:", a, b), level.debug)
+		Log(fmt.Sprintln("Calling Template Function [add] with arguments:", a, b), level.debug)
 		return a + b
 	},
 
 	// strip function for removing characters from text
 	"strip": func(s string, rmv string) string {
-		Log(fmt.Sprintln("Calling Template Function [Strip] with arguments:", s, rmv), level.debug)
+		Log(fmt.Sprintln("Calling Template Function [strip] with arguments:", s, rmv), level.debug)
 		return strings.Replace(s, rmv, "", -1)
 	},
 
-	// file function for reading text from a given file under the files folder
-	"file": func(filename string) (string, error) {
+	// cat function for reading text from a given file under the files folder
+	"cat": func(path string) (string, error) {
 
-		Log(fmt.Sprintln("Calling Template Function [File] with arguments:", filename), level.debug)
-		p := job.tplFiles[0]
-		f := filepath.Join(filepath.Dir(p), "..", "files", filename)
-		b, err := ioutil.ReadFile(f)
+		Log(fmt.Sprintln("Calling Template Function [cat] with arguments:", path), level.debug)
+		b, err := ioutil.ReadFile(path)
 		if err != nil {
 			Log(err.Error(), level.err)
 			return "", err
 		}
 		return string(b), nil
 	},
+
+	// suffix - returns true if string starts with given suffix
+	"suffix": suffix,
+
+	// prefix - returns true if string starts with given prefix
+	"prefix": prefix,
+
+	// contains - returns true if string contains
+	"contains": contains,
 
 	// Get get does an HTTP Get request of the given url and returns the output string
 	"GET": httpGet,
@@ -204,6 +222,15 @@ var deployTimeFunctions = template.FuncMap{
 
 		return "", fmt.Errorf("Stack Output Not found - Stack:%s | Output:%s", req[0], req[1])
 	},
+
+	// suffix - returns true if string starts with given suffix
+	"suffix": suffix,
+
+	// prefix - returns true if string starts with given prefix
+	"prefix": prefix,
+
+	// contains - returns true if string contains
+	"contains": contains,
 
 	// Get get does an HTTP Get request of the given url and returns the output string
 	"GET": httpGet,

@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -12,21 +13,24 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// config environment variable
+const configENV = "QAZ_CONFIG"
+
 // job var used as a central point for command data
 var job = struct {
-	cfgFile      string
-	tplFile      string
-	profile      string
-	tplFiles     []string
-	stacks       map[string]string
-	terminateAll bool
-	version      bool
-	request      string
-	debug        bool
-	funcEvent    string
-	changeName   string
-	stackName    string
-	rollback     bool
+	cfgSource  string
+	tplSource  string
+	profile    string
+	tplSources []string
+	stacks     map[string]string
+	all        bool
+	version    bool
+	request    string
+	debug      bool
+	funcEvent  string
+	changeName string
+	stackName  string
+	rollback   bool
 }{}
 
 // Wait Group for handling goroutines
@@ -107,34 +111,56 @@ var initCmd = &cobra.Command{
 }
 
 var generateCmd = &cobra.Command{
-	Use:   "generate",
+	Use:   "generate [stack]",
 	Short: "Generates template from configuration values",
+	Example: strings.Join([]string{
+		"",
+		"qaz generate -c config.yml -t stack::source",
+		"qaz generate vpc -c config.yml",
+	}, "\n"),
 	Run: func(cmd *cobra.Command, args []string) {
 
 		job.request = "generate"
+		var s string
+		var source string
 
-		s, source, err := getSource(job.tplFile)
+		err := configReader(job.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
 		}
 
-		job.tplFile = source
-		err = configReader(job.cfgFile)
-		if err != nil {
-			handleError(err)
+		if job.tplSource != "" {
+			s, source, err = getSource(job.tplSource)
+			if err != nil {
+				handleError(err)
+				return
+			}
+		}
+
+		if len(args) > 0 {
+			s = args[0]
+		}
+
+		// check if stack exists in config
+		if _, ok := stacks[s]; !ok {
+			handleError(fmt.Errorf("Stack [%s] not found in config", s))
 			return
+		}
+
+		if stacks[s].source == "" {
+			stacks[s].source = source
 		}
 
 		name := fmt.Sprintf("%s-%s", project, s)
 		Log(fmt.Sprintln("Generating a template for ", name), "debug")
 
-		tpl, err := genTimeParser(job.tplFile)
+		err = stacks[s].genTimeParser()
 		if err != nil {
 			handleError(err)
 			return
 		}
-		fmt.Println(tpl)
+		fmt.Println(stacks[s].template)
 	},
 }
 
@@ -142,36 +168,27 @@ var deployCmd = &cobra.Command{
 	Use:   "deploy",
 	Short: "Deploys stack(s) to AWS",
 	Example: strings.Join([]string{
-		"qaz deploy -c path/to/config -t path/to/template",
-		"qaz deploy -c path/to/config -t stack::s3//bucket/key",
+		"qaz deploy stack -c path/to/config",
+		"qaz deploy -c path/to/config -t stack::s3://bucket/key",
+		"qaz deploy -c path/to/config -t stack::path/to/template",
 		"qaz deploy -c path/to/config -t stack::http://someurl",
+		"qaz deploy -c path/to/config -t stack::lambda:{some:json}@lambda_function",
 	}, "\n"),
 	Run: func(cmd *cobra.Command, args []string) {
 
 		job.request = "deploy"
 
-		job.stacks = make(map[string]string)
-
-		sourceCopy := job.tplFiles
-
-		// creating empty template list for re-population later
-		job.tplFiles = []string{}
-
-		for _, src := range sourceCopy {
-			if strings.Contains(src, `*`) {
-				glob, _ := filepath.Glob(src)
-
-				for _, f := range glob {
-					job.tplFiles = append(job.tplFiles, f)
-				}
-				continue
-			}
-
-			job.tplFiles = append(job.tplFiles, src)
+		err := configReader(job.cfgSource)
+		if err != nil {
+			handleError(err)
+			return
 		}
 
-		for _, f := range job.tplFiles {
-			s, source, err := getSource(f)
+		job.stacks = make(map[string]string)
+
+		// Add job stacks based on templates Flags
+		for _, src := range job.tplSources {
+			s, source, err := getSource(src)
 			if err != nil {
 				handleError(err)
 				return
@@ -179,24 +196,40 @@ var deployCmd = &cobra.Command{
 			job.stacks[s] = source
 		}
 
-		err := configReader(job.cfgFile)
-		if err != nil {
-			handleError(err)
-			return
+		// Add all stacks with defined sources if all
+		if job.all {
+			for s, v := range stacks {
+				// so flag values aren't overwritten
+				if _, ok := job.stacks[s]; !ok {
+					job.stacks[s] = v.source
+				}
+			}
 		}
 
-		for s, f := range job.stacks {
-			if v, err := genTimeParser(f); err != nil {
+		// Add job stacks based on Args
+		if len(args) > 0 && !job.all {
+			for _, stk := range args {
+				if _, ok := stacks[stk]; !ok {
+					handleError(fmt.Errorf("Stack [%s] not found in conig", stk))
+					return
+				}
+				job.stacks[stk] = stacks[stk].source
+			}
+		}
+
+		for s, src := range job.stacks {
+			if stacks[s].source == "" {
+				stacks[s].source = src
+			}
+			if err := stacks[s].genTimeParser(); err != nil {
 				handleError(err)
 			} else {
 
 				// Handle missing stacks
 				if stacks[s] == nil {
-					handleError(fmt.Errorf("Missing Stack in %s: [%s]", job.cfgFile, s))
+					handleError(fmt.Errorf("Missing Stack in %s: [%s]", job.cfgSource, s))
 					return
 				}
-
-				stacks[s].template = v
 			}
 		}
 
@@ -211,28 +244,45 @@ var updateCmd = &cobra.Command{
 	Short: "Updates a given stack",
 	Example: strings.Join([]string{
 		"qaz update -c path/to/config -t stack::path/to/template",
-		"qaz update -c path/to/config -t stack::s3//bucket/key",
+		"qaz update -c path/to/config -t stack::s3://bucket/key",
 		"qaz update -c path/to/config -t stack::http://someurl",
+		"qaz deploy -c path/to/config -t stack::lambda:{some:json}@lambda_function",
 	}, "\n"),
 	Run: func(cmd *cobra.Command, args []string) {
 
 		job.request = "update"
+		var s string
+		var source string
 
-		s, source, err := getSource(job.tplFile)
+		err := configReader(job.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
 		}
 
-		job.tplFile = source
+		if job.tplSource != "" {
+			s, source, err = getSource(job.tplSource)
+			if err != nil {
+				handleError(err)
+				return
+			}
+		}
 
-		err = configReader(job.cfgFile)
-		if err != nil {
-			handleError(err)
+		if len(args) > 0 {
+			s = args[0]
+		}
+
+		// check if stack exists in config
+		if _, ok := stacks[s]; !ok {
+			handleError(fmt.Errorf("Stack [%s] not found in config", s))
 			return
 		}
 
-		v, err := genTimeParser(job.tplFile)
+		if stacks[s].source == "" {
+			stacks[s].source = source
+		}
+
+		err = stacks[s].genTimeParser()
 		if err != nil {
 			handleError(err)
 			return
@@ -240,19 +290,73 @@ var updateCmd = &cobra.Command{
 
 		// Handle missing stacks
 		if stacks[s] == nil {
-			handleError(fmt.Errorf("Missing Stack in %s: [%s]", job.cfgFile, s))
+			handleError(fmt.Errorf("Missing Stack in %s: [%s]", job.cfgSource, s))
 			return
 		}
 
-		stacks[s].template = v
-
-		// resolve deploy time function
-		if err = stacks[s].deployTimeParser(); err != nil {
+		if err := stacks[s].update(); err != nil {
 			handleError(err)
+			return
 		}
 
-		stacks[s].update()
+	},
+}
 
+var checkCmd = &cobra.Command{
+	Use:   "check",
+	Short: "Validates Cloudformation Templates",
+	Example: strings.Join([]string{
+		"qaz check -c path/to/config.yml -t path/to/template -c path/to/config",
+		"qaz check -c path/to/config.yml -t stack::http://someurl",
+		"qaz check -c path/to/config.yml -t stack::s3://bucket/key",
+		"qaz deploy -c path/to/config.yml -t stack::lambda:{some:json}@lambda_function",
+	}, "\n"),
+	Run: func(cmd *cobra.Command, args []string) {
+
+		job.request = "validate"
+		var s string
+		var source string
+
+		err := configReader(job.cfgSource)
+		if err != nil {
+			handleError(err)
+			return
+		}
+
+		if job.tplSource != "" {
+			s, source, err = getSource(job.tplSource)
+			if err != nil {
+				handleError(err)
+				return
+			}
+		}
+
+		if len(args) > 0 {
+			s = args[0]
+		}
+
+		// check if stack exists in config
+		if _, ok := stacks[s]; !ok {
+			handleError(fmt.Errorf("Stack [%s] not found in config", s))
+			return
+		}
+
+		if stacks[s].source == "" {
+			stacks[s].source = source
+		}
+
+		name := fmt.Sprintf("%s-%s", config.Project, s)
+		fmt.Println("Validating template for", name)
+
+		if err = stacks[s].genTimeParser(); err != nil {
+			handleError(err)
+			return
+		}
+
+		if err := stacks[s].check(); err != nil {
+			handleError(err)
+			return
+		}
 	},
 }
 
@@ -263,7 +367,7 @@ var terminateCmd = &cobra.Command{
 
 		job.request = "terminate"
 
-		if !job.terminateAll {
+		if !job.all {
 			job.stacks = make(map[string]string)
 			for _, stk := range args {
 				job.stacks[stk] = ""
@@ -275,7 +379,7 @@ var terminateCmd = &cobra.Command{
 			}
 		}
 
-		err := configReader(job.cfgFile)
+		err := configReader(job.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
@@ -293,7 +397,7 @@ var statusCmd = &cobra.Command{
 
 		job.request = "status"
 
-		err := configReader(job.cfgFile)
+		err := configReader(job.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
@@ -326,7 +430,7 @@ var outputsCmd = &cobra.Command{
 			return
 		}
 
-		err := configReader(job.cfgFile)
+		err := configReader(job.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
@@ -343,13 +447,18 @@ var outputsCmd = &cobra.Command{
 			go func(s string) {
 				if err := stacks[s].outputs(); err != nil {
 					handleError(err)
+					wg.Done()
+					return
 				}
 
 				for _, i := range stacks[s].output.Stacks {
-					fmt.Printf("\n"+"[%s]"+"\n", *i.StackName)
-					for _, o := range i.Outputs {
-						fmt.Printf("  Description: %s\n  %s: %s\n\n", *o.Description, colorString(*o.OutputKey, "magenta"), *o.OutputValue)
+					m, err := json.MarshalIndent(i.Outputs, "", "  ")
+					if err != nil {
+						handleError(err)
+
 					}
+
+					fmt.Println(string(m))
 				}
 
 				wg.Done()
@@ -379,64 +488,11 @@ var exportsCmd = &cobra.Command{
 	},
 }
 
-var checkCmd = &cobra.Command{
-	Use:   "check",
-	Short: "Validates Cloudformation Templates",
-	Example: strings.Join([]string{
-		"qaz check -c path/to/config.yml -t path/to/template -c path/to/config",
-		"qaz check -c path/to/config.yml -t stack::http://someurl.example",
-		"qaz check -c path/to/config.yml -t stack::s3://bucket/key",
-	}, "\n"),
-	Run: func(cmd *cobra.Command, args []string) {
-
-		job.request = "validate"
-
-		s, source, err := getSource(job.tplFile)
-		if err != nil {
-			handleError(err)
-			return
-		}
-
-		job.tplFile = source
-
-		err = configReader(job.cfgFile)
-		if err != nil {
-			handleError(err)
-			return
-		}
-
-		name := fmt.Sprintf("%s-%s", project, s)
-		fmt.Println("Validating template for", name)
-
-		tpl, err := genTimeParser(job.tplFile)
-		if err != nil {
-			handleError(err)
-			return
-		}
-
-		stk := stack{name: s}
-		stk.setStackName()
-		stk.template = tpl
-
-		stk.session, err = manager.GetSess(stk.profile)
-		if err != nil {
-			handleError(err)
-			return
-		}
-
-		if err := stk.check(); err != nil {
-			handleError(err)
-			return
-		}
-	},
-}
-
 var invokeCmd = &cobra.Command{
 	Use:   "invoke",
 	Short: "Invoke AWS Lambda Functions",
 	Run: func(cmd *cobra.Command, args []string) {
 		job.request = "lambda_invoke"
-		// fmt.Println(colorString("Coming Soon!", "magenta"))
 
 		if len(args) < 1 {
 			fmt.Println("No Lambda Function specified")
@@ -481,7 +537,7 @@ var policyCmd = &cobra.Command{
 			return
 		}
 
-		err := configReader(job.cfgFile)
+		err := configReader(job.cfgSource)
 		if err != nil {
 			handleError(err)
 			return

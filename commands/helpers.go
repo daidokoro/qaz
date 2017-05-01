@@ -4,7 +4,6 @@ package commands
 
 import (
 	"bufio"
-	"bytes"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -15,8 +14,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/ttacon/chalk"
 )
 
@@ -155,34 +152,11 @@ func Get(url string) (string, error) {
 	return string(b), nil
 }
 
-// S3Read - Reads the content of a given s3 url endpoint and returns the content string.
-func S3Read(url string) (string, error) {
-
-	sess, err := manager.GetSess(job.profile)
-	if err != nil {
-		return "", err
+// defaultConfig - sets config based on ENV variable or default config.yml
+func defaultConfig() string {
+	env := os.Getenv(configENV)
+	if env == "" {
+		return "config.yml"
 	}
-
-	svc := s3.New(sess)
-
-	// Parse s3 url
-	bucket := strings.Split(strings.Replace(strings.ToLower(url), `s3://`, "", -1), `/`)[0]
-	key := strings.Replace(strings.ToLower(url), fmt.Sprintf("s3://%s/", bucket), "", -1)
-
-	params := &s3.GetObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
-	}
-
-	Log(fmt.Sprintln("Calling S3 [GetObject] with parameters:", params), level.debug)
-	resp, err := svc.GetObject(params)
-	if err != nil {
-		return "", err
-	}
-
-	buf := new(bytes.Buffer)
-
-	Log("Reading from S3 Response Body", level.debug)
-	buf.ReadFrom(resp.Body)
-	return buf.String(), nil
+	return env
 }

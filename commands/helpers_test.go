@@ -4,12 +4,11 @@ import "testing"
 
 // TestgetSource - Tests getSource function
 func TestGetSource(t *testing.T) {
-	input := `https://raw.githubusercontent.com/daidokoro/qaz/master/examples/vpc/config.yml`
+	input := `vpc::https://raw.githubusercontent.com/daidokoro/qaz/master/examples/vpc/config.yml`
 	_, _, err := getSource(input)
 	if err != nil {
 		t.Error(err.Error())
 	}
-	t.Log("Success: getSouce")
 }
 
 // TestAwsSession - tests this awsSession function
