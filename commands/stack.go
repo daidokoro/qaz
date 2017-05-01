@@ -559,7 +559,7 @@ func (s *stack) stackPolicy() error {
 func (s *stack) deployTimeParser() error {
 
 	// define Delims
-	left, right := config.delims("gen")
+	left, right := config.delims("deploy")
 
 	// Create template
 	t, err := template.New("deploy-template").Delims(left, right).Funcs(deployTimeFunctions).Parse(s.template)
