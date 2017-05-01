@@ -115,7 +115,7 @@ var generateCmd = &cobra.Command{
 	Short: "Generates template from configuration values",
 	Example: strings.Join([]string{
 		"",
-		"qaz generate -c config.yml -t vpc.yml",
+		"qaz generate -c config.yml -t stack::source",
 		"qaz generate vpc -c config.yml",
 	}, "\n"),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -169,8 +169,10 @@ var deployCmd = &cobra.Command{
 	Short: "Deploys stack(s) to AWS",
 	Example: strings.Join([]string{
 		"qaz deploy stack -c path/to/config",
-		"qaz deploy -c path/to/config -t stack::s3//bucket/key",
+		"qaz deploy -c path/to/config -t stack::s3://bucket/key",
 		"qaz deploy -c path/to/config -t stack::path/to/template",
+		"qaz deploy -c path/to/config -t stack::http://someurl",
+		"qaz deploy -c path/to/config -t stack::lambda:{some:json}@lambda_function",
 	}, "\n"),
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -242,8 +244,9 @@ var updateCmd = &cobra.Command{
 	Short: "Updates a given stack",
 	Example: strings.Join([]string{
 		"qaz update -c path/to/config -t stack::path/to/template",
-		"qaz update -c path/to/config -t stack::s3//bucket/key",
+		"qaz update -c path/to/config -t stack::s3://bucket/key",
 		"qaz update -c path/to/config -t stack::http://someurl",
+		"qaz deploy -c path/to/config -t stack::lambda:{some:json}@lambda_function",
 	}, "\n"),
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -304,8 +307,9 @@ var checkCmd = &cobra.Command{
 	Short: "Validates Cloudformation Templates",
 	Example: strings.Join([]string{
 		"qaz check -c path/to/config.yml -t path/to/template -c path/to/config",
-		"qaz check -c path/to/config.yml -t stack::http://someurl.example",
+		"qaz check -c path/to/config.yml -t stack::http://someurl",
 		"qaz check -c path/to/config.yml -t stack::s3://bucket/key",
+		"qaz deploy -c path/to/config.yml -t stack::lambda:{some:json}@lambda_function",
 	}, "\n"),
 	Run: func(cmd *cobra.Command, args []string) {
 
