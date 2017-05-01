@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -50,6 +51,33 @@ func fetchContent(source string) (string, error) {
 			return "", err
 		}
 		return resp, nil
+	case "lambda":
+		Log(fmt.Sprintln("Source Type: [lambda] Detected, Fetching Source: ", source), level.debug)
+		lambdaSrc := strings.Split(strings.Replace(source, "lambda:", "", -1), "@")
+
+		var raw interface{}
+		if err := json.Unmarshal([]byte(lambdaSrc[0]), &raw); err != nil {
+			return "", err
+		}
+
+		event, err := json.Marshal(raw)
+		if err != nil {
+			return "", err
+		}
+
+		f := function{
+			name:    lambdaSrc[1],
+			payload: event,
+		}
+
+		// using default profile
+		sess := manager.sessions[job.profile]
+		if err := f.Invoke(sess); err != nil {
+			return "", err
+		}
+
+		return f.response, nil
+
 	default:
 		Log(fmt.Sprintln("Source Type: [file] Detected, Fetching Source: ", source), level.debug)
 		b, err := ioutil.ReadFile(source)
