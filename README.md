@@ -76,7 +76,17 @@ qaz requires:
 
 ## Checkout the [Wiki](https://github.com/daidokoro/qaz/wiki) for more on how Qaz works!
 
+### Table of contents
 
+- [Home](https://github.com/daidokoro/qaz/wiki)
+- [Installation](https://github.com/daidokoro/qaz/wiki/Install)
+- [Handling Configuration Files](https://github.com/daidokoro/qaz/wiki/Config)
+- [Custom Template Functions](https://github.com/daidokoro/qaz/wiki/Custom-Function)
+- [Templating with Qaz](https://github.com/daidokoro/qaz/wiki/Templates)
+- [Troposphere via Lambda](https://github.com/daidokoro/qaz/wiki/Troposphere)
+
+
+--
 
 See `examples` folder for more examples of usage. More examples to come.
 
