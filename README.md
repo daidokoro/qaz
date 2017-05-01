@@ -24,7 +24,7 @@ Qaz emphasizes minimal abstraction from the underlying AWS Cloudformation Platfo
 
 - Dynamic deploy script generation utilising the built-in templating functionality
 
-- Single YAML Configuration file for multiple stack templates per environment
+- Single YAML or JSON Configuration file for multiple stack templates per environment
 
 - Utilises Go-routines for Multi-stack concurrent Cloudformation requests for *all* appropriate calls
 
