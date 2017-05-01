@@ -15,7 +15,7 @@ region = "eu-west-1"
 
 [profile lab]
 aws_secret_access_key = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-aws_access_key_id = xxxxxxxx"xxxxxxxxxxxxxx
+aws_access_key_id = "xxxxxxxxxxxxxxxxxxxxxx"
 region = "eu-west-1"
 ```
 
