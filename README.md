@@ -1,6 +1,8 @@
 # qaz—A CLI tool for Templating & Managing stacks in AWS Cloudformation  
 
-![Alt text](images/qaz.png?raw=true "Qaz welcome logo")
+<p align="center">
+  <img src="images/qaz.png">
+</p>
 
 [![Join the chat at https://gitter.im/qaz-go/Lobby](https://badges.gitter.im/qaz-go/Lobby.svg)](https://gitter.im/qaz-go/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![GitHub stars](https://img.shields.io/github/stars/daidokoro/qaz.svg)](https://github.com/daidokoro/qaz/stargazers)
@@ -72,7 +74,7 @@ qaz requires:
 [![asciicast](https://asciinema.org/a/6d27ij32ev7ztarkfmrq5s0zg.png)](https://asciinema.org/a/6d27ij32ev7ztarkfmrq5s0zg?speed=2)
 
 
-Checkout the [Wiki](https://github.com/daidokoro/qaz/wiki) for more on how Qaz works!
+## Checkout the [Wiki](https://github.com/daidokoro/qaz/wiki) for more on how Qaz works!
 
 
 
