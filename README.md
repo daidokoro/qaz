@@ -1,6 +1,4 @@
-# qaz—A CLI tool for Templating & Managing stacks in AWS Cloudformation  
-
-<p align="center">
+ <p align="center">
   <img src="images/qaz.png">
 </p>
 
