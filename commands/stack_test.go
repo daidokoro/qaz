@@ -37,6 +37,10 @@ func TestStack(t *testing.T) {
 
 	// set template source
 	teststack.source = testTemplateSrc
+	teststack.template, err = fetchContent(teststack.source)
+	if err != nil {
+		t.Error(err)
+	}
 
 	// Get Stack template - test s3Read
 	if err := teststack.genTimeParser(); err != nil {
@@ -118,13 +122,19 @@ func TestDeploy(t *testing.T) {
 
 	teststack.setStackName()
 
-	// Get Stack template - test s3Read
-	if err := teststack.genTimeParser(); err != nil {
+	// Set source
+	teststack.source = deployTemplateSrc
+	resp, err := fetchContent(teststack.source)
+	if err != nil {
 		t.Error(err)
 	}
 
-	// Set source
-	teststack.source = deployTemplateSrc
+	teststack.template = resp
+
+	// Get Stack template - test s3Read
+	if err = teststack.genTimeParser(); err != nil {
+		t.Error(err)
+	}
 
 	// Test Deploy Stack
 	if err := teststack.deploy(); err != nil {
