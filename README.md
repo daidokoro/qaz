@@ -76,7 +76,7 @@ qaz requires:
 
 ## Checkout the [Wiki](https://github.com/daidokoro/qaz/wiki) for more on how Qaz works!
 
-### Content
+__Content__:
 
 - [Home](https://github.com/daidokoro/qaz/wiki)
 - [Installation](https://github.com/daidokoro/qaz/wiki/Install)
