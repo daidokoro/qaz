@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 )
@@ -29,11 +31,21 @@ type stack struct {
 	profile      string
 	source       string
 	bucket       string
+	role         string
 }
 
 // setStackName - sets the stackname with struct
 func (s *stack) setStackName() {
 	s.stackname = fmt.Sprintf("%s-%s", config.Project, s.name)
+}
+
+// creds - Returns credentials if role set
+func (s *stack) creds() *credentials.Credentials {
+	var creds *credentials.Credentials
+	if s.role == "" {
+		return creds
+	}
+	return stscreds.NewCredentials(s.session, s.role)
 }
 
 func (s *stack) deploy() error {
@@ -45,7 +57,7 @@ func (s *stack) deploy() error {
 
 	Log(fmt.Sprintf("Updated Template:\n%s", s.template), level.debug)
 	done := make(chan bool)
-	svc := cloudformation.New(s.session)
+	svc := cloudformation.New(s.session, &aws.Config{Credentials: s.creds()})
 
 	createParams := &cloudformation.CreateStackInput{
 		StackName:       aws.String(s.stackname),
@@ -127,7 +139,7 @@ func (s *stack) update() error {
 	}
 
 	done := make(chan bool)
-	svc := cloudformation.New(s.session)
+	svc := cloudformation.New(s.session, &aws.Config{Credentials: s.creds()})
 	updateParams := &cloudformation.UpdateStackInput{
 		StackName:    aws.String(s.stackname),
 		TemplateBody: aws.String(s.template),
@@ -205,7 +217,7 @@ func (s *stack) terminate() error {
 	}
 
 	done := make(chan bool)
-	svc := cloudformation.New(s.session)
+	svc := cloudformation.New(s.session, &aws.Config{Credentials: s.creds()})
 
 	params := &cloudformation.DeleteStackInput{
 		StackName: aws.String(s.stackname),
@@ -248,7 +260,7 @@ func (s *stack) terminate() error {
 }
 
 func (s *stack) stackExists() bool {
-	svc := cloudformation.New(s.session)
+	svc := cloudformation.New(s.session, &aws.Config{Credentials: s.creds()})
 
 	describeStacksInput := &cloudformation.DescribeStacksInput{
 		StackName: aws.String(s.stackname),
@@ -265,7 +277,7 @@ func (s *stack) stackExists() bool {
 }
 
 func (s *stack) status() error {
-	svc := cloudformation.New(s.session)
+	svc := cloudformation.New(s.session, &aws.Config{Credentials: s.creds()})
 
 	describeStacksInput := &cloudformation.DescribeStacksInput{
 		StackName: aws.String(s.stackname),
@@ -306,7 +318,7 @@ func (s *stack) status() error {
 }
 
 func (s *stack) state() (string, error) {
-	svc := cloudformation.New(s.session)
+	svc := cloudformation.New(s.session, &aws.Config{Credentials: s.creds()})
 
 	describeStacksInput := &cloudformation.DescribeStacksInput{
 		StackName: aws.String(s.stackname),
@@ -330,7 +342,7 @@ func (s *stack) state() (string, error) {
 }
 
 func (s *stack) change(req string) error {
-	svc := cloudformation.New(s.session)
+	svc := cloudformation.New(s.session, &aws.Config{Credentials: s.creds()})
 
 	switch req {
 
@@ -485,7 +497,7 @@ func (s *stack) change(req string) error {
 }
 
 func (s *stack) check() error {
-	svc := cloudformation.New(s.session)
+	svc := cloudformation.New(s.session, &aws.Config{Credentials: s.creds()})
 
 	params := &cloudformation.ValidateTemplateInput{
 		TemplateBody: aws.String(s.template),
@@ -508,7 +520,7 @@ func (s *stack) check() error {
 
 func (s *stack) outputs() error {
 
-	svc := cloudformation.New(s.session)
+	svc := cloudformation.New(s.session, &aws.Config{Credentials: s.creds()})
 	outputParams := &cloudformation.DescribeStacksInput{
 		StackName: aws.String(s.stackname),
 	}
@@ -531,7 +543,7 @@ func (s *stack) stackPolicy() error {
 		return fmt.Errorf("Empty Stack Policy value detected...")
 	}
 
-	svc := cloudformation.New(s.session)
+	svc := cloudformation.New(s.session, &aws.Config{Credentials: s.creds()})
 
 	params := &cloudformation.SetStackPolicyInput{
 		StackName: &s.stackname,
@@ -559,7 +571,7 @@ func (s *stack) stackPolicy() error {
 func (s *stack) deployTimeParser() error {
 
 	// define Delims
-	left, right := config.delims("gen")
+	left, right := config.delims("deploy")
 
 	// Create template
 	t, err := template.New("deploy-template").Delims(left, right).Funcs(deployTimeFunctions).Parse(s.template)
@@ -614,7 +626,7 @@ func (s *stack) genTimeParser() error {
 
 // tail - tracks the progress during stack updates. c - command Type
 func (s *stack) tail(c string, done <-chan bool) {
-	svc := cloudformation.New(s.session)
+	svc := cloudformation.New(s.session, &aws.Config{Credentials: s.creds()})
 
 	params := &cloudformation.DescribeStackEventsInput{
 		StackName: aws.String(s.stackname),

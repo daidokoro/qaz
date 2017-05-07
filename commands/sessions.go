@@ -23,9 +23,9 @@ func (s *sessionManager) GetSess(p string) (*session.Session, error) {
 		p = job.profile
 	}
 
-	if _, ok := s.sessions[p]; ok {
+	if v, ok := s.sessions[p]; ok {
 		Log(fmt.Sprintf("Session Detected: [%s]", p), level.debug)
-		return s.sessions[p], nil
+		return v, nil
 	}
 
 	options := session.Options{
@@ -47,4 +47,6 @@ func (s *sessionManager) GetSess(p string) (*session.Session, error) {
 	return sess, nil
 }
 
-var manager = sessionManager{sessions: make(map[string]*session.Session)}
+var manager = sessionManager{
+	sessions: make(map[string]*session.Session),
+}
