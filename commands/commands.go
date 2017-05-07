@@ -505,7 +505,7 @@ var invokeCmd = &cobra.Command{
 			return
 		}
 
-		f := function{name: args[0]}
+		f := awsLambda{name: args[0]}
 
 		if job.funcEvent != "" {
 			f.payload = []byte(job.funcEvent)

@@ -87,7 +87,7 @@ var s3Read = func(url string) (string, error) {
 }
 
 var lambdaInvoke = func(name string, payload string) (interface{}, error) {
-	f := function{name: name}
+	f := awsLambda{name: name}
 	if payload != "" {
 		f.payload = []byte(payload)
 	}

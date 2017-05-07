@@ -32,6 +32,7 @@ type stack struct {
 	source       string
 	bucket       string
 	role         string
+	hooks
 }
 
 // setStackName - sets the stackname with struct

@@ -21,7 +21,7 @@ func TestAwsSession(t *testing.T) {
 
 // TestInvoke - test lambda invoke Functions
 func TestInvoke(t *testing.T) {
-	f := function{
+	f := awsLambda{
 		name:    "hello",
 		payload: []byte(`{"name":"qaz"}`),
 	}

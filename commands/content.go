@@ -65,7 +65,7 @@ func fetchContent(source string) (string, error) {
 			return "", err
 		}
 
-		f := function{
+		f := awsLambda{
 			name:    lambdaSrc[1],
 			payload: event,
 		}

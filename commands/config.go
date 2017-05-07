@@ -27,6 +27,7 @@ type Config struct {
 		Source     string                 `yaml:"source,omitempty",json:"source,omitempty"`
 		Bucket     string                 `yaml:"bucket,omitempty",json:"bucket,omitempty"`
 		Role       string                 `yaml:"role,omitempty",json:"role,omitempty"`
+		Hooks      hooks                  `yaml:"hooks,omitempty",json:"hooks,omitempty"`
 		CF         map[string]interface{} `yaml:"cf,omitempty",json:"cf,omitempty"`
 	} `yaml:"stacks",json:"stacks"`
 }
