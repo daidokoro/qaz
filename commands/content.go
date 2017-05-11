@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"regexp"
 	"strings"
 )
 
@@ -65,8 +66,15 @@ func fetchContent(source string) (string, error) {
 			return "", err
 		}
 
+		reg, err := regexp.Compile("[^A-Za-z0-9_-]+")
+		if err != nil {
+			return "", err
+		}
+
+		lambdaName := reg.ReplaceAllString(lambdaSrc[1], "")
+
 		f := awsLambda{
-			name:    lambdaSrc[1],
+			name:    lambdaName,
 			payload: event,
 		}
 
