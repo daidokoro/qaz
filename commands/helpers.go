@@ -9,12 +9,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/ttacon/chalk"
 )
 
 // configTemplate - Returns template byte string for init() function
@@ -33,60 +30,6 @@ global:
 stacks:
 
 `, region, project))
-}
-
-// colorMap - Used to map a particular color to a cf status phrase - returns lowercase strings in color.
-func colorMap(s string) string {
-
-	// If Windows, disable colorS
-	if runtime.GOOS == "windows" {
-		return s
-	}
-
-	v := strings.Split(s, "_")[len(strings.Split(s, "_"))-1]
-
-	var result string
-
-	switch v {
-	case "COMPLETE":
-		result = chalk.Green.Color(s)
-	case "PROGRESS":
-		result = chalk.Yellow.Color(s)
-	case "FAILED":
-		result = chalk.Red.Color(s)
-	case "SKIPPED":
-		result = chalk.Blue.Color(s)
-	default:
-		// Unidentified, just returns the same string
-		return strings.ToLower(s)
-	}
-	return strings.ToLower(result)
-}
-
-// colorString - Returns colored string
-func colorString(s string, color string) string {
-
-	// If Windows, disable colorS
-	if runtime.GOOS == "windows" {
-		return s
-	}
-
-	var result string
-	switch strings.ToLower(color) {
-	case "green":
-		result = chalk.Green.Color(s)
-	case "yellow":
-		result = chalk.Yellow.Color(s)
-	case "red":
-		result = chalk.Red.Color(s)
-	case "magenta":
-		result = chalk.Magenta.Color(s)
-	default:
-		// Unidentified, just returns the same string
-		return s
-	}
-
-	return result
 }
 
 // all - returns true if all items in array the same as the given string
