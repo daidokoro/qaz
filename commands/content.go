@@ -60,7 +60,7 @@ func fetchContent(source string) (string, error) {
 		}
 
 		// using default profile
-		sess := manager.sessions[job.profile]
+		sess := manager.sessions[run.profile]
 		if err := f.Invoke(sess); err != nil {
 			return "", err
 		}
