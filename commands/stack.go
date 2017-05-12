@@ -62,7 +62,7 @@ func (s *stack) deploy() error {
 
 	createParams := &cloudformation.CreateStackInput{
 		StackName:       aws.String(s.stackname),
-		DisableRollback: aws.Bool(!job.rollback),
+		DisableRollback: aws.Bool(!run.rollback),
 	}
 
 	if s.policy != "" {
@@ -356,7 +356,7 @@ func (s *stack) change(req string) error {
 
 		params := &cloudformation.CreateChangeSetInput{
 			StackName:     aws.String(s.stackname),
-			ChangeSetName: aws.String(job.changeName),
+			ChangeSetName: aws.String(run.changeName),
 		}
 
 		Log(fmt.Sprintf("Updated Template:\n%s", s.template), level.debug)
@@ -404,7 +404,7 @@ func (s *stack) change(req string) error {
 
 		describeParams := &cloudformation.DescribeChangeSetInput{
 			StackName:     aws.String(s.stackname),
-			ChangeSetName: aws.String(job.changeName),
+			ChangeSetName: aws.String(run.changeName),
 		}
 
 		for {
@@ -414,7 +414,7 @@ func (s *stack) change(req string) error {
 				return err
 			}
 
-			Log(fmt.Sprintf("Creating Change-Set: [%s] - %s - %s", job.changeName, colorMap(*resp.Status), s.stackname), level.info)
+			Log(fmt.Sprintf("Creating Change-Set: [%s] - %s - %s", run.changeName, colorMap(*resp.Status), s.stackname), level.info)
 
 			if *resp.Status == "CREATE_COMPLETE" || *resp.Status == "FAILED" {
 				break
@@ -425,7 +425,7 @@ func (s *stack) change(req string) error {
 
 	case "rm":
 		params := &cloudformation.DeleteChangeSetInput{
-			ChangeSetName: aws.String(job.changeName),
+			ChangeSetName: aws.String(run.changeName),
 			StackName:     aws.String(s.stackname),
 		}
 
@@ -433,7 +433,7 @@ func (s *stack) change(req string) error {
 			return err
 		}
 
-		Log(fmt.Sprintf("Change-Set: [%s] deleted", job.changeName), level.info)
+		Log(fmt.Sprintf("Change-Set: [%s] deleted", run.changeName), level.info)
 
 	case "list":
 		params := &cloudformation.ListChangeSetsInput{
@@ -455,7 +455,7 @@ func (s *stack) change(req string) error {
 		done := make(chan bool)
 		params := &cloudformation.ExecuteChangeSetInput{
 			StackName:     aws.String(s.stackname),
-			ChangeSetName: aws.String(job.changeName),
+			ChangeSetName: aws.String(run.changeName),
 		}
 
 		if _, err := svc.ExecuteChangeSet(params); err != nil {
@@ -477,7 +477,7 @@ func (s *stack) change(req string) error {
 
 	case "desc":
 		params := &cloudformation.DescribeChangeSetInput{
-			ChangeSetName: aws.String(job.changeName),
+			ChangeSetName: aws.String(run.changeName),
 			StackName:     aws.String(s.stackname),
 		}
 
@@ -639,7 +639,7 @@ func (s *stack) tail(c string, done <-chan bool) {
 	for {
 		select {
 		case <-done:
-			Log("Tail Job Completed", level.debug)
+			Log("Tail run.Completed", level.debug)
 			return
 		default:
 			// If channel is not populated, run verbose cf print
