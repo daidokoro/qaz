@@ -20,12 +20,12 @@ func (s *sessionManager) GetSess(p string) (*session.Session, error) {
 
 	// Set P to default or command input if stack input is empty
 	if p == "" {
-		p = job.profile
+		p = run.profile
 	}
 
-	if _, ok := s.sessions[p]; ok {
+	if v, ok := s.sessions[p]; ok {
 		Log(fmt.Sprintf("Session Detected: [%s]", p), level.debug)
-		return s.sessions[p], nil
+		return v, nil
 	}
 
 	options := session.Options{
@@ -37,7 +37,7 @@ func (s *sessionManager) GetSess(p string) (*session.Session, error) {
 		options.Config = aws.Config{Region: &s.region}
 	}
 
-	Log(fmt.Sprintf("Creating AWS Session with options: Regioin: %s, Profile: %s ", region, job.profile), level.debug)
+	Log(fmt.Sprintf("Creating AWS Session with options: Regioin: %s, Profile: %s ", region, run.profile), level.debug)
 	sess, err := session.NewSessionWithOptions(options)
 	if err != nil {
 		return sess, err
@@ -47,4 +47,6 @@ func (s *sessionManager) GetSess(p string) (*session.Session, error) {
 	return sess, nil
 }
 
-var manager = sessionManager{sessions: make(map[string]*session.Session)}
+var manager = sessionManager{
+	sessions: make(map[string]*session.Session),
+}

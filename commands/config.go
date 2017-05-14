@@ -26,7 +26,9 @@ type Config struct {
 		Profile    string                 `yaml:"profile,omitempty",json:"profile,omitempty"`
 		Source     string                 `yaml:"source,omitempty",json:"source,omitempty"`
 		Bucket     string                 `yaml:"bucket,omitempty",json:"bucket,omitempty"`
-		CF         map[string]interface{} `yaml:"cf",json:"cf,omitempty"`
+		Role       string                 `yaml:"role,omitempty",json:"role,omitempty"`
+		Hooks      hooks                  `yaml:"hooks,omitempty",json:"hooks,omitempty"`
+		CF         map[string]interface{} `yaml:"cf,omitempty",json:"cf,omitempty"`
 	} `yaml:"stacks",json:"stacks"`
 }
 
@@ -85,7 +87,6 @@ func (c *Config) delims(level string) (string, string) {
 	}
 	// default
 	return "{{", "}}"
-
 }
 
 // configReader parses the config YAML file with Viper
@@ -114,6 +115,7 @@ func configReader(conf string) error {
 		stacks[s].profile = v.Profile
 		stacks[s].source = v.Source
 		stacks[s].bucket = v.Bucket
+		stacks[s].role = v.Role
 
 		// set session
 		sess, err := manager.GetSess(stacks[s].profile)

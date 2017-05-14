@@ -60,7 +60,7 @@ func DeployHandler() {
 
 	for _, stk := range stacks {
 
-		if _, ok := job.stacks[stk.name]; !ok && len(job.stacks) > 0 {
+		if _, ok := run.stacks[stk.name]; !ok && len(run.stacks) > 0 {
 			continue
 		}
 
@@ -159,9 +159,9 @@ func TerminateHandler() {
 	var status = make(map[string]string)
 
 	for _, stk := range stacks {
-		if _, ok := job.stacks[stk.name]; !ok && len(job.stacks) > 0 {
-			Log(fmt.Sprintf("%s: not in job.stacks, skipping", stk.name), level.debug)
-			continue // only process items in the job.stacks unless empty
+		if _, ok := run.stacks[stk.name]; !ok && len(run.stacks) > 0 {
+			Log(fmt.Sprintf("%s: not in run.stacks, skipping", stk.name), level.debug)
+			continue // only process items in the run.stacks unless empty
 		}
 
 		if len(stk.dependsOn) == 0 {

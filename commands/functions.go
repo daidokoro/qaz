@@ -15,7 +15,7 @@ import (
 // Common Functions - Both Deploy/Gen
 
 var kmsEncrypt = func(kid string, text string) (string, error) {
-	sess, err := manager.GetSess(job.profile)
+	sess, err := manager.GetSess(run.profile)
 	if err != nil {
 		Log(err.Error(), level.err)
 		return "", err
@@ -38,7 +38,7 @@ var kmsEncrypt = func(kid string, text string) (string, error) {
 }
 
 var kmsDecrypt = func(cipher string) (string, error) {
-	sess, err := manager.GetSess(job.profile)
+	sess, err := manager.GetSess(run.profile)
 	if err != nil {
 		Log(err.Error(), level.err)
 		return "", err
@@ -87,12 +87,12 @@ var s3Read = func(url string) (string, error) {
 }
 
 var lambdaInvoke = func(name string, payload string) (interface{}, error) {
-	f := function{name: name}
+	f := awsLambda{name: name}
 	if payload != "" {
 		f.payload = []byte(payload)
 	}
 
-	sess, err := manager.GetSess(job.profile)
+	sess, err := manager.GetSess(run.profile)
 	if err != nil {
 		Log(err.Error(), level.err)
 		return "", err
@@ -197,7 +197,7 @@ var deployTimeFunctions = template.FuncMap{
 		Log(fmt.Sprintf("Deploy-Time function resolving: %s", target), level.debug)
 		req := strings.Split(target, "::")
 
-		sess, err := manager.GetSess(job.profile)
+		sess, err := manager.GetSess(run.profile)
 		if err != nil {
 			Log(err.Error(), level.err)
 			return "", nil

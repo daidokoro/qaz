@@ -85,7 +85,7 @@ func TestStack(t *testing.T) {
 
 	// Test ChangeSets
 	teststack.template = strings.Replace(teststack.template, "Secret", "MySecret", -1)
-	job.changeName = "gotest"
+	run.changeName = "gotest"
 
 	for _, c := range []string{"create", "list", "desc", "execute"} {
 		if err := teststack.change(c); err != nil {
@@ -98,7 +98,7 @@ func TestStack(t *testing.T) {
 
 // TestDeploy - test deploy and terminate stack.
 func TestDeploy(t *testing.T) {
-	job.debug = true
+	run.debug = true
 	teststack := stack{
 		name:    "vpc",
 		profile: "default",

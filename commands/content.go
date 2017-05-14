@@ -5,40 +5,22 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"regexp"
 	"strings"
 )
 
 // global variables
 var (
-	region    string
-	project   string
-	stackname string
-	stacks    map[string]*stack
+	region  string
+	project string
+	stacks  map[string]*stack
 )
-
-// used for stack keyword referencing
-var keyword = struct {
-	depends        string
-	parameters     string
-	cloudformation string
-}{
-	"depends_on",
-	"parameters",
-	"cf",
-}
 
 // fetchContent - checks the source type, url/s3/file and calls the corresponding function
 func fetchContent(source string) (string, error) {
 	switch strings.Split(strings.ToLower(source), ":")[0] {
-	case "http":
+	case "http", "https":
 		Log(fmt.Sprintln("Source Type: [http] Detected, Fetching Source: ", source), level.debug)
-		resp, err := Get(source)
-		if err != nil {
-			return "", err
-		}
-		return resp, nil
-	case "https":
-		Log(fmt.Sprintln("Source Type: [https] Detected, Fetching Source: ", source), level.debug)
 		resp, err := Get(source)
 		if err != nil {
 			return "", err
@@ -65,13 +47,20 @@ func fetchContent(source string) (string, error) {
 			return "", err
 		}
 
-		f := function{
-			name:    lambdaSrc[1],
+		reg, err := regexp.Compile("[^A-Za-z0-9_-]+")
+		if err != nil {
+			return "", err
+		}
+
+		lambdaName := reg.ReplaceAllString(lambdaSrc[1], "")
+
+		f := awsLambda{
+			name:    lambdaName,
 			payload: event,
 		}
 
 		// using default profile
-		sess := manager.sessions[job.profile]
+		sess := manager.sessions[run.profile]
 		if err := f.Invoke(sess); err != nil {
 			return "", err
 		}

@@ -16,8 +16,8 @@ import (
 // config environment variable
 const configENV = "QAZ_CONFIG"
 
-// job var used as a central point for command data
-var job = struct {
+// run.var used as a central point for command data
+var run = struct {
 	cfgSource  string
 	tplSource  string
 	profile    string
@@ -31,6 +31,7 @@ var job = struct {
 	changeName string
 	stackName  string
 	rollback   bool
+	colors     bool
 }{}
 
 // Wait Group for handling goroutines
@@ -42,7 +43,7 @@ var RootCmd = &cobra.Command{
 	Short: fmt.Sprintf("\n"),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		if job.version {
+		if run.version {
 			fmt.Printf("qaz - Version %s"+"\n", version)
 			return
 		}
@@ -120,18 +121,17 @@ var generateCmd = &cobra.Command{
 	}, "\n"),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		job.request = "generate"
 		var s string
 		var source string
 
-		err := configReader(job.cfgSource)
+		err := configReader(run.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
 		}
 
-		if job.tplSource != "" {
-			s, source, err = getSource(job.tplSource)
+		if run.tplSource != "" {
+			s, source, err = getSource(run.tplSource)
 			if err != nil {
 				handleError(err)
 				return
@@ -176,48 +176,46 @@ var deployCmd = &cobra.Command{
 	}, "\n"),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		job.request = "deploy"
-
-		err := configReader(job.cfgSource)
+		err := configReader(run.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
 		}
 
-		job.stacks = make(map[string]string)
+		run.stacks = make(map[string]string)
 
-		// Add job stacks based on templates Flags
-		for _, src := range job.tplSources {
+		// Add run.stacks based on templates Flags
+		for _, src := range run.tplSources {
 			s, source, err := getSource(src)
 			if err != nil {
 				handleError(err)
 				return
 			}
-			job.stacks[s] = source
+			run.stacks[s] = source
 		}
 
 		// Add all stacks with defined sources if all
-		if job.all {
+		if run.all {
 			for s, v := range stacks {
 				// so flag values aren't overwritten
-				if _, ok := job.stacks[s]; !ok {
-					job.stacks[s] = v.source
+				if _, ok := run.stacks[s]; !ok {
+					run.stacks[s] = v.source
 				}
 			}
 		}
 
-		// Add job stacks based on Args
-		if len(args) > 0 && !job.all {
+		// Add run.stacks based on Args
+		if len(args) > 0 && !run.all {
 			for _, stk := range args {
 				if _, ok := stacks[stk]; !ok {
 					handleError(fmt.Errorf("Stack [%s] not found in conig", stk))
 					return
 				}
-				job.stacks[stk] = stacks[stk].source
+				run.stacks[stk] = stacks[stk].source
 			}
 		}
 
-		for s, src := range job.stacks {
+		for s, src := range run.stacks {
 			if stacks[s].source == "" {
 				stacks[s].source = src
 			}
@@ -227,7 +225,7 @@ var deployCmd = &cobra.Command{
 
 				// Handle missing stacks
 				if stacks[s] == nil {
-					handleError(fmt.Errorf("Missing Stack in %s: [%s]", job.cfgSource, s))
+					handleError(fmt.Errorf("Missing Stack in %s: [%s]", run.cfgSource, s))
 					return
 				}
 			}
@@ -250,18 +248,17 @@ var updateCmd = &cobra.Command{
 	}, "\n"),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		job.request = "update"
 		var s string
 		var source string
 
-		err := configReader(job.cfgSource)
+		err := configReader(run.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
 		}
 
-		if job.tplSource != "" {
-			s, source, err = getSource(job.tplSource)
+		if run.tplSource != "" {
+			s, source, err = getSource(run.tplSource)
 			if err != nil {
 				handleError(err)
 				return
@@ -290,7 +287,7 @@ var updateCmd = &cobra.Command{
 
 		// Handle missing stacks
 		if stacks[s] == nil {
-			handleError(fmt.Errorf("Missing Stack in %s: [%s]", job.cfgSource, s))
+			handleError(fmt.Errorf("Missing Stack in %s: [%s]", run.cfgSource, s))
 			return
 		}
 
@@ -313,18 +310,17 @@ var checkCmd = &cobra.Command{
 	}, "\n"),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		job.request = "validate"
 		var s string
 		var source string
 
-		err := configReader(job.cfgSource)
+		err := configReader(run.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
 		}
 
-		if job.tplSource != "" {
-			s, source, err = getSource(job.tplSource)
+		if run.tplSource != "" {
+			s, source, err = getSource(run.tplSource)
 			if err != nil {
 				handleError(err)
 				return
@@ -365,21 +361,19 @@ var terminateCmd = &cobra.Command{
 	Short: "Terminates stacks",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		job.request = "terminate"
-
-		if !job.all {
-			job.stacks = make(map[string]string)
+		if !run.all {
+			run.stacks = make(map[string]string)
 			for _, stk := range args {
-				job.stacks[stk] = ""
+				run.stacks[stk] = ""
 			}
 
-			if len(job.stacks) == 0 {
+			if len(run.stacks) == 0 {
 				Log("No stack specified for termination", level.warn)
 				return
 			}
 		}
 
-		err := configReader(job.cfgSource)
+		err := configReader(run.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
@@ -395,9 +389,7 @@ var statusCmd = &cobra.Command{
 	Short: "Prints status of deployed/un-deployed stacks",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		job.request = "status"
-
-		err := configReader(job.cfgSource)
+		err := configReader(run.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
@@ -423,14 +415,12 @@ var outputsCmd = &cobra.Command{
 	Example: "qaz outputs vpc subnets --config path/to/config",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		job.request = "outputs"
-
 		if len(args) < 1 {
 			fmt.Println("Please specify stack(s) to check, For details try --> qaz outputs --help")
 			return
 		}
 
-		err := configReader(job.cfgSource)
+		err := configReader(run.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
@@ -475,9 +465,7 @@ var exportsCmd = &cobra.Command{
 	Example: "qaz exports",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		job.request = "exports"
-
-		sess, err := manager.GetSess(job.profile)
+		sess, err := manager.GetSess(run.profile)
 		if err != nil {
 			handleError(err)
 			return
@@ -492,23 +480,22 @@ var invokeCmd = &cobra.Command{
 	Use:   "invoke",
 	Short: "Invoke AWS Lambda Functions",
 	Run: func(cmd *cobra.Command, args []string) {
-		job.request = "lambda_invoke"
 
 		if len(args) < 1 {
 			fmt.Println("No Lambda Function specified")
 			return
 		}
 
-		sess, err := manager.GetSess(job.profile)
+		sess, err := manager.GetSess(run.profile)
 		if err != nil {
 			handleError(err)
 			return
 		}
 
-		f := function{name: args[0]}
+		f := awsLambda{name: args[0]}
 
-		if job.funcEvent != "" {
-			f.payload = []byte(job.funcEvent)
+		if run.funcEvent != "" {
+			f.payload = []byte(run.funcEvent)
 		}
 
 		if err := f.Invoke(sess); err != nil {
@@ -530,14 +517,12 @@ var policyCmd = &cobra.Command{
 	Example: "qaz set-policy <stack name>",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		job.request = "set-policy"
-
 		if len(args) == 0 {
 			handleError(fmt.Errorf("Please specify stack name..."))
 			return
 		}
 
-		err := configReader(job.cfgSource)
+		err := configReader(run.cfgSource)
 		if err != nil {
 			handleError(err)
 			return

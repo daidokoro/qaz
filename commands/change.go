@@ -19,7 +19,7 @@ var create = &cobra.Command{
 	Use:   "create",
 	Short: "Create Changet-Set",
 	Run: func(cmd *cobra.Command, args []string) {
-		job.request = "change-set create"
+
 		var s string
 		var source string
 
@@ -28,16 +28,16 @@ var create = &cobra.Command{
 			return
 		}
 
-		job.changeName = args[0]
+		run.changeName = args[0]
 
-		err := configReader(job.cfgSource)
+		err := configReader(run.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
 		}
 
-		if job.tplSource != "" {
-			s, source, err = getSource(job.tplSource)
+		if run.tplSource != "" {
+			s, source, err = getSource(run.tplSource)
 			if err != nil {
 				handleError(err)
 				return
@@ -75,31 +75,30 @@ var rm = &cobra.Command{
 	Use:   "rm",
 	Short: "Delete Change-Set",
 	Run: func(cmd *cobra.Command, args []string) {
-		job.request = "change-set delete"
 
 		if len(args) < 1 {
 			fmt.Println("Please provide Change-Set Name...")
 			return
 		}
 
-		if job.stackName == "" {
+		if run.stackName == "" {
 			fmt.Println("Please specify stack name using --stack OR -s ...")
 			return
 		}
 
-		job.changeName = args[0]
+		run.changeName = args[0]
 
-		err := configReader(job.cfgSource)
+		err := configReader(run.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
 		}
 
-		if _, ok := stacks[job.stackName]; !ok {
-			handleError(fmt.Errorf("Stack not found: [%s]", job.stackName))
+		if _, ok := stacks[run.stackName]; !ok {
+			handleError(fmt.Errorf("Stack not found: [%s]", run.stackName))
 		}
 
-		s := stacks[job.stackName]
+		s := stacks[run.stackName]
 
 		if err := s.change("rm"); err != nil {
 			handleError(err)
@@ -112,24 +111,23 @@ var list = &cobra.Command{
 	Use:   "list",
 	Short: "List Change-Sets",
 	Run: func(cmd *cobra.Command, args []string) {
-		job.request = "change-set list"
 
-		if job.stackName == "" {
+		if run.stackName == "" {
 			fmt.Println("Please specify stack name using --stack OR -s ...")
 			return
 		}
 
-		err := configReader(job.cfgSource)
+		err := configReader(run.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
 		}
 
-		if _, ok := stacks[job.stackName]; !ok {
-			handleError(fmt.Errorf("Stack not found: [%s]", job.stackName))
+		if _, ok := stacks[run.stackName]; !ok {
+			handleError(fmt.Errorf("Stack not found: [%s]", run.stackName))
 		}
 
-		s := stacks[job.stackName]
+		s := stacks[run.stackName]
 
 		if err := s.change("list"); err != nil {
 			handleError(err)
@@ -141,31 +139,30 @@ var execute = &cobra.Command{
 	Use:   "execute",
 	Short: "Execute Change-Set",
 	Run: func(cmd *cobra.Command, args []string) {
-		job.request = "change-set execute"
 
 		if len(args) < 1 {
 			fmt.Println("Please provide Change-Set Name...")
 			return
 		}
 
-		if job.stackName == "" {
+		if run.stackName == "" {
 			fmt.Println("Please specify stack name using --stack OR -s ...")
 			return
 		}
 
-		job.changeName = args[0]
+		run.changeName = args[0]
 
-		err := configReader(job.cfgSource)
+		err := configReader(run.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
 		}
 
-		if _, ok := stacks[job.stackName]; !ok {
-			handleError(fmt.Errorf("Stack not found: [%s]", job.stackName))
+		if _, ok := stacks[run.stackName]; !ok {
+			handleError(fmt.Errorf("Stack not found: [%s]", run.stackName))
 		}
 
-		s := stacks[job.stackName]
+		s := stacks[run.stackName]
 
 		if err := s.change("execute"); err != nil {
 			handleError(err)
@@ -177,31 +174,30 @@ var desc = &cobra.Command{
 	Use:   "desc",
 	Short: "Describe Change-Set",
 	Run: func(cmd *cobra.Command, args []string) {
-		job.request = "change-set decribe"
 
 		if len(args) < 1 {
 			fmt.Println("Please provide Change-Set Name...")
 			return
 		}
 
-		if job.stackName == "" {
+		if run.stackName == "" {
 			fmt.Println("Please specify stack name using --stack OR -s ...")
 			return
 		}
 
-		job.changeName = args[0]
+		run.changeName = args[0]
 
-		err := configReader(job.cfgSource)
+		err := configReader(run.cfgSource)
 		if err != nil {
 			handleError(err)
 			return
 		}
 
-		if _, ok := stacks[job.stackName]; !ok {
-			handleError(fmt.Errorf("Stack not found: [%s]", job.stackName))
+		if _, ok := stacks[run.stackName]; !ok {
+			handleError(fmt.Errorf("Stack not found: [%s]", run.stackName))
 		}
 
-		s := stacks[job.stackName]
+		s := stacks[run.stackName]
 
 		if err := s.change("desc"); err != nil {
 			handleError(err)
