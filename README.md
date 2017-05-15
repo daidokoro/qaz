@@ -28,7 +28,7 @@ Qaz emphasizes minimal abstraction from the underlying AWS Cloudformation Platfo
 
 - Utilises Go-routines for Multi-stack concurrent Cloudformation requests for *all* appropriate calls
 
-- Support for AWS Profile selection for Multi-AWS account environments
+- Support for AWS Profile selection & Role switching for Multi-AWS account environments
 
 - Cross stack referencing with support for Cloudformation Exports(_Preferred_) & dynamically retrieving stack outputs on deploy
 
