@@ -69,10 +69,9 @@ qaz requires:
 
 - AWS credentials, you can read about how to set these up [here](http://blogs.aws.amazon.com/security/post/Tx3D6U6WSFGOK2H/A-New-and-Standardized-Way-to-Manage-Credentials-in-the-AWS-SDKs)
 
-## Initialize Project
+## Quickstart
 
-[![asciicast](https://asciinema.org/a/6d27ij32ev7ztarkfmrq5s0zg.png)](https://asciinema.org/a/6d27ij32ev7ztarkfmrq5s0zg?speed=2)
-
+[![asciicast](https://asciinema.org/a/bbuegywnih0x1r35epfdotrv5.png)](https://asciinema.org/a/bbuegywnih0x1r35epfdotrv5?speed=4)
 
 ## Checkout the [Wiki](https://github.com/daidokoro/qaz/wiki) for more on how Qaz works!
 
@@ -104,7 +103,7 @@ Available Commands:
   exports     Prints stack exports
   generate    Generates template from configuration values
   help        Help about any command
-  init        Creates a basic qaz project
+  init        Creates an initial Qaz config file
   invoke      Invoke AWS Lambda Functions
   outputs     Prints stack outputs
   set-policy  Set Stack Policies based on configured value
@@ -114,10 +113,12 @@ Available Commands:
 
 Flags:
       --debug            Run in debug mode...
+  -h, --help             help for qaz
+      --no-colors        disable colors in outputs
   -p, --profile string   configured aws profile (default "default")
       --version          print current/running version
 
-Use "qaz [command] --help" for more information about a command.
+Use "qaz [command] --help" for more information about a command
 
 ```
 
