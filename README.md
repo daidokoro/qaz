@@ -71,7 +71,7 @@ qaz requires:
 
 ## Quickstart
 
-[![asciicast](https://asciinema.org/a/bbuegywnih0x1r35epfdotrv5.png)](https://asciinema.org/a/bbuegywnih0x1r35epfdotrv5?speed=4)
+[![asciicast](https://asciinema.org/a/bbuegywnih0x1r35epfdotrv5.png)](https://asciinema.org/a/bbuegywnih0x1r35epfdotrv5?speed=3)
 
 ## Checkout the [Wiki](https://github.com/daidokoro/qaz/wiki) for more on how Qaz works!
 
