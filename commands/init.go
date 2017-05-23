@@ -8,7 +8,7 @@ func init() {
 
 	// Define Deploy Flags
 	deployCmd.Flags().StringArrayVarP(&run.tplSources, "template", "t", []string{}, "path to template file(s) Or stack::url")
-	deployCmd.Flags().BoolVarP(&run.rollback, "rollback", "R", false, "Set Stack to rollback on deployment failures")
+	deployCmd.Flags().BoolVarP(&run.rollback, "disable-rollback", "", false, "Set Stack to rollback on deployment failures")
 	deployCmd.Flags().BoolVarP(&run.all, "all", "A", false, "deploy all stacks with defined Sources in config")
 
 	// Define Terminate Flags
