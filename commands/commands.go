@@ -54,7 +54,7 @@ var RootCmd = &cobra.Command{
 
 var initCmd = &cobra.Command{
 	Use:   "init [target directory]",
-	Short: "Creates a basic qaz project",
+	Short: "Creates an initial Qaz config file",
 	Run: func(cmd *cobra.Command, args []string) {
 
 		// Print Banner
@@ -70,13 +70,12 @@ var initCmd = &cobra.Command{
 		}
 
 		// Get Project & AWS Region
-		project = getInput("-> Enter your Project name", "qaz-project")
-		region = getInput("-> Enter AWS Region", "eu-west-1")
+		arrow := colorString("->", "magenta")
+		project = getInput(fmt.Sprintf("%s Enter your Project name", arrow), "qaz-project")
+		region = getInput(fmt.Sprintf("%s Enter AWS Region", arrow), "eu-west-1")
 
 		// set target paths
 		c := filepath.Join(target, "config.yml")
-		t := filepath.Join(target, "templates")
-		f := filepath.Join(target, "files")
 
 		// Check if config file exists
 		var overwrite string
@@ -95,14 +94,6 @@ var initCmd = &cobra.Command{
 		if overwrite != "N" {
 			if err := ioutil.WriteFile(c, configTemplate(project, region), 0644); err != nil {
 				fmt.Printf("%s Error, unable to create config.yml file: %s"+"\n", err, colorString("->", "red"))
-				return
-			}
-		}
-
-		// Create template folder
-		for _, dir := range []string{t, f} {
-			if err := os.Mkdir(dir, os.ModePerm); err != nil {
-				fmt.Printf("%s [%s] folder not created: %s"+"\n--\n", colorString("->", "yellow"), dir, err)
 				return
 			}
 		}
