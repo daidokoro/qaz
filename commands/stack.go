@@ -50,7 +50,6 @@ func (s *stack) creds() *credentials.Credentials {
 }
 
 func (s *stack) deploy() error {
-
 	err := s.deployTimeParser()
 	if err != nil {
 		return err
@@ -62,7 +61,7 @@ func (s *stack) deploy() error {
 
 	createParams := &cloudformation.CreateStackInput{
 		StackName:       aws.String(s.stackname),
-		DisableRollback: aws.Bool(!run.rollback),
+		DisableRollback: aws.Bool(run.rollback),
 	}
 
 	if s.policy != "" {
@@ -333,11 +332,12 @@ func (s *stack) state() (string, error) {
 		}
 		return "", err
 	}
-
-	if strings.Contains(strings.ToLower(status.GoString()), "complete") {
-		return state.complete, nil
-	} else if strings.Contains(strings.ToLower(status.GoString()), "fail") {
+	resp := strings.ToLower(status.GoString())
+	switch {
+	case strings.Contains(resp, "rollback"), strings.Contains(resp, "fail"):
 		return state.failed, nil
+	case strings.Contains(resp, "complete"):
+		return state.complete, nil
 	}
 	return "", nil
 }
@@ -683,4 +683,20 @@ func (s *stack) tail(c string, done <-chan bool) {
 		}
 
 	}
+}
+
+// cleanup functions in create_failed or delete_failed states
+func (s *stack) cleanup() error {
+	Log(fmt.Sprintf("Running stack cleanup on [%s]", s.name), level.info)
+	resp, err := s.state()
+	if err != nil {
+		return err
+	}
+
+	if resp == state.failed {
+		if err := s.terminate(); err != nil {
+			return err
+		}
+	}
+	return nil
 }

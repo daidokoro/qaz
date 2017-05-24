@@ -66,13 +66,13 @@ func DeployHandler() {
 
 		// Set deploy status & Check if stack exists
 		if stk.stackExists() {
-
-			updateState(status, stk.name, state.complete)
-			fmt.Printf("Stack [%s] already exists..."+"\n", stk.name)
-			continue
-		} else {
-			updateState(status, stk.name, state.pending)
+			if err := stk.cleanup(); err != nil {
+				Log(fmt.Sprintf("Failed to remove stack: [%s] - %s", stk.name, err.Error()), level.err)
+				updateState(status, stk.name, state.failed)
+				continue
+			}
 		}
+		updateState(status, stk.name, state.pending)
 
 		if len(stk.dependsOn) == 0 {
 			wg.Add(1)
