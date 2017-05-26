@@ -32,6 +32,9 @@ var run = struct {
 	stackName  string
 	rollback   bool
 	colors     bool
+	cfgRaw     string
+	gituser    string
+	gitpass    string
 }{}
 
 // Wait Group for handling goroutines
@@ -115,7 +118,7 @@ var generateCmd = &cobra.Command{
 		var s string
 		var source string
 
-		err := configReader(run.cfgSource)
+		err := configReader(run.cfgSource, run.cfgRaw)
 		if err != nil {
 			handleError(err)
 			return
@@ -167,7 +170,7 @@ var deployCmd = &cobra.Command{
 	}, "\n"),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		err := configReader(run.cfgSource)
+		err := configReader(run.cfgSource, run.cfgRaw)
 		if err != nil {
 			handleError(err)
 			return
@@ -228,6 +231,46 @@ var deployCmd = &cobra.Command{
 	},
 }
 
+var gitDeployCmd = &cobra.Command{
+	Use:   "git-deploy",
+	Short: "Deploy project from Git repository",
+	Run: func(cmd *cobra.Command, args []string) {
+		repo, err := NewRepo(args[0])
+		if err != nil {
+			handleError(err)
+			return
+		}
+
+		// Passing repo to the global var
+		gitrepo = *repo
+
+		if _, ok := repo.files[run.cfgSource]; !ok {
+			handleError(fmt.Errorf("Config [%s] not found in git repo", run.cfgSource))
+			return
+		}
+
+		if err := configReader(run.cfgSource, repo.files[run.cfgSource]); err != nil {
+			handleError(err)
+			return
+		}
+
+		//create run stacks
+		run.stacks = make(map[string]string)
+
+		for s, v := range stacks {
+			// populate run stacks
+			run.stacks[s] = v.source
+			if err := stacks[s].genTimeParser(); err != nil {
+				handleError(err)
+			}
+		}
+
+		// Deploy Stacks
+		DeployHandler()
+
+	},
+}
+
 var updateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Updates a given stack",
@@ -242,7 +285,7 @@ var updateCmd = &cobra.Command{
 		var s string
 		var source string
 
-		err := configReader(run.cfgSource)
+		err := configReader(run.cfgSource, run.cfgRaw)
 		if err != nil {
 			handleError(err)
 			return
@@ -304,7 +347,7 @@ var checkCmd = &cobra.Command{
 		var s string
 		var source string
 
-		err := configReader(run.cfgSource)
+		err := configReader(run.cfgSource, "")
 		if err != nil {
 			handleError(err)
 			return
@@ -364,7 +407,7 @@ var terminateCmd = &cobra.Command{
 			}
 		}
 
-		err := configReader(run.cfgSource)
+		err := configReader(run.cfgSource, "")
 		if err != nil {
 			handleError(err)
 			return
@@ -380,7 +423,7 @@ var statusCmd = &cobra.Command{
 	Short: "Prints status of deployed/un-deployed stacks",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		err := configReader(run.cfgSource)
+		err := configReader(run.cfgSource, run.cfgRaw)
 		if err != nil {
 			handleError(err)
 			return
@@ -411,7 +454,7 @@ var outputsCmd = &cobra.Command{
 			return
 		}
 
-		err := configReader(run.cfgSource)
+		err := configReader(run.cfgSource, run.cfgRaw)
 		if err != nil {
 			handleError(err)
 			return
@@ -513,7 +556,7 @@ var policyCmd = &cobra.Command{
 			return
 		}
 
-		err := configReader(run.cfgSource)
+		err := configReader(run.cfgSource, run.cfgRaw)
 		if err != nil {
 			handleError(err)
 			return
