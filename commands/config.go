@@ -14,22 +14,21 @@ var config Config
 
 // Config type for handling yaml config files
 type Config struct {
-	Region            string                 `yaml:"region,omitempty",json:"region,omitempty"`
-	Project           string                 `yaml:"project",json:"project,omitempty"`
-	GenerateDelimiter string                 `yaml:"gen_time,omitempty",json:"gen_time,omitempty"`
-	DeployDelimiter   string                 `yaml:"deploy_time,omitempty",json:"deploy,omitempty"`
-	Global            map[string]interface{} `yaml:"global,omitempty",json:"global,omitempty"`
+	Region            string                 `yaml:"region,omitempty" json:"region,omitempty"`
+	Project           string                 `yaml:"project" json:"project"`
+	GenerateDelimiter string                 `yaml:"gen_time,omitempty" json:"gen_time,omitempty"`
+	DeployDelimiter   string                 `yaml:"deploy_time,omitempty" json:"deploy,omitempty"`
+	Global            map[string]interface{} `yaml:"global,omitempty" json:"global,omitempty"`
 	Stacks            map[string]struct {
-		DependsOn  []string               `yaml:"depends_on,omitempty",json:"depends_on,omitempty"`
-		Parameters []map[string]string    `yaml:"parameters,omitempty",json:"parameters,omitempty"`
-		Policy     string                 `yaml:"policy,omitempty",json:"policy,omitempty"`
-		Profile    string                 `yaml:"profile,omitempty",json:"profile,omitempty"`
-		Source     string                 `yaml:"source,omitempty",json:"source,omitempty"`
-		Bucket     string                 `yaml:"bucket,omitempty",json:"bucket,omitempty"`
-		Role       string                 `yaml:"role,omitempty",json:"role,omitempty"`
-		Hooks      hooks                  `yaml:"hooks,omitempty",json:"hooks,omitempty"`
-		CF         map[string]interface{} `yaml:"cf,omitempty",json:"cf,omitempty"`
-	} `yaml:"stacks",json:"stacks"`
+		DependsOn  []string               `yaml:"depends_on,omitempty" json:"depends_on,omitempty"`
+		Parameters []map[string]string    `yaml:"parameters,omitempty" json:"parameters,omitempty"`
+		Policy     string                 `yaml:"policy,omitempty" json:"policy,omitempty"`
+		Profile    string                 `yaml:"profile,omitempty" json:"profile,omitempty"`
+		Source     string                 `yaml:"source,omitempty" json:"source,omitempty"`
+		Bucket     string                 `yaml:"bucket,omitempty" json:"bucket,omitempty"`
+		Role       string                 `yaml:"role,omitempty" json:"role,omitempty"`
+		CF         map[string]interface{} `yaml:"cf,omitempty" json:"cf,omitempty"`
+	} `yaml:"stacks" json:"stacks"`
 }
 
 // Returns map string of config values
@@ -90,14 +89,18 @@ func (c *Config) delims(level string) (string, string) {
 }
 
 // configReader parses the config YAML file with Viper
-func configReader(conf string) error {
+func configReader(confSource string, conf string) error {
 
-	cfg, err := fetchContent(conf)
-	if err != nil {
-		return err
+	if conf == "" {
+		cfg, err := fetchContent(confSource)
+		if err != nil {
+			return err
+		}
+
+		conf = cfg
 	}
 
-	if err := yaml.Unmarshal([]byte(cfg), &config); err != nil {
+	if err := yaml.Unmarshal([]byte(conf), &config); err != nil {
 		return err
 	}
 
