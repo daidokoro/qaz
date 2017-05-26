@@ -18,7 +18,7 @@ func TestStack(t *testing.T) {
 	testTemplateSrc := `s3://daidokoro-dev/qaz/test/sqs.yml`
 
 	// Get Config
-	err := configReader(testConfigSrc)
+	err := configReader(testConfigSrc, run.cfgRaw)
 	if err != nil {
 		t.Error(err)
 	}
@@ -109,7 +109,7 @@ func TestDeploy(t *testing.T) {
 	deployConfSource := `https://raw.githubusercontent.com/daidokoro/qaz/master/examples/vpc/config.yml`
 
 	// Get Config
-	err := configReader(deployConfSource)
+	err := configReader(deployConfSource, run.cfgRaw)
 	if err != nil {
 		t.Error(err)
 	}
