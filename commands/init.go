@@ -11,6 +11,12 @@ func init() {
 	deployCmd.Flags().BoolVarP(&run.rollback, "disable-rollback", "", false, "Set Stack to rollback on deployment failures")
 	deployCmd.Flags().BoolVarP(&run.all, "all", "A", false, "deploy all stacks with defined Sources in config")
 
+	// Define Git Deploy Flags
+	gitDeployCmd.Flags().BoolVarP(&run.rollback, "disable-rollback", "", false, "Set Stack to rollback on deployment failures")
+	gitDeployCmd.Flags().BoolVarP(&run.all, "all", "A", false, "deploy all stacks with defined Sources in config")
+	gitDeployCmd.Flags().StringVarP(&run.gituser, "user", "u", "", "git username")
+	gitDeployCmd.Flags().StringVarP(&run.gitpass, "password", "", "", "git password")
+
 	// Define Terminate Flags
 	terminateCmd.Flags().BoolVarP(&run.all, "all", "A", false, "terminate all stacks")
 
@@ -34,7 +40,7 @@ func init() {
 	changeCmd.AddCommand(create, rm, list, execute, desc)
 
 	// Add Config --config common flag
-	for _, cmd := range []interface{}{checkCmd, updateCmd, outputsCmd, statusCmd, terminateCmd, generateCmd, deployCmd, policyCmd} {
+	for _, cmd := range []interface{}{checkCmd, updateCmd, outputsCmd, statusCmd, terminateCmd, generateCmd, deployCmd, gitDeployCmd, policyCmd} {
 		cmd.(*cobra.Command).Flags().StringVarP(&run.cfgSource, "config", "c", defaultConfig(), "path to config file")
 	}
 
@@ -56,6 +62,7 @@ func init() {
 		statusCmd, outputsCmd, initCmd,
 		updateCmd, checkCmd, exportsCmd,
 		invokeCmd, changeCmd, policyCmd,
+		gitDeployCmd,
 	)
 
 }
