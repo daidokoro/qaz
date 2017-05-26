@@ -30,7 +30,7 @@ var create = &cobra.Command{
 
 		run.changeName = args[0]
 
-		err := configReader(run.cfgSource)
+		err := configReader(run.cfgSource, run.cfgRaw)
 		if err != nil {
 			handleError(err)
 			return
@@ -88,7 +88,7 @@ var rm = &cobra.Command{
 
 		run.changeName = args[0]
 
-		err := configReader(run.cfgSource)
+		err := configReader(run.cfgSource, run.cfgRaw)
 		if err != nil {
 			handleError(err)
 			return
@@ -117,7 +117,7 @@ var list = &cobra.Command{
 			return
 		}
 
-		err := configReader(run.cfgSource)
+		err := configReader(run.cfgSource, run.cfgRaw)
 		if err != nil {
 			handleError(err)
 			return
@@ -152,7 +152,7 @@ var execute = &cobra.Command{
 
 		run.changeName = args[0]
 
-		err := configReader(run.cfgSource)
+		err := configReader(run.cfgSource, run.cfgRaw)
 		if err != nil {
 			handleError(err)
 			return
@@ -187,7 +187,7 @@ var desc = &cobra.Command{
 
 		run.changeName = args[0]
 
-		err := configReader(run.cfgSource)
+		err := configReader(run.cfgSource, run.cfgRaw)
 		if err != nil {
 			handleError(err)
 			return
