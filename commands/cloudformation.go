@@ -80,7 +80,7 @@ func DeployHandler() {
 				defer wg.Done()
 
 				// Deploy 0 Depency Stacks first - each on their on go routine
-				Log(fmt.Sprintf("Deploying a template for [%s]", s.name), "info")
+				Log(fmt.Sprintf("deploying a template for [%s]", s.name), "info")
 
 				if err := s.deploy(); err != nil {
 					handleError(err)
