@@ -18,21 +18,21 @@ import (
 
 // stack - holds all meaningful information about a particular stack.
 type stack struct {
-	name         string
-	stackname    string
-	template     string
-	dependsOn    []string
-	dependents   []interface{}
-	stackoutputs *cloudformation.DescribeStacksOutput
-	parameters   []*cloudformation.Parameter
-	output       *cloudformation.DescribeStacksOutput
-	policy       string
-	session      *session.Session
-	profile      string
-	source       string
-	bucket       string
-	role         string
-	hooks
+	name            string
+	stackname       string
+	template        string
+	initialTemplate string
+	dependsOn       []string
+	dependents      []interface{}
+	stackoutputs    *cloudformation.DescribeStacksOutput
+	parameters      []*cloudformation.Parameter
+	output          *cloudformation.DescribeStacksOutput
+	policy          string
+	session         *session.Session
+	profile         string
+	source          string
+	bucket          string
+	role            string
 }
 
 // setStackName - sets the stackname with struct
@@ -125,7 +125,7 @@ func (s *stack) deploy() error {
 		return err
 	}
 
-	Log(fmt.Sprintf("Deployment successful: [%s]", s.stackname), "info")
+	Log(fmt.Sprintf("deployment successful: [%s]", s.stackname), "info")
 
 	done <- true
 	return nil
@@ -254,7 +254,7 @@ func (s *stack) terminate() error {
 		time.Sleep(time.Second * 1)
 	}
 
-	Log(fmt.Sprintf("Deletion successful: [%s]", s.stackname), "info")
+	Log(fmt.Sprintf("termination successful: [%s]", s.stackname), "info")
 
 	return nil
 }
@@ -662,8 +662,8 @@ func (s *stack) tail(c string, done <-chan bool) {
 				}
 
 				line := strings.Join([]string{
-					colorMap(*event.ResourceStatus),
 					*event.StackName,
+					colorMap(*event.ResourceStatus),
 					*event.ResourceType,
 					*event.LogicalResourceId,
 					statusReason,
