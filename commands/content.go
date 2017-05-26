@@ -68,6 +68,16 @@ func fetchContent(source string) (string, error) {
 		return f.response, nil
 
 	default:
+		if gitrepo.URL != "" {
+			Log(fmt.Sprintln("Source Type: [git-repo file] Detected, Fetching Source: ", source), level.debug)
+			out, ok := gitrepo.files[source]
+			if !ok {
+				return "", fmt.Errorf("Source file [%s] not found in Repo", source)
+			}
+
+			return out, nil
+		}
+
 		Log(fmt.Sprintln("Source Type: [file] Detected, Fetching Source: ", source), level.debug)
 		b, err := ioutil.ReadFile(source)
 		if err != nil {
