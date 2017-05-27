@@ -244,9 +244,10 @@ var gitDeployCmd = &cobra.Command{
 		// Passing repo to the global var
 		gitrepo = *repo
 
-		if _, ok := repo.files[run.cfgSource]; !ok {
-			handleError(fmt.Errorf("Config [%s] not found in git repo", run.cfgSource))
-			return
+		if out, ok := repo.files[run.cfgSource]; !ok {
+			Log(fmt.Sprintf("config [%s] not found in git repo - checking local file system", run.cfgSource), level.warn)
+		} else if ok {
+			repo.config = out
 		}
 
 		if err := configReader(run.cfgSource, repo.files[run.cfgSource]); err != nil {

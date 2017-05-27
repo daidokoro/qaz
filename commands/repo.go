@@ -20,9 +20,10 @@ import (
 
 // Repo used to manage git repo based deployments
 type Repo struct {
-	URL   string
-	fs    *memfs.Memory
-	files map[string]string
+	URL    string
+	fs     *memfs.Memory
+	files  map[string]string
+	config string
 }
 
 var gitrepo Repo
