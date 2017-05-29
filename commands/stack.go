@@ -111,7 +111,7 @@ func (s *stack) deploy() error {
 
 	Log(fmt.Sprintln("Calling [CreateStack] with parameters:", createParams), level.debug)
 	if _, err := svc.CreateStack(createParams); err != nil {
-		return errors.New(fmt.Sprintln("Deploying failed: ", err.Error()))
+		return errors.New(fmt.Sprintln("deploying failed: ", err.Error()))
 
 	}
 
@@ -332,9 +332,20 @@ func (s *stack) state() (string, error) {
 		}
 		return "", err
 	}
-	resp := strings.ToLower(status.GoString())
+
+	var resp string
+	for _, stk := range status.Stacks {
+		if *stk.StackName == s.stackname {
+			resp = strings.ToLower(*stk.StackStatus)
+			break
+		}
+	}
+
+	// resp := strings.ToLower(status.GoString())
+	Log(fmt.Sprintf("Stack status: %s", resp), level.debug)
+
 	switch {
-	case strings.Contains(resp, "rollback"), strings.Contains(resp, "fail"):
+	case strings.Contains(resp, "fail"), strings.Contains(resp, "rollback_complete"):
 		return state.failed, nil
 	case strings.Contains(resp, "complete"):
 		return state.complete, nil
@@ -636,7 +647,11 @@ func (s *stack) tail(c string, done <-chan bool) {
 	// used to track what lines have already been printed, to prevent dubplicate output
 	printed := make(map[string]interface{})
 
-	for {
+	// create a ticker - 1.5 seconds
+	tick := time.NewTicker(time.Millisecond * 1500)
+	defer tick.Stop()
+
+	for _ = range tick.C {
 		select {
 		case <-done:
 			Log("Tail run.Completed", level.debug)
@@ -647,8 +662,6 @@ func (s *stack) tail(c string, done <-chan bool) {
 			stackevents, err := svc.DescribeStackEvents(params)
 			if err != nil {
 				Log(fmt.Sprintln("Error when tailing events: ", err.Error()), level.debug)
-				// Sleep 2 seconds before next check - eep going until done signal
-				time.Sleep(time.Duration(2 * time.Second))
 				continue
 			}
 
@@ -670,16 +683,14 @@ func (s *stack) tail(c string, done <-chan bool) {
 				}, " - ")
 
 				if _, ok := printed[line]; !ok {
-					if strings.Split(*event.ResourceStatus, "_")[0] == c || c == "" {
+					event := strings.Split(*event.ResourceStatus, "_")[0]
+					if event == c || c == "" || strings.Contains(strings.ToLower(event), "rollback") {
 						Log(strings.Trim(line, "- "), level.info)
 					}
 
 					printed[line] = nil
 				}
 			}
-
-			// Sleep 2 seconds before next check
-			time.Sleep(time.Duration(2 * time.Second))
 		}
 
 	}
