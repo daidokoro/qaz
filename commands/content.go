@@ -68,9 +68,15 @@ func fetchContent(source string) (string, error) {
 		return f.response, nil
 
 	default:
-		if gitrepo.config != "" {
+		if gitrepo.URL != "" {
 			Log(fmt.Sprintln("Source Type: [git-repo file] Detected, Fetching Source: ", source), level.debug)
-			return gitrepo.config, nil
+			out, ok := gitrepo.files[source]
+			if ok {
+				return out, nil
+			} else if !ok {
+				Log(fmt.Sprintf("config [%s] not found in git repo - checking local file system", source), level.warn)
+			}
+
 		}
 
 		Log(fmt.Sprintln("Source Type: [file] Detected, Fetching Source: ", source), level.debug)
