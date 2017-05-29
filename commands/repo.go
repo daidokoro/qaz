@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"syscall"
 
 	"golang.org/x/crypto/ssh/terminal"
@@ -15,6 +16,7 @@ import (
 	"gopkg.in/src-d/go-billy.v2/memfs"
 	git "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/http"
+	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
 )
 
@@ -64,18 +66,9 @@ func (r *Repo) clone() error {
 		Progress: os.Stdout,
 	}
 
-	if run.gituser != "" {
-		if run.gitpass == "" {
-			fmt.Printf("password:")
-			p, err := terminal.ReadPassword(int(syscall.Stdin))
-			if err != nil {
-				return err
-			}
-			fmt.Printf("\n")
-
-			run.gitpass = string(p)
-		}
-		opts.Auth = http.NewBasicAuth(run.gituser, run.gitpass)
+	// set authentication
+	if err := r.getAuth(opts); err != nil {
+		return err
 	}
 
 	Log(fmt.Sprintln("calling [git clone] with params:", opts), level.debug)
@@ -113,5 +106,35 @@ func (r *Repo) readFiles(root []billy.FileInfo, dirname string) error {
 		r.files[path] = buf.String()
 
 	}
+	return nil
+}
+
+func (r *Repo) getAuth(opts *git.CloneOptions) error {
+	if strings.HasPrefix(r.URL, "git@") {
+		Log("SSH Source URL detected, attempting to use SSH Keys", level.debug)
+
+		sshAuth, err := ssh.NewPublicKeysFromFile("git", run.gitrsa, "")
+		if err != nil {
+			return err
+		}
+
+		opts.Auth = sshAuth
+		return nil
+	}
+
+	if run.gituser != "" {
+		if run.gitpass == "" {
+			fmt.Printf("password:")
+			p, err := terminal.ReadPassword(int(syscall.Stdin))
+			if err != nil {
+				return err
+			}
+			fmt.Printf("\n")
+
+			run.gitpass = string(p)
+		}
+		opts.Auth = http.NewBasicAuth(run.gituser, run.gitpass)
+	}
+
 	return nil
 }

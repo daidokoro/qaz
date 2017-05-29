@@ -2,7 +2,12 @@ package commands
 
 // Init sits here
 
-import "github.com/spf13/cobra"
+import (
+	"os"
+	"path/filepath"
+
+	"github.com/spf13/cobra"
+)
 
 func init() {
 
@@ -16,6 +21,7 @@ func init() {
 	gitDeployCmd.Flags().BoolVarP(&run.all, "all", "A", false, "deploy all stacks with defined Sources in config")
 	gitDeployCmd.Flags().StringVarP(&run.gituser, "user", "u", "", "git username")
 	gitDeployCmd.Flags().StringVarP(&run.gitpass, "password", "", "", "git password")
+	gitDeployCmd.Flags().StringVarP(&run.gitrsa, "ssh-rsa", "", filepath.Join(os.Getenv("HOME"), ".ssh/id_rsa"), "path to git SSH id_rsa")
 
 	// Define Terminate Flags
 	terminateCmd.Flags().BoolVarP(&run.all, "all", "A", false, "terminate all stacks")
