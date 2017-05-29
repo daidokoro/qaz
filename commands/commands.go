@@ -35,6 +35,7 @@ var run = struct {
 	cfgRaw     string
 	gituser    string
 	gitpass    string
+	gitrsa     string
 }{}
 
 // Wait Group for handling goroutines
@@ -244,13 +245,16 @@ var gitDeployCmd = &cobra.Command{
 		// Passing repo to the global var
 		gitrepo = *repo
 
-		if out, ok := repo.files[run.cfgSource]; !ok {
-			Log(fmt.Sprintf("config [%s] not found in git repo - checking local file system", run.cfgSource), level.warn)
-		} else if ok {
+		if out, ok := repo.files[run.cfgSource]; ok {
 			repo.config = out
 		}
 
-		if err := configReader(run.cfgSource, repo.files[run.cfgSource]); err != nil {
+		Log("Repo Files:", level.debug)
+		for k := range repo.files {
+			Log(k, level.debug)
+		}
+
+		if err := configReader(run.cfgSource, repo.config); err != nil {
 			handleError(err)
 			return
 		}
