@@ -69,8 +69,13 @@ func DeployHandler() {
 			if err := stk.cleanup(); err != nil {
 				Log(fmt.Sprintf("Failed to remove stack: [%s] - %s", stk.name, err.Error()), level.err)
 				updateState(status, stk.name, state.failed)
+			}
+
+			if stk.stackExists() {
+				Log(fmt.Sprintf("stack [%s] already exists...\n", stk.name), level.info)
 				continue
 			}
+
 		}
 		updateState(status, stk.name, state.pending)
 
@@ -80,7 +85,7 @@ func DeployHandler() {
 				defer wg.Done()
 
 				// Deploy 0 Depency Stacks first - each on their on go routine
-				Log(fmt.Sprintf("deploying a template for [%s]", s.name), "info")
+				Log(fmt.Sprintf("deploying a template for [%s]", s.name), level.info)
 
 				if err := s.deploy(); err != nil {
 					handleError(err)
@@ -155,64 +160,40 @@ func DeployHandler() {
 
 // TerminateHandler - Handles terminating stacks in the correct order
 func TerminateHandler() {
-	// 	status -  pending, failed, completed
-	var status = make(map[string]string)
-
 	for _, stk := range stacks {
 		if _, ok := run.stacks[stk.name]; !ok && len(run.stacks) > 0 {
 			Log(fmt.Sprintf("%s: not in run.stacks, skipping", stk.name), level.debug)
 			continue // only process items in the run.stacks unless empty
 		}
 
-		if len(stk.dependsOn) == 0 {
-			wg.Add(1)
-			go func(s stack) {
-				defer wg.Done()
-				// Reverse depency look-up so termination waits for all stacks
-				// which depend on it, to finish terminating first.
-				for {
+		// if len(stk.dependsOn) == 0 {
+		wg.Add(1)
+		go func(s stack) {
+			defer wg.Done()
 
-					for _, stk := range stacks {
-						// fmt.Println(stk, stk.dependsOn)
-						if stringIn(s.name, stk.dependsOn) {
-							Log(fmt.Sprintf("[%s]: Depends on [%s].. Waiting for dependency to terminate", stk.name, s.name), level.info)
-							for {
+			// create ticker
+			tick := time.NewTicker(time.Millisecond * 1500)
+			defer tick.Stop()
 
-								if !stk.stackExists() {
-									break
-								}
-								time.Sleep(time.Second * 2)
+			// Reverse depency look-up so termination waits for all stacks
+			// which depend on it, to finish terminating first.
+			for {
+				for _, stk := range stacks {
+					if stringIn(s.name, stk.dependsOn) {
+						Log(fmt.Sprintf("[%s]: Depends on [%s].. Waiting for dependency to terminate", stk.name, s.name), level.info)
+						for _ = range tick.C {
+							if !stk.stackExists() {
+								break
 							}
 						}
 					}
-
-					s.terminate()
-					return
 				}
 
-			}(*stk)
-			continue
-		}
-
-		wg.Add(1)
-		go func(s *stack) {
-			defer wg.Done()
-
-			// Stacks with no Reverse depencies are terminated first
-			updateState(status, s.name, state.pending)
-
-			Log(fmt.Sprintf("Terminating stack [%s]", s.stackname), "info")
-			if err := s.terminate(); err != nil {
-				updateState(status, s.name, state.failed)
+				s.terminate()
 				return
 			}
 
-			updateState(status, s.name, state.complete)
-
-			return
-
-		}(stk)
-
+		}(*stk)
 	}
 
 	// Wait for go routines to complete
