@@ -32,6 +32,10 @@ var run = struct {
 	stackName  string
 	rollback   bool
 	colors     bool
+	cfgRaw     string
+	gituser    string
+	gitpass    string
+	gitrsa     string
 }{}
 
 // Wait Group for handling goroutines
@@ -54,7 +58,7 @@ var RootCmd = &cobra.Command{
 
 var initCmd = &cobra.Command{
 	Use:   "init [target directory]",
-	Short: "Creates a basic qaz project",
+	Short: "Creates an initial Qaz config file",
 	Run: func(cmd *cobra.Command, args []string) {
 
 		// Print Banner
@@ -70,13 +74,12 @@ var initCmd = &cobra.Command{
 		}
 
 		// Get Project & AWS Region
-		project = getInput("-> Enter your Project name", "qaz-project")
-		region = getInput("-> Enter AWS Region", "eu-west-1")
+		arrow := colorString("->", "magenta")
+		project = getInput(fmt.Sprintf("%s Enter your Project name", arrow), "qaz-project")
+		region = getInput(fmt.Sprintf("%s Enter AWS Region", arrow), "eu-west-1")
 
 		// set target paths
 		c := filepath.Join(target, "config.yml")
-		t := filepath.Join(target, "templates")
-		f := filepath.Join(target, "files")
 
 		// Check if config file exists
 		var overwrite string
@@ -99,14 +102,6 @@ var initCmd = &cobra.Command{
 			}
 		}
 
-		// Create template folder
-		for _, dir := range []string{t, f} {
-			if err := os.Mkdir(dir, os.ModePerm); err != nil {
-				fmt.Printf("%s [%s] folder not created: %s"+"\n--\n", colorString("->", "yellow"), dir, err)
-				return
-			}
-		}
-
 		fmt.Println("--")
 	},
 }
@@ -124,7 +119,7 @@ var generateCmd = &cobra.Command{
 		var s string
 		var source string
 
-		err := configReader(run.cfgSource)
+		err := configReader(run.cfgSource, run.cfgRaw)
 		if err != nil {
 			handleError(err)
 			return
@@ -176,7 +171,7 @@ var deployCmd = &cobra.Command{
 	}, "\n"),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		err := configReader(run.cfgSource)
+		err := configReader(run.cfgSource, run.cfgRaw)
 		if err != nil {
 			handleError(err)
 			return
@@ -237,6 +232,58 @@ var deployCmd = &cobra.Command{
 	},
 }
 
+var gitDeployCmd = &cobra.Command{
+	Use:     "git-deploy [git-repo]",
+	Short:   "Deploy project from Git repository",
+	Example: "qaz git-deploy https://github.com/cfn-deployable/simplevpc --user me",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		// check args
+		if len(args) < 1 {
+			fmt.Println("Please specify git repo...")
+			return
+		}
+
+		repo, err := NewRepo(args[0])
+		if err != nil {
+			handleError(err)
+			return
+		}
+
+		// Passing repo to the global var
+		gitrepo = *repo
+
+		if out, ok := repo.files[run.cfgSource]; ok {
+			repo.config = out
+		}
+
+		Log("Repo Files:", level.debug)
+		for k := range repo.files {
+			Log(k, level.debug)
+		}
+
+		if err := configReader(run.cfgSource, repo.config); err != nil {
+			handleError(err)
+			return
+		}
+
+		//create run stacks
+		run.stacks = make(map[string]string)
+
+		for s, v := range stacks {
+			// populate run stacks
+			run.stacks[s] = v.source
+			if err := stacks[s].genTimeParser(); err != nil {
+				handleError(err)
+			}
+		}
+
+		// Deploy Stacks
+		DeployHandler()
+
+	},
+}
+
 var updateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Updates a given stack",
@@ -251,7 +298,7 @@ var updateCmd = &cobra.Command{
 		var s string
 		var source string
 
-		err := configReader(run.cfgSource)
+		err := configReader(run.cfgSource, run.cfgRaw)
 		if err != nil {
 			handleError(err)
 			return
@@ -313,7 +360,7 @@ var checkCmd = &cobra.Command{
 		var s string
 		var source string
 
-		err := configReader(run.cfgSource)
+		err := configReader(run.cfgSource, "")
 		if err != nil {
 			handleError(err)
 			return
@@ -373,7 +420,7 @@ var terminateCmd = &cobra.Command{
 			}
 		}
 
-		err := configReader(run.cfgSource)
+		err := configReader(run.cfgSource, "")
 		if err != nil {
 			handleError(err)
 			return
@@ -389,7 +436,7 @@ var statusCmd = &cobra.Command{
 	Short: "Prints status of deployed/un-deployed stacks",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		err := configReader(run.cfgSource)
+		err := configReader(run.cfgSource, run.cfgRaw)
 		if err != nil {
 			handleError(err)
 			return
@@ -420,7 +467,7 @@ var outputsCmd = &cobra.Command{
 			return
 		}
 
-		err := configReader(run.cfgSource)
+		err := configReader(run.cfgSource, run.cfgRaw)
 		if err != nil {
 			handleError(err)
 			return
@@ -522,7 +569,7 @@ var policyCmd = &cobra.Command{
 			return
 		}
 
-		err := configReader(run.cfgSource)
+		err := configReader(run.cfgSource, run.cfgRaw)
 		if err != nil {
 			handleError(err)
 			return

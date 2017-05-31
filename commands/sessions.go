@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
 	"github.com/aws/aws-sdk-go/aws/session"
 )
 
@@ -29,8 +30,9 @@ func (s *sessionManager) GetSess(p string) (*session.Session, error) {
 	}
 
 	options := session.Options{
-		Profile:           p,
-		SharedConfigState: session.SharedConfigEnable,
+		Profile:                 p,
+		SharedConfigState:       session.SharedConfigEnable,
+		AssumeRoleTokenProvider: stscreds.StdinTokenProvider,
 	}
 
 	if s.region != "" {

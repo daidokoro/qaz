@@ -18,21 +18,21 @@ import (
 
 // stack - holds all meaningful information about a particular stack.
 type stack struct {
-	name         string
-	stackname    string
-	template     string
-	dependsOn    []string
-	dependents   []interface{}
-	stackoutputs *cloudformation.DescribeStacksOutput
-	parameters   []*cloudformation.Parameter
-	output       *cloudformation.DescribeStacksOutput
-	policy       string
-	session      *session.Session
-	profile      string
-	source       string
-	bucket       string
-	role         string
-	hooks
+	name            string
+	stackname       string
+	template        string
+	initialTemplate string
+	dependsOn       []string
+	dependents      []interface{}
+	stackoutputs    *cloudformation.DescribeStacksOutput
+	parameters      []*cloudformation.Parameter
+	output          *cloudformation.DescribeStacksOutput
+	policy          string
+	session         *session.Session
+	profile         string
+	source          string
+	bucket          string
+	role            string
 }
 
 // setStackName - sets the stackname with struct
@@ -50,7 +50,6 @@ func (s *stack) creds() *credentials.Credentials {
 }
 
 func (s *stack) deploy() error {
-
 	err := s.deployTimeParser()
 	if err != nil {
 		return err
@@ -62,7 +61,7 @@ func (s *stack) deploy() error {
 
 	createParams := &cloudformation.CreateStackInput{
 		StackName:       aws.String(s.stackname),
-		DisableRollback: aws.Bool(!run.rollback),
+		DisableRollback: aws.Bool(run.rollback),
 	}
 
 	if s.policy != "" {
@@ -112,7 +111,7 @@ func (s *stack) deploy() error {
 
 	Log(fmt.Sprintln("Calling [CreateStack] with parameters:", createParams), level.debug)
 	if _, err := svc.CreateStack(createParams); err != nil {
-		return errors.New(fmt.Sprintln("Deploying failed: ", err.Error()))
+		return errors.New(fmt.Sprintln("deploying failed: ", err.Error()))
 
 	}
 
@@ -126,7 +125,7 @@ func (s *stack) deploy() error {
 		return err
 	}
 
-	Log(fmt.Sprintf("Deployment successful: [%s]", s.stackname), "info")
+	Log(fmt.Sprintf("deployment successful: [%s]", s.stackname), "info")
 
 	done <- true
 	return nil
@@ -255,7 +254,7 @@ func (s *stack) terminate() error {
 		time.Sleep(time.Second * 1)
 	}
 
-	Log(fmt.Sprintf("Deletion successful: [%s]", s.stackname), "info")
+	Log(fmt.Sprintf("termination successful: [%s]", s.stackname), "info")
 
 	return nil
 }
@@ -334,10 +333,22 @@ func (s *stack) state() (string, error) {
 		return "", err
 	}
 
-	if strings.Contains(strings.ToLower(status.GoString()), "complete") {
-		return state.complete, nil
-	} else if strings.Contains(strings.ToLower(status.GoString()), "fail") {
+	var resp string
+	for _, stk := range status.Stacks {
+		if *stk.StackName == s.stackname {
+			resp = strings.ToLower(*stk.StackStatus)
+			break
+		}
+	}
+
+	// resp := strings.ToLower(status.GoString())
+	Log(fmt.Sprintf("Stack status: %s", resp), level.debug)
+
+	switch {
+	case strings.Contains(resp, "fail"), strings.Contains(resp, "rollback_complete"):
 		return state.failed, nil
+	case strings.Contains(resp, "complete"):
+		return state.complete, nil
 	}
 	return "", nil
 }
@@ -636,7 +647,11 @@ func (s *stack) tail(c string, done <-chan bool) {
 	// used to track what lines have already been printed, to prevent dubplicate output
 	printed := make(map[string]interface{})
 
-	for {
+	// create a ticker - 1.5 seconds
+	tick := time.NewTicker(time.Millisecond * 1500)
+	defer tick.Stop()
+
+	for _ = range tick.C {
 		select {
 		case <-done:
 			Log("Tail run.Completed", level.debug)
@@ -647,8 +662,6 @@ func (s *stack) tail(c string, done <-chan bool) {
 			stackevents, err := svc.DescribeStackEvents(params)
 			if err != nil {
 				Log(fmt.Sprintln("Error when tailing events: ", err.Error()), level.debug)
-				// Sleep 2 seconds before next check - eep going until done signal
-				time.Sleep(time.Duration(2 * time.Second))
 				continue
 			}
 
@@ -662,25 +675,39 @@ func (s *stack) tail(c string, done <-chan bool) {
 				}
 
 				line := strings.Join([]string{
-					colorMap(*event.ResourceStatus),
 					*event.StackName,
+					colorMap(*event.ResourceStatus),
 					*event.ResourceType,
 					*event.LogicalResourceId,
 					statusReason,
 				}, " - ")
 
 				if _, ok := printed[line]; !ok {
-					if strings.Split(*event.ResourceStatus, "_")[0] == c || c == "" {
+					event := strings.Split(*event.ResourceStatus, "_")[0]
+					if event == c || c == "" || strings.Contains(strings.ToLower(event), "rollback") {
 						Log(strings.Trim(line, "- "), level.info)
 					}
 
 					printed[line] = nil
 				}
 			}
-
-			// Sleep 2 seconds before next check
-			time.Sleep(time.Duration(2 * time.Second))
 		}
 
 	}
+}
+
+// cleanup functions in create_failed or delete_failed states
+func (s *stack) cleanup() error {
+	Log(fmt.Sprintf("Running stack cleanup on [%s]", s.name), level.info)
+	resp, err := s.state()
+	if err != nil {
+		return err
+	}
+
+	if resp == state.failed {
+		if err := s.terminate(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
