@@ -233,9 +233,17 @@ var deployCmd = &cobra.Command{
 }
 
 var gitDeployCmd = &cobra.Command{
-	Use:   "git-deploy",
-	Short: "Deploy project from Git repository",
+	Use:     "git-deploy [git-repo]",
+	Short:   "Deploy project from Git repository",
+	Example: "qaz git-deploy https://github.com/cfn-deployable/simplevpc --user me",
 	Run: func(cmd *cobra.Command, args []string) {
+
+		// check args
+		if len(args) < 1 {
+			fmt.Println("Please specify git repo...")
+			return
+		}
+
 		repo, err := NewRepo(args[0])
 		if err != nil {
 			handleError(err)
