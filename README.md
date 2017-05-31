@@ -42,7 +42,7 @@ Qaz emphasizes minimal abstraction from the underlying AWS Cloudformation Platfo
 
 - Support for fetching templates and configuration via Lambda Execution allows for dynamically generating Cloudformation using any of the Languages supported in AWS Lambda, (_nodejs, python, java_)
 - __Troposphere__ support via Lambda.
-- Deploy Cloudformation directly from your Git Repo (___New!___)
+- Deploy Cloudformation directly from your Git Repo (__New!__)
 
 
 ## Installation
