@@ -42,6 +42,7 @@ Qaz emphasizes minimal abstraction from the underlying AWS Cloudformation Platfo
 
 - Support for fetching templates and configuration via Lambda Execution allows for dynamically generating Cloudformation using any of the Languages supported in AWS Lambda, (_nodejs, python, java_)
 - __Troposphere__ support via Lambda.
+- Deploy Cloudformation directly from your Git Repo (___New!___)
 
 
 ## Installation
@@ -104,6 +105,7 @@ Available Commands:
   deploy      Deploys stack(s) to AWS
   exports     Prints stack exports
   generate    Generates template from configuration values
+  git-deploy  Deploy project from Git repository
   help        Help about any command
   init        Creates an initial Qaz config file
   invoke      Invoke AWS Lambda Functions
@@ -120,7 +122,7 @@ Flags:
   -p, --profile string   configured aws profile (default "default")
       --version          print current/running version
 
-Use "qaz [command] --help" for more information about a command
+Use "qaz [command] --help" for more information about a command.
 
 ```
 
