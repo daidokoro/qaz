@@ -85,6 +85,7 @@ __Content___
 - [Custom Template Functions](https://github.com/daidokoro/qaz/wiki/Custom-Function)
 - [Templating with Qaz](https://github.com/daidokoro/qaz/wiki/Templates)
 - [Troposphere via Lambda](https://github.com/daidokoro/qaz/wiki/Troposphere)
+- [Deploy using Git](https://github.com/daidokoro/qaz/wiki/Deploy-Using-Git)
 
 
 
