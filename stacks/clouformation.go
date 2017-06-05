@@ -1,4 +1,4 @@
-package commands
+package stacks
 
 import (
 	"fmt"
@@ -25,7 +25,7 @@ var mutex = &sync.Mutex{}
 
 // updateState - Locks cross channel object and updates value
 func updateState(statusMap map[string]string, name string, status string) {
-	Log(fmt.Sprintf("Updating Stack Status Map: %s - %s", name, status), level.debug)
+	Log.Debug(fmt.Sprintf("Updating Stack Status Map: %s - %s", name, status))
 	mutex.Lock()
 	statusMap[name] = status
 	mutex.Unlock()
@@ -38,7 +38,7 @@ func Exports(session *session.Session) error {
 
 	exportParams := &cloudformation.ListExportsInput{}
 
-	Log(fmt.Sprintln("Calling [ListExports] with parameters:", exportParams), level.debug)
+	Log.Debug(fmt.Sprintln("Calling [ListExports] with parameters:", exportParams))
 	exports, err := svc.ListExports(exportParams)
 
 	if err != nil {
@@ -47,71 +47,71 @@ func Exports(session *session.Session) error {
 
 	for _, i := range exports.Exports {
 
-		fmt.Printf("Export Name: %s\nExport Value: %s\n--\n", colorString(*i.Name, "magenta"), *i.Value)
+		fmt.Printf("Export Name: %s\nExport Value: %s\n--\n", Log.ColorString(*i.Name, "magenta"), *i.Value)
 	}
 
 	return nil
 }
 
 // DeployHandler - Handles deploying stacks in the corrcet order
-func DeployHandler() {
+func DeployHandler(runstacks map[string]string, stacks map[string]*Stack) {
 	// status -  pending, failed, completed
 	var status = make(map[string]string)
 
 	for _, stk := range stacks {
 
-		if _, ok := run.stacks[stk.name]; !ok && len(run.stacks) > 0 {
+		if _, ok := runstacks[stk.Name]; !ok && len(runstacks) > 0 {
 			continue
 		}
 
 		// Set deploy status & Check if stack exists
-		if stk.stackExists() {
+		if stk.StackExists() {
 			if err := stk.cleanup(); err != nil {
-				Log(fmt.Sprintf("Failed to remove stack: [%s] - %s", stk.name, err.Error()), level.err)
-				updateState(status, stk.name, state.failed)
+				Log.Error(fmt.Sprintf("Failed to remove stack: [%s] - %s", stk.Name, err.Error()))
+				updateState(status, stk.Name, state.failed)
 			}
 
-			if stk.stackExists() {
-				Log(fmt.Sprintf("stack [%s] already exists...\n", stk.name), level.info)
+			if stk.StackExists() {
+				Log.Info(fmt.Sprintf("stack [%s] already exists...\n", stk.Name))
 				continue
 			}
 
 		}
-		updateState(status, stk.name, state.pending)
+		updateState(status, stk.Name, state.pending)
 
-		if len(stk.dependsOn) == 0 {
+		if len(stk.DependsOn) == 0 {
 			wg.Add(1)
-			go func(s stack) {
+			go func(s *Stack) {
 				defer wg.Done()
 
 				// Deploy 0 Depency Stacks first - each on their on go routine
-				Log(fmt.Sprintf("deploying a template for [%s]", s.name), level.info)
+				Log.Info(fmt.Sprintf("deploying a template for [%s]", s.Name))
 
-				if err := s.deploy(); err != nil {
-					handleError(err)
+				if err := s.Deploy(); err != nil {
+					Log.Error(err.Error())
 				}
 
-				updateState(status, s.name, state.complete)
+				updateState(status, s.Name, state.complete)
 
-				// TODO: add deploy logic here
+				// TODO: add deploy Logic here
 				return
-			}(*stk)
+			}(stk)
 			continue
 		}
 
 		wg.Add(1)
-		go func(s *stack) {
-			Log(fmt.Sprintf("[%s] depends on: %s", s.name, s.dependsOn), "info")
+		go func(s *Stack) {
+			Log.Info(fmt.Sprintf("[%s] depends on: %s", s.Name, s.DependsOn))
 			defer wg.Done()
 
-			Log(fmt.Sprintf("Beginning Wait State for Depencies of [%s]"+"\n", s.name), level.debug)
+			Log.Debug(fmt.Sprintf("Beginning Wait State for Depencies of [%s]"+"\n", s.Name))
 			for {
 				depts := []string{}
-				for _, dept := range s.dependsOn {
+				for _, dept := range s.DependsOn {
 					// Dependency wait
 					dp, ok := stacks[dept]
 					if !ok {
-						Log(fmt.Sprintf("Bad dependency: [%s]", dept), level.err)
+						Log.Error(fmt.Sprintf("Bad dependency: [%s]", dept))
 						return
 					}
 
@@ -119,11 +119,11 @@ func DeployHandler() {
 
 					switch chk {
 					case state.failed:
-						updateState(status, dp.name, state.failed)
+						updateState(status, dp.Name, state.failed)
 					case state.complete:
-						updateState(status, dp.name, state.complete)
+						updateState(status, dp.Name, state.complete)
 					default:
-						updateState(status, dp.name, state.pending)
+						updateState(status, dp.Name, state.pending)
 					}
 
 					mutex.Lock()
@@ -133,17 +133,17 @@ func DeployHandler() {
 
 				if all(depts, state.complete) {
 					// Deploy stack once dependencies clear
-					Log(fmt.Sprintf("Deploying a template for [%s]", s.name), "info")
+					Log.Info(fmt.Sprintf("Deploying a template for [%s]", s.Name))
 
-					if err := s.deploy(); err != nil {
-						handleError(err)
+					if err := s.Deploy(); err != nil {
+						Log.Error(err.Error())
 					}
 					return
 				}
 
 				for _, v := range depts {
 					if v == state.failed {
-						Log(fmt.Sprintf("Deploy Cancelled for stack [%s] due to dependency failure!", s.name), "warn")
+						Log.Warn(fmt.Sprintf("Deploy Cancelled for stack [%s] due to dependency failure!", s.Name))
 						return
 					}
 				}
@@ -159,16 +159,16 @@ func DeployHandler() {
 }
 
 // TerminateHandler - Handles terminating stacks in the correct order
-func TerminateHandler() {
+func TerminateHandler(runstacks map[string]string, stacks map[string]*Stack) {
 	for _, stk := range stacks {
-		if _, ok := run.stacks[stk.name]; !ok && len(run.stacks) > 0 {
-			Log(fmt.Sprintf("%s: not in run.stacks, skipping", stk.name), level.debug)
+		if _, ok := runstacks[stk.Name]; !ok && len(runstacks) > 0 {
+			Log.Debug(fmt.Sprintf("%s: not in run.stacks, skipping", stk.Name))
 			continue // only process items in the run.stacks unless empty
 		}
 
-		// if len(stk.dependsOn) == 0 {
+		// if len(stk.DependsOn) == 0 {
 		wg.Add(1)
-		go func(s stack) {
+		go func(s *Stack) {
 			defer wg.Done()
 
 			// create ticker
@@ -179,10 +179,10 @@ func TerminateHandler() {
 			// which depend on it, to finish terminating first.
 			for {
 				for _, stk := range stacks {
-					if stringIn(s.name, stk.dependsOn) {
-						Log(fmt.Sprintf("[%s]: Depends on [%s].. Waiting for dependency to terminate", stk.name, s.name), level.info)
+					if stringIn(s.Name, stk.DependsOn) {
+						Log.Info(fmt.Sprintf("[%s]: Depends on [%s].. Waiting for dependency to terminate", stk.Name, s.Name))
 						for _ = range tick.C {
-							if !stk.stackExists() {
+							if !stk.StackExists() {
 								break
 							}
 						}
@@ -193,7 +193,7 @@ func TerminateHandler() {
 				return
 			}
 
-		}(*stk)
+		}(stk)
 	}
 
 	// Wait for go routines to complete

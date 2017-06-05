@@ -1,4 +1,4 @@
-package commands
+package stacks
 
 import (
 	"fmt"
@@ -8,13 +8,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/lambda"
 )
 
-type awsLambda struct {
+type awslambda struct {
 	name     string
 	payload  []byte
 	response string
 }
 
-func (a *awsLambda) Invoke(sess *session.Session) error {
+func (a *awslambda) Invoke(sess *session.Session) error {
 	svc := lambda.New(sess)
 
 	params := &lambda.InvokeInput{
@@ -25,7 +25,7 @@ func (a *awsLambda) Invoke(sess *session.Session) error {
 		params.Payload = a.payload
 	}
 
-	log.Debug(fmt.Sprintln("Calling [Invoke] with parameters:", params))
+	Log.Debug(fmt.Sprintln("Calling [Invoke] with parameters:", params))
 	resp, err := svc.Invoke(params)
 
 	if err != nil {
@@ -38,6 +38,6 @@ func (a *awsLambda) Invoke(sess *session.Session) error {
 
 	a.response = string(resp.Payload)
 
-	log.Debug(fmt.Sprintln("Lambda response:", a.response))
+	Log.Debug(fmt.Sprintln("Lambda response:", a.response))
 	return nil
 }

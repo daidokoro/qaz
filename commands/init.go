@@ -43,7 +43,7 @@ func init() {
 	invokeCmd.Flags().StringVarP(&run.funcEvent, "event", "e", "", "JSON Event data for AWS Lambda invoke")
 
 	// Define Changes Command
-	changeCmd.AddCommand(create, rm, list, execute, desc)
+	// changeCmd.AddCommand(create, rm, list, execute, desc)
 
 	// Add Config --config common flag
 	for _, cmd := range []interface{}{checkCmd, updateCmd, outputsCmd, statusCmd, terminateCmd, generateCmd, deployCmd, gitDeployCmd, policyCmd} {
@@ -63,11 +63,20 @@ func init() {
 	create.Flags().StringVarP(&run.tplSource, "template", "t", "", "path to template file Or stack::url")
 	changeCmd.Flags().StringVarP(&run.cfgSource, "config", "c", defaultConfig(), "path to config file")
 
+	// add commands
 	RootCmd.AddCommand(
-		generateCmd, deployCmd, terminateCmd,
-		statusCmd, outputsCmd, initCmd,
-		updateCmd, checkCmd, exportsCmd,
-		invokeCmd, changeCmd, policyCmd,
+		generateCmd,
+		deployCmd,
+		terminateCmd,
+		statusCmd,
+		outputsCmd,
+		initCmd,
+		updateCmd,
+		checkCmd,
+		exportsCmd,
+		invokeCmd,
+		changeCmd,
+		policyCmd,
 		gitDeployCmd,
 	)
 

@@ -2,39 +2,36 @@ package commands
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
+	"qaz/bucket"
+	"qaz/utils"
 	"regexp"
 	"strings"
-)
-
-// global variables
-var (
-	region  string
-	project string
-	stacks  map[string]*stack
 )
 
 // fetchContent - checks the source type, url/s3/file and calls the corresponding function
 func fetchContent(source string) (string, error) {
 	switch strings.Split(strings.ToLower(source), ":")[0] {
 	case "http", "https":
-		Log(fmt.Sprintln("Source Type: [http] Detected, Fetching Source: ", source), level.debug)
-		resp, err := Get(source)
+		log.Debug(fmt.Sprintln("Source Type: [http] Detected, Fetching Source: ", source))
+		resp, err := utils.Get(source)
 		if err != nil {
 			return "", err
 		}
 		return resp, nil
 	case "s3":
-		Log(fmt.Sprintln("Source Type: [s3] Detected, Fetching Source: ", source), level.debug)
-		resp, err := S3Read(source)
+		log.Debug(fmt.Sprintln("Source Type: [s3] Detected, Fetching Source: ", source))
+		sess, err := manager.GetSess(run.profile)
+		utils.HandleError(err)
+
+		resp, err := bucket.S3Read(source, sess)
 		if err != nil {
 			return "", err
 		}
 		return resp, nil
 	case "lambda":
-		Log(fmt.Sprintln("Source Type: [lambda] Detected, Fetching Source: ", source), level.debug)
+		log.Debug(fmt.Sprintln("Source Type: [lambda] Detected, Fetching Source: ", source))
 		lambdaSrc := strings.Split(strings.Replace(source, "lambda:", "", -1), "@")
 
 		var raw interface{}
@@ -69,32 +66,21 @@ func fetchContent(source string) (string, error) {
 
 	default:
 		if gitrepo.URL != "" {
-			Log(fmt.Sprintln("Source Type: [git-repo file] Detected, Fetching Source: ", source), level.debug)
-			out, ok := gitrepo.files[source]
+			log.Debug(fmt.Sprintln("Source Type: [git-repo file] Detected, Fetching Source: ", source))
+			out, ok := gitrepo.Files[source]
 			if ok {
 				return out, nil
 			} else if !ok {
-				Log(fmt.Sprintf("config [%s] not found in git repo - checking local file system", source), level.warn)
+				log.Warn(fmt.Sprintf("config [%s] not found in git repo - checking local file system", source))
 			}
 
 		}
 
-		Log(fmt.Sprintln("Source Type: [file] Detected, Fetching Source: ", source), level.debug)
+		log.Debug(fmt.Sprintln("Source Type: [file] Detected, Fetching Source: ", source))
 		b, err := ioutil.ReadFile(source)
 		if err != nil {
 			return "", err
 		}
 		return string(b), nil
 	}
-}
-
-// getName  - Checks if arg is url or file and returns stack name and filepath/url
-func getSource(src string) (string, string, error) {
-
-	vals := strings.Split(src, "::")
-	if len(vals) < 2 {
-		return "", "", errors.New(`Error, invalid format - Usage: stackname::http://someurl OR stackname::path/to/template`)
-	}
-
-	return vals[0], vals[1], nil
 }

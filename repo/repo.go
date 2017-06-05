@@ -1,4 +1,4 @@
-package commands
+package repo
 
 // All logic for Git clone and deploy commands
 
@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"qaz/logger"
 	"strings"
 	"syscall"
 
@@ -24,18 +25,21 @@ import (
 type Repo struct {
 	URL    string
 	fs     *memfs.Memory
-	files  map[string]string
-	config string
+	Files  map[string]string
+	Config string
+	RSA    string
+	User   string
+	Secret string
+	log    *logger.Logger
 }
 
-var gitrepo Repo
-
 // NewRepo - returns pointer to a new repo struct
-func NewRepo(url string) (*Repo, error) {
+func NewRepo(url string, log *logger.Logger) (*Repo, error) {
 	r := &Repo{
 		fs:    memfs.New(),
-		files: make(map[string]string),
+		Files: make(map[string]string),
 		URL:   url,
+		log:   log,
 	}
 
 	if err := r.clone(); err != nil {
@@ -44,13 +48,11 @@ func NewRepo(url string) (*Repo, error) {
 
 	root, err := r.fs.ReadDir("/")
 	if err != nil {
-		handleError(err)
-		return r, nil
+		return r, err
 	}
 
 	if err := r.readFiles(root, ""); err != nil {
-		handleError(err)
-		return r, nil
+		return r, err
 	}
 
 	return r, nil
@@ -71,10 +73,10 @@ func (r *Repo) clone() error {
 		return err
 	}
 
-	Log(fmt.Sprintln("calling [git clone] with params:", opts), level.debug)
+	r.log.Debug(fmt.Sprintln("calling [git clone] with params:", opts))
 
 	// Clones the repository into the worktree (fs) and storer all the .git
-	Log(fmt.Sprintf("fetching git repo: [%s]\n--", filepath.Base(r.URL)), level.info)
+	r.log.Info(fmt.Sprintf("fetching git repo: [%s]\n--", filepath.Base(r.URL)))
 	if _, err := git.Clone(store, r.fs, opts); err != nil {
 		return err
 	}
@@ -85,7 +87,7 @@ func (r *Repo) clone() error {
 }
 
 func (r *Repo) readFiles(root []billy.FileInfo, dirname string) error {
-	Log(fmt.Sprintf("writing repo files to memory filesystem [%s]", dirname), level.debug)
+	r.log.Debug(fmt.Sprintf("writing repo files to memory filesystem [%s]", dirname))
 	for _, i := range root {
 		if i.IsDir() {
 			dir, _ := r.fs.ReadDir(i.Name())
@@ -103,7 +105,7 @@ func (r *Repo) readFiles(root []billy.FileInfo, dirname string) error {
 		buf.ReadFrom(out)
 
 		// update file map
-		r.files[path] = buf.String()
+		r.Files[path] = buf.String()
 
 	}
 	return nil
@@ -111,9 +113,9 @@ func (r *Repo) readFiles(root []billy.FileInfo, dirname string) error {
 
 func (r *Repo) getAuth(opts *git.CloneOptions) error {
 	if strings.HasPrefix(r.URL, "git@") {
-		Log("SSH Source URL detected, attempting to use SSH Keys", level.debug)
+		r.log.Debug("SSH Source URL detected, attempting to use SSH Keys")
 
-		sshAuth, err := ssh.NewPublicKeysFromFile("git", run.gitrsa, "")
+		sshAuth, err := ssh.NewPublicKeysFromFile("git", r.RSA, "")
 		if err != nil {
 			return err
 		}
@@ -122,8 +124,8 @@ func (r *Repo) getAuth(opts *git.CloneOptions) error {
 		return nil
 	}
 
-	if run.gituser != "" {
-		if run.gitpass == "" {
+	if r.User != "" {
+		if r.Secret == "" {
 			fmt.Printf("password:")
 			p, err := terminal.ReadPassword(int(syscall.Stdin))
 			if err != nil {
@@ -131,9 +133,9 @@ func (r *Repo) getAuth(opts *git.CloneOptions) error {
 			}
 			fmt.Printf("\n")
 
-			run.gitpass = string(p)
+			r.Secret = string(p)
 		}
-		opts.Auth = http.NewBasicAuth(run.gituser, run.gitpass)
+		opts.Auth = http.NewBasicAuth(r.User, r.Secret)
 	}
 
 	return nil

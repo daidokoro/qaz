@@ -3,6 +3,9 @@ package commands
 import (
 	"fmt"
 	"io/ioutil"
+	"qaz/bucket"
+	stks "qaz/stacks"
+	"qaz/utils"
 	"strings"
 	"text/template"
 
@@ -17,7 +20,7 @@ import (
 var kmsEncrypt = func(kid string, text string) (string, error) {
 	sess, err := manager.GetSess(run.profile)
 	if err != nil {
-		Log(err.Error(), level.err)
+		log.Error(err.Error())
 		return "", err
 	}
 
@@ -30,7 +33,7 @@ var kmsEncrypt = func(kid string, text string) (string, error) {
 
 	resp, err := svc.Encrypt(params)
 	if err != nil {
-		Log(err.Error(), level.err)
+		log.Error(err.Error())
 		return "", err
 	}
 
@@ -40,7 +43,7 @@ var kmsEncrypt = func(kid string, text string) (string, error) {
 var kmsDecrypt = func(cipher string) (string, error) {
 	sess, err := manager.GetSess(run.profile)
 	if err != nil {
-		Log(err.Error(), level.err)
+		log.Error(err.Error())
 		return "", err
 	}
 
@@ -48,7 +51,7 @@ var kmsDecrypt = func(cipher string) (string, error) {
 
 	ciph, err := base64.StdEncoding.DecodeString(cipher)
 	if err != nil {
-		Log(err.Error(), level.err)
+		log.Error(err.Error())
 		return "", err
 	}
 
@@ -58,7 +61,7 @@ var kmsDecrypt = func(cipher string) (string, error) {
 
 	resp, err := svc.Decrypt(params)
 	if err != nil {
-		Log(err.Error(), level.err)
+		log.Error(err.Error())
 		return "", err
 	}
 
@@ -66,21 +69,32 @@ var kmsDecrypt = func(cipher string) (string, error) {
 }
 
 var httpGet = func(url string) (interface{}, error) {
-	Log(fmt.Sprintln("Calling Template Function [GET] with arguments:", url), level.debug)
-	resp, err := Get(url)
+	log.Debug(fmt.Sprintln("Calling Template Function [GET] with arguments:", url))
+	resp, err := utils.Get(url)
 	if err != nil {
-		Log(err.Error(), level.err)
+		log.Error(err.Error())
 		return "", err
 	}
 
 	return resp, nil
 }
 
-var s3Read = func(url string) (string, error) {
-	Log(fmt.Sprintln("Calling Template Function [S3Read] with arguments:", url), level.debug)
-	resp, err := S3Read(url)
+var s3Read = func(url string, profile ...string) (string, error) {
+	log.Debug(fmt.Sprintln("Calling Template Function [S3Read] with arguments:", url))
+
+	var p = run.profile
+	if len(profile) < 1 {
+		log.Warn(fmt.Sprintf("No Profile specified for S3read, using: %s", p))
+	} else {
+		p = profile[0]
+	}
+
+	sess, err := manager.GetSess(p)
+	utils.HandleError(err)
+
+	resp, err := bucket.S3Read(url, sess)
 	if err != nil {
-		Log(err.Error(), level.err)
+		log.Error(err.Error())
 		return "", err
 	}
 	return resp, nil
@@ -94,12 +108,12 @@ var lambdaInvoke = func(name string, payload string) (interface{}, error) {
 
 	sess, err := manager.GetSess(run.profile)
 	if err != nil {
-		Log(err.Error(), level.err)
+		log.Error(err.Error())
 		return "", err
 	}
 
 	if err := f.Invoke(sess); err != nil {
-		Log(err.Error(), level.err)
+		log.Error(err.Error())
 		return "", err
 	}
 
@@ -123,23 +137,23 @@ var contains = func(s string, con string) bool {
 var genTimeFunctions = template.FuncMap{
 	// simple additon function useful for counters in loops
 	"add": func(a int, b int) int {
-		Log(fmt.Sprintln("Calling Template Function [add] with arguments:", a, b), level.debug)
+		log.Debug(fmt.Sprintln("Calling Template Function [add] with arguments:", a, b))
 		return a + b
 	},
 
 	// strip function for removing characters from text
 	"strip": func(s string, rmv string) string {
-		Log(fmt.Sprintln("Calling Template Function [strip] with arguments:", s, rmv), level.debug)
+		log.Debug(fmt.Sprintln("Calling Template Function [strip] with arguments:", s, rmv))
 		return strings.Replace(s, rmv, "", -1)
 	},
 
 	// cat function for reading text from a given file under the files folder
 	"cat": func(path string) (string, error) {
 
-		Log(fmt.Sprintln("Calling Template Function [cat] with arguments:", path), level.debug)
+		log.Debug(fmt.Sprintln("Calling Template Function [cat] with arguments:", path))
 		b, err := ioutil.ReadFile(path)
 		if err != nil {
-			Log(err.Error(), level.err)
+			log.Error(err.Error())
 			return "", err
 		}
 		return string(b), nil
@@ -173,16 +187,16 @@ var genTimeFunctions = template.FuncMap{
 var deployTimeFunctions = template.FuncMap{
 	// Fetching stackoutputs
 	"stack_output": func(target string) (string, error) {
-		Log(fmt.Sprintf("Deploy-Time function resolving: %s", target), level.debug)
+		log.Debug(fmt.Sprintf("Deploy-Time function resolving: %s", target))
 		req := strings.Split(target, "::")
 
 		s := stacks[req[0]]
 
-		if err := s.outputs(); err != nil {
+		if err := s.Outputs(); err != nil {
 			return "", err
 		}
 
-		for _, i := range s.output.Stacks {
+		for _, i := range s.Output.Stacks {
 			for _, o := range i.Outputs {
 				if *o.OutputKey == req[1] {
 					return *o.OutputValue, nil
@@ -194,25 +208,25 @@ var deployTimeFunctions = template.FuncMap{
 	},
 
 	"stack_output_ext": func(target string) (string, error) {
-		Log(fmt.Sprintf("Deploy-Time function resolving: %s", target), level.debug)
+		log.Debug(fmt.Sprintf("Deploy-Time function resolving: %s", target))
 		req := strings.Split(target, "::")
 
 		sess, err := manager.GetSess(run.profile)
 		if err != nil {
-			Log(err.Error(), level.err)
+			log.Error(err.Error())
 			return "", nil
 		}
 
-		s := stack{
-			stackname: req[0],
-			session:   sess,
+		s := stks.Stack{
+			Stackname: req[0],
+			Session:   sess,
 		}
 
-		if err := s.outputs(); err != nil {
+		if err := s.Outputs(); err != nil {
 			return "", err
 		}
 
-		for _, i := range s.output.Stacks {
+		for _, i := range s.Output.Stacks {
 			for _, o := range i.Outputs {
 				if *o.OutputKey == req[1] {
 					return *o.OutputValue, nil

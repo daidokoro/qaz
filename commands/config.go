@@ -2,15 +2,14 @@ package commands
 
 import (
 	"fmt"
-	"strings"
 
 	yaml "gopkg.in/yaml.v2"
+
+	stks "qaz/stacks"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 )
-
-var config Config
 
 // Config type for handling yaml config files
 type Config struct {
@@ -31,8 +30,8 @@ type Config struct {
 	} `yaml:"stacks" json:"stacks"`
 }
 
-// Returns map string of config values
-func (c *Config) vars() map[string]interface{} {
+// Vars Returns map string of config values
+func (c *Config) Vars() map[string]interface{} {
 	m := make(map[string]interface{})
 	m["global"] = c.Global
 	m["region"] = c.Region
@@ -46,13 +45,13 @@ func (c *Config) vars() map[string]interface{} {
 }
 
 // Adds parameters to given stack based on config
-func (c *Config) parameters(s *stack) {
+func (c *Config) parameters(s *stks.Stack) {
 
 	for stk, val := range c.Stacks {
-		if s.name == stk {
+		if s.Name == stk {
 			for _, param := range val.Parameters {
 				for k, v := range param {
-					s.parameters = append(s.parameters, &cloudformation.Parameter{
+					s.Parameters = append(s.Parameters, &cloudformation.Parameter{
 						ParameterKey:   aws.String(k),
 						ParameterValue: aws.String(v),
 					})
@@ -63,33 +62,13 @@ func (c *Config) parameters(s *stack) {
 	}
 }
 
-// Read template source and sets the template value in given stack
-func (c *Config) getSource(s *stack) error {
-	return nil
+// GetProject - Returns project name
+func (c *Config) GetProject() string {
+	return c.Project
 }
 
-// delims - Returns left/righ delimiters in a list where string is the deploy level - gen/deploy time
-func (c *Config) delims(level string) (string, string) {
-
-	if level == "deploy" {
-		if config.DeployDelimiter != "" {
-			delims := strings.Split(config.GenerateDelimiter, ":")
-			return delims[0], delims[1]
-		}
-		// default
-		return "<<", ">>"
-	}
-
-	if config.GenerateDelimiter != "" {
-		delims := strings.Split(config.GenerateDelimiter, ":")
-		return delims[0], delims[1]
-	}
-	// default
-	return "{{", "}}"
-}
-
-// configReader parses the config YAML file with Viper
-func configReader(confSource string, conf string) error {
+// configure parses the config file abd setos stacjs abd ebv
+func configure(confSource string, conf string) error {
 
 	if conf == "" {
 		cfg, err := fetchContent(confSource)
@@ -104,29 +83,43 @@ func configReader(confSource string, conf string) error {
 		return err
 	}
 
-	Log(fmt.Sprintln("Config File Read:", config), level.debug)
+	log.Debug(fmt.Sprintln("Config File Read:", config))
 
-	stacks = make(map[string]*stack)
+	stacks = make(map[string]*stks.Stack)
+
+	// add logging
+	stks.Log = &log
+
+	// add repo
+	stks.Git = &gitrepo
 
 	// Get Stack Values
 	for s, v := range config.Stacks {
-		stacks[s] = &stack{}
-		stacks[s].name = s
-		stacks[s].setStackName()
-		stacks[s].dependsOn = v.DependsOn
-		stacks[s].policy = v.Policy
-		stacks[s].profile = v.Profile
-		stacks[s].source = v.Source
-		stacks[s].bucket = v.Bucket
-		stacks[s].role = v.Role
+		stacks[s] = &stks.Stack{
+			Name:           s,
+			Profile:        v.Profile,
+			DependsOn:      v.DependsOn,
+			Policy:         v.Policy,
+			Source:         v.Source,
+			Bucket:         v.Bucket,
+			Role:           v.Role,
+			DeployDelims:   &config.DeployDelimiter,
+			GenDelims:      &config.GenerateDelimiter,
+			TemplateValues: config.Vars(),
+			GenTimeFunc:    &genTimeFunctions,
+			DeployTimeFunc: &deployTimeFunctions,
+			Project:        &config.Project,
+		}
+
+		stacks[s].SetStackName()
 
 		// set session
-		sess, err := manager.GetSess(stacks[s].profile)
+		sess, err := manager.GetSess(stacks[s].Profile)
 		if err != nil {
 			return err
 		}
 
-		stacks[s].session = sess
+		stacks[s].Session = sess
 
 		// set parameters, if any
 		config.parameters(stacks[s])
