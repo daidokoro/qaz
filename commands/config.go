@@ -62,11 +62,6 @@ func (c *Config) parameters(s *stks.Stack) {
 	}
 }
 
-// GetProject - Returns project name
-func (c *Config) GetProject() string {
-	return c.Project
-}
-
 // configure parses the config file abd setos stacjs abd ebv
 func configure(confSource string, conf string) error {
 

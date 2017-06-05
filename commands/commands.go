@@ -89,10 +89,7 @@ var invokeCmd = &cobra.Command{
 		}
 
 		sess, err := manager.GetSess(run.profile)
-		if err != nil {
-			utils.HandleError(err)
-			return
-		}
+		utils.HandleError(err)
 
 		f := awsLambda{name: args[0]}
 
@@ -105,7 +102,6 @@ var invokeCmd = &cobra.Command{
 				utils.HandleError(fmt.Errorf("Unhandled Exception: Potential Issue with Lambda Function Logic for %s...\n", f.name))
 			}
 			utils.HandleError(err)
-			return
 		}
 
 		fmt.Println(f.response)
@@ -125,23 +121,17 @@ var policyCmd = &cobra.Command{
 		}
 
 		err := configure(run.cfgSource, run.cfgRaw)
-		if err != nil {
-			utils.HandleError(err)
-			return
-		}
+		utils.HandleError(err)
 
 		for _, s := range args {
 			wg.Add(1)
 			go func(s string) {
-
 				if _, ok := stacks[s]; !ok {
 					utils.HandleError(fmt.Errorf("Stack [%s] not found in config", s))
-
-				} else {
-					if err := stacks[s].StackPolicy(); err != nil {
-						utils.HandleError(err)
-					}
 				}
+
+				err := stacks[s].StackPolicy()
+				utils.HandleError(err)
 
 				wg.Done()
 				return
