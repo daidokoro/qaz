@@ -11,7 +11,7 @@ import (
 func (l *Logger) ColorMap(s string) string {
 
 	// If Windows, disable colorS
-	if runtime.GOOS == "windows" || l.colors {
+	if runtime.GOOS == "windows" || *l.Colors {
 		return strings.ToLower(s)
 	}
 
@@ -39,7 +39,7 @@ func (l *Logger) ColorMap(s string) string {
 func (l *Logger) ColorString(s, color string) string {
 
 	// If Windows, disable colorS
-	if runtime.GOOS == "windows" || l.colors {
+	if runtime.GOOS == "windows" || *l.Colors {
 		return s
 	}
 
