@@ -63,7 +63,6 @@ func (s *Stack) fetchContent() error {
 
 	default:
 		if Git.URL != "" {
-			fmt.Println(Git.Files)
 			Log.Debug(fmt.Sprintln("Source Type: [git-repo file] Detected, Fetching Source: ", s.Source))
 			out, ok := Git.Files[s.Source]
 			if ok {
