@@ -6,7 +6,7 @@ import "fmt"
 
 // Logger contains logging flags, colors, debug
 type Logger struct {
-	colors    bool
+	Colors    *bool
 	DebugMode *bool
 }
 
@@ -35,7 +35,7 @@ func (l *Logger) Debug(msg string) {
 // New creates a Logger Object
 func New(debug, colors bool) *Logger {
 	return &Logger{
-		colors:    colors,
+		Colors:    &colors,
 		DebugMode: &debug,
 	}
 }

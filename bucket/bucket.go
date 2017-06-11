@@ -15,8 +15,8 @@ import (
 
 // -- Contains all things S3
 
-// define logger
-var log *logger.Logger
+// Log define logger
+var Log *logger.Logger
 
 // S3Read - Reads the content of a given s3 url endpoint and returns the content string.
 func S3Read(url string, sess *session.Session) (string, error) {
@@ -31,7 +31,7 @@ func S3Read(url string, sess *session.Session) (string, error) {
 		Key:    aws.String(key),
 	}
 
-	log.Debug(fmt.Sprintln("Calling S3 [GetObject] with parameters:", params))
+	Log.Debug(fmt.Sprintln("Calling S3 [GetObject] with parameters:", params))
 	resp, err := svc.GetObject(params)
 	if err != nil {
 		return "", err
@@ -39,9 +39,10 @@ func S3Read(url string, sess *session.Session) (string, error) {
 
 	buf := new(bytes.Buffer)
 
-	log.Debug("Reading from S3 Response Body")
+	Log.Debug("Reading from S3 Response Body")
 	buf.ReadFrom(resp.Body)
 	return buf.String(), nil
+
 }
 
 // S3write - Writes a file to s3 and returns the presigned url
@@ -56,7 +57,7 @@ func S3write(bucket string, key string, body string, sess *session.Session) (str
 		},
 	}
 
-	log.Debug(fmt.Sprintln("Calling S3 [PutObject] with parameters:", params))
+	Log.Debug(fmt.Sprintln("Calling S3 [PutObject] with parameters:", params))
 	_, err := svc.PutObject(params)
 	if err != nil {
 		return "", err
@@ -84,7 +85,7 @@ func Create(bucket string, sess *session.Session) error {
 		Bucket: &bucket,
 	}
 
-	log.Debug(fmt.Sprintln("Calling S3 [CreateBucket] with parameters:", params))
+	Log.Debug(fmt.Sprintln("Calling S3 [CreateBucket] with parameters:", params))
 	_, err := svc.CreateBucket(params)
 	if err != nil {
 		return err
@@ -95,6 +96,7 @@ func Create(bucket string, sess *session.Session) error {
 	}
 
 	return nil
+
 }
 
 // Exists - checks if bucket exists - if err, then its assumed that the bucket does not exist.
@@ -104,7 +106,7 @@ func Exists(bucket string, sess *session.Session) (bool, error) {
 		Bucket: &bucket,
 	}
 
-	log.Debug(fmt.Sprintln("Calling S3 [HeadBucket] with parameters:", params))
+	Log.Debug(fmt.Sprintln("Calling S3 [HeadBucket] with parameters:", params))
 	_, err := svc.HeadBucket(params)
 	if err != nil {
 		return false, err

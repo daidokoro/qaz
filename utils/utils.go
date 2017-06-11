@@ -17,7 +17,8 @@ import (
 	"time"
 )
 
-var log logger.Logger
+// Log defines logger
+var Log *logger.Logger
 
 // ConfigTemplate - Returns template byte string for init() function
 func ConfigTemplate(project string, region string) []byte {
@@ -49,7 +50,7 @@ func All(a []string, s string) bool {
 
 // StringIn - returns true if string in array
 func StringIn(s string, a []string) bool {
-	log.Debug(fmt.Sprintf("Checking If [%s] is in: %s", s, a))
+	Log.Debug(fmt.Sprintf("Checking If [%s] is in: %s", s, a))
 	for _, str := range a {
 		if str == s {
 			return true
@@ -113,7 +114,7 @@ func GetSource(src string) (string, string, error) {
 // HandleError - exits on error
 func HandleError(msg interface{}) {
 	if msg != nil {
-		log.Error(msg.(error).Error())
+		Log.Error(msg.(error).Error())
 		os.Exit(1)
 	}
 }
