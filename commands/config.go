@@ -9,25 +9,26 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/daidokoro/hcl"
 )
 
 // Config type for handling yaml config files
 type Config struct {
-	Region            string                 `yaml:"region,omitempty" json:"region,omitempty"`
-	Project           string                 `yaml:"project" json:"project"`
-	GenerateDelimiter string                 `yaml:"gen_time,omitempty" json:"gen_time,omitempty"`
-	DeployDelimiter   string                 `yaml:"deploy_time,omitempty" json:"deploy,omitempty"`
-	Global            map[string]interface{} `yaml:"global,omitempty" json:"global,omitempty"`
+	Region            string                 `yaml:"region,omitempty" json:"region,omitempty" hcl:"region,omitempty"`
+	Project           string                 `yaml:"project" json:"project" hcl:"project"`
+	GenerateDelimiter string                 `yaml:"gen_time,omitempty" json:"gen_time,omitempty" hcl:"gen_time,omitempty"`
+	DeployDelimiter   string                 `yaml:"deploy_time,omitempty" json:"deploy_time,omitempty" hcl:"deploy_time,omitempty"`
+	Global            map[string]interface{} `yaml:"global,omitempty" json:"global,omitempty" hcl:"global,omitempty"`
 	Stacks            map[string]struct {
-		DependsOn  []string               `yaml:"depends_on,omitempty" json:"depends_on,omitempty"`
-		Parameters []map[string]string    `yaml:"parameters,omitempty" json:"parameters,omitempty"`
-		Policy     string                 `yaml:"policy,omitempty" json:"policy,omitempty"`
-		Profile    string                 `yaml:"profile,omitempty" json:"profile,omitempty"`
-		Source     string                 `yaml:"source,omitempty" json:"source,omitempty"`
-		Bucket     string                 `yaml:"bucket,omitempty" json:"bucket,omitempty"`
-		Role       string                 `yaml:"role,omitempty" json:"role,omitempty"`
-		CF         map[string]interface{} `yaml:"cf,omitempty" json:"cf,omitempty"`
-	} `yaml:"stacks" json:"stacks"`
+		DependsOn  []string               `yaml:"depends_on,omitempty" json:"depends_on,omitempty" hcl:"depends_on,omitempty"`
+		Parameters []map[string]string    `yaml:"parameters,omitempty" json:"parameters,omitempty" hcl:"parameters,omitempty"`
+		Policy     string                 `yaml:"policy,omitempty" json:"policy,omitempty" hcl:"policy,omitempty"`
+		Profile    string                 `yaml:"profile,omitempty" json:"profile,omitempty" hcl:"profile,omitempty"`
+		Source     string                 `yaml:"source,omitempty" json:"source,omitempty" hcl:"source,omitempty"`
+		Bucket     string                 `yaml:"bucket,omitempty" json:"bucket,omitempty" hcl:"bucket,omitempty"`
+		Role       string                 `yaml:"role,omitempty" json:"role,omitempty" hcl:"role,omitempty"`
+		CF         map[string]interface{} `yaml:"cf,omitempty" json:"cf,omitempty" hcl:"cf,omitempty"`
+	} `yaml:"stacks" json:"stacks" hcl:"stacks"`
 }
 
 // Vars Returns map string of config values
@@ -74,19 +75,18 @@ func configure(confSource string, conf string) error {
 		conf = cfg
 	}
 
-	if err := yaml.Unmarshal([]byte(conf), &config); err != nil {
-		return err
+	log.Debug("checking Config for HCL format...")
+	if err := hcl.Unmarshal([]byte(conf), &config); err != nil {
+		// fmt.Println(err)
+		log.Debug(fmt.Sprintln("failed to parse hcl... moving to JSON/YAML...", err.Error()))
+		if err := yaml.Unmarshal([]byte(conf), &config); err != nil {
+			return err
+		}
 	}
 
 	log.Debug(fmt.Sprintln("Config File Read:", config))
 
 	stacks = make(map[string]*stks.Stack)
-
-	// add logging
-	stks.Log = &log
-
-	// add repo
-	stks.Git = &gitrepo
 
 	// Get Stack Values
 	for s, v := range config.Stacks {
