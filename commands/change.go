@@ -32,16 +32,11 @@ var create = &cobra.Command{
 		run.changeName = args[0]
 
 		err := configure(run.cfgSource, run.cfgRaw)
-		if err != nil {
-			utils.HandleError(err)
-			return
-		}
+		utils.HandleError(err)
 
 		if run.tplSource != "" {
 			s, source, err = utils.GetSource(run.tplSource)
-			if err != nil {
-				utils.HandleError(err)
-			}
+			utils.HandleError(err)
 		}
 
 		if len(args) > 0 {
@@ -57,15 +52,11 @@ var create = &cobra.Command{
 			stacks[s].Source = source
 		}
 
-		if err = stacks[s].GenTimeParser(); err != nil {
-			utils.HandleError(err)
-			return
-		}
+		err = stacks[s].GenTimeParser()
+		utils.HandleError(err)
 
-		if err := stacks[s].Change("create", run.changeName); err != nil {
-			utils.HandleError(err)
-			return
-		}
+		err = stacks[s].Change("create", run.changeName)
+		utils.HandleError(err)
 
 	},
 }
@@ -88,10 +79,7 @@ var rm = &cobra.Command{
 		run.changeName = args[0]
 
 		err := configure(run.cfgSource, run.cfgRaw)
-		if err != nil {
-			utils.HandleError(err)
-			return
-		}
+		utils.HandleError(err)
 
 		if _, ok := stacks[run.stackName]; !ok {
 			utils.HandleError(fmt.Errorf("Stack not found: [%s]", run.stackName))
@@ -99,9 +87,8 @@ var rm = &cobra.Command{
 
 		s := stacks[run.stackName]
 
-		if err := s.Change("rm", run.changeName); err != nil {
-			utils.HandleError(err)
-		}
+		err = s.Change("rm", run.changeName)
+		utils.HandleError(err)
 
 	},
 }
