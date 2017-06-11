@@ -16,6 +16,7 @@ var (
 	gitrepo repo.Repo
 	log     = logger.Logger{
 		DebugMode: &run.debug,
+		Colors:    &run.colors,
 	}
 )
 
@@ -25,7 +26,7 @@ const (
 	defaultconfig = "config.yml"
 )
 
-// run.var used as a central point for command data
+// run.var used as a central point for command data from flags
 var run = struct {
 	cfgSource  string
 	tplSource  string
