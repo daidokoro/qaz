@@ -16,6 +16,7 @@ var generateCmd = &cobra.Command{
 		"qaz generate -c config.yml -t stack::source",
 		"qaz generate vpc -c config.yml",
 	}, "\n"),
+	PreRun: initialise,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		var s string

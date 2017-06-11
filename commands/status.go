@@ -15,8 +15,9 @@ import (
 var (
 	// status command
 	statusCmd = &cobra.Command{
-		Use:   "status",
-		Short: "Prints status of deployed/un-deployed stacks",
+		Use:    "status",
+		Short:  "Prints status of deployed/un-deployed stacks",
+		PreRun: initialise,
 		Run: func(cmd *cobra.Command, args []string) {
 
 			err := configure(run.cfgSource, run.cfgRaw)
@@ -46,6 +47,7 @@ var (
 			"qaz check -c path/to/config.yml -t stack::s3://bucket/key",
 			"qaz deploy -c path/to/config.yml -t stack::lambda:{some:json}@lambda_function",
 		}, "\n"),
+		PreRun: initialise,
 		Run: func(cmd *cobra.Command, args []string) {
 
 			var s string
