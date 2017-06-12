@@ -25,6 +25,7 @@ var (
 			"qaz deploy -c path/to/config -t stack::http://someurl",
 			"qaz deploy -c path/to/config -t stack::lambda:{some:json}@lambda_function",
 		}, "\n"),
+		PreRun: initialise,
 		Run: func(cmd *cobra.Command, args []string) {
 
 			err := configure(run.cfgSource, run.cfgRaw)
@@ -84,6 +85,7 @@ var (
 		Use:     "git-deploy [git-repo]",
 		Short:   "Deploy project from Git repository",
 		Example: "qaz git-deploy https://github.com/cfn-deployable/simplevpc --user me",
+		PreRun:  initialise,
 		Run: func(cmd *cobra.Command, args []string) {
 
 			// check args
@@ -92,14 +94,14 @@ var (
 				return
 			}
 
-			repo, err := repo.NewRepo(args[0], &log)
-			if err != nil {
-				utils.HandleError(err)
-				return
-			}
+			repo, err := repo.NewRepo(args[0])
+			utils.HandleError(err)
 
 			// Passing repo to the global var
 			gitrepo = *repo
+
+			// add repo
+			stks.Git = &gitrepo
 
 			if out, ok := repo.Files[run.cfgSource]; ok {
 				repo.Config = out
@@ -110,10 +112,8 @@ var (
 				log.Debug(k)
 			}
 
-			if err := configure(run.cfgSource, repo.Config); err != nil {
-				utils.HandleError(err)
-				return
-			}
+			err = configure(run.cfgSource, repo.Config)
+			utils.HandleError(err)
 
 			//create run stacks
 			run.stacks = make(map[string]string)
@@ -121,9 +121,8 @@ var (
 			for s, v := range stacks {
 				// populate run stacks
 				run.stacks[s] = v.Source
-				if err := stacks[s].GenTimeParser(); err != nil {
-					utils.HandleError(err)
-				}
+				err := stacks[s].GenTimeParser()
+				utils.HandleError(err)
 			}
 
 			// Deploy Stacks
@@ -142,6 +141,7 @@ var (
 			"qaz update -c path/to/config -t stack::http://someurl",
 			"qaz deploy -c path/to/config -t stack::lambda:{some:json}@lambda_function",
 		}, "\n"),
+		PreRun: initialise,
 		Run: func(cmd *cobra.Command, args []string) {
 
 			var s string
@@ -197,8 +197,9 @@ var (
 
 	// terminate command
 	terminateCmd = &cobra.Command{
-		Use:   "terminate [stacks]",
-		Short: "Terminates stacks",
+		Use:    "terminate [stacks]",
+		Short:  "Terminates stacks",
+		PreRun: initialise,
 		Run: func(cmd *cobra.Command, args []string) {
 
 			if !run.all {
