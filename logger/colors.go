@@ -53,6 +53,8 @@ func (l *Logger) ColorString(s, color string) string {
 		result = chalk.Red.Color(s)
 	case "magenta":
 		result = chalk.Magenta.Color(s)
+	case "cyan":
+		result = chalk.Cyan.Color(s)
 	default:
 		// Unidentified, just returns the same string
 		return s
