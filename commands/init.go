@@ -43,19 +43,40 @@ func init() {
 	invokeCmd.Flags().StringVarP(&run.funcEvent, "event", "e", "", "JSON Event data for AWS Lambda invoke")
 
 	// Define Changes Command
-	// changeCmd.AddCommand(create, rm, list, execute, desc)
+	changeCmd.AddCommand(create, rm, list, execute, desc)
 
 	// Add Config --config common flag
-	for _, cmd := range []interface{}{checkCmd, updateCmd, outputsCmd, statusCmd, terminateCmd, generateCmd, deployCmd, gitDeployCmd, policyCmd} {
+	for _, cmd := range []interface{}{
+		checkCmd,
+		updateCmd,
+		outputsCmd,
+		statusCmd,
+		terminateCmd,
+		generateCmd,
+		deployCmd,
+		gitDeployCmd,
+		policyCmd,
+		valuesCmd,
+	} {
 		cmd.(*cobra.Command).Flags().StringVarP(&run.cfgSource, "config", "c", defaultConfig(), "path to config file")
 	}
 
 	// Add Template --template common flag
-	for _, cmd := range []interface{}{generateCmd, updateCmd, checkCmd} {
+	for _, cmd := range []interface{}{
+		generateCmd,
+		updateCmd,
+		checkCmd,
+	} {
 		cmd.(*cobra.Command).Flags().StringVarP(&run.tplSource, "template", "t", "", "path to template source Or stack::source")
 	}
 
-	for _, cmd := range []interface{}{create, list, rm, execute, desc} {
+	for _, cmd := range []interface{}{
+		create,
+		list,
+		rm,
+		execute,
+		desc,
+	} {
 		cmd.(*cobra.Command).Flags().StringVarP(&run.cfgSource, "config", "c", defaultConfig(), "path to config file [Required]")
 		cmd.(*cobra.Command).Flags().StringVarP(&run.stackName, "stack", "s", "", "Qaz local project Stack Name [Required]")
 	}
@@ -78,6 +99,7 @@ func init() {
 		changeCmd,
 		policyCmd,
 		gitDeployCmd,
+		valuesCmd,
 	)
 
 }
