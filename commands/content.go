@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+// TODO: Come up with a better way to do this
 // fetchContent - checks the source type, url/s3/file and calls the corresponding function
 func fetchContent(source string) (string, error) {
 	switch strings.Split(strings.ToLower(source), ":")[0] {
