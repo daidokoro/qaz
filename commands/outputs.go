@@ -64,10 +64,8 @@ var (
 		Use:     "exports",
 		Short:   "Prints stack exports",
 		Example: "qaz exports",
+		PreRun:  initialise,
 		Run: func(cmd *cobra.Command, args []string) {
-
-			// add logging
-			stks.Log = &log
 
 			sess, err := manager.GetSess(run.profile)
 			utils.HandleError(err)
