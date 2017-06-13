@@ -121,7 +121,7 @@ var contains = func(s string, con string) bool {
 // template function maps
 
 var genTimeFunctions = template.FuncMap{
-	// simple additon function useful for counters in loops
+	// simple addition function useful for counters in loops
 	"add": func(a int, b int) int {
 		Log(fmt.Sprintln("Calling Template Function [add] with arguments:", a, b), level.debug)
 		return a + b
