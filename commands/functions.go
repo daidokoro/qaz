@@ -168,6 +168,11 @@ var genTimeFunctions = template.FuncMap{
 
 	// kms-decrypt - Descrypts CipherText
 	"kms_decrypt": kmsDecrypt,
+
+	// loop - useful to range over an int (rather than a slice, map, or channel). see examples/loop
+	"loop": func(n int) []struct{} {
+		return make([]struct{}, n)
+	},
 }
 
 var deployTimeFunctions = template.FuncMap{
@@ -246,4 +251,9 @@ var deployTimeFunctions = template.FuncMap{
 
 	// kms-decrypt - Descrypts CipherText
 	"kms_decrypt": kmsDecrypt,
+
+	// loop - useful to range over an int (rather than a slice, map, or channel). see examples/loop
+	"loop": func(n int) []struct{} {
+		return make([]struct{}, n)
+	},
 }

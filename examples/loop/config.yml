@@ -1,0 +1,15 @@
+# AWS Region
+region: us-east-1
+
+# Project Name
+project: testproj
+
+# Global Stack Variables
+global:
+
+# Stacks
+stacks:
+  teststack:
+    source: source.yml
+    cf:
+      num_hosts: 4
