@@ -166,7 +166,7 @@ var genTimeFunctions = template.FuncMap{
 	// kms-encrypt - Encrypts PlainText using KMS key
 	"kms_encrypt": kmsEncrypt,
 
-	// kms-decrypt - Descrypts CipherText
+	// kms-decrypt - Decrypts CipherText
 	"kms_decrypt": kmsDecrypt,
 }
 
@@ -244,6 +244,6 @@ var deployTimeFunctions = template.FuncMap{
 	// kms-encrypt - Encrypts PlainText using KMS key
 	"kms_encrypt": kmsEncrypt,
 
-	// kms-decrypt - Descrypts CipherText
+	// kms-decrypt - Decrypts CipherText
 	"kms_decrypt": kmsDecrypt,
 }
