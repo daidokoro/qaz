@@ -39,7 +39,7 @@ func (s *sessionManager) GetSess(p string) (*session.Session, error) {
 		options.Config = aws.Config{Region: &s.region}
 	}
 
-	Log(fmt.Sprintf("Creating AWS Session with options: Regioin: %s, Profile: %s ", region, run.profile), level.debug)
+	Log(fmt.Sprintf("Creating AWS Session with options: Region: %s, Profile: %s ", region, run.profile), level.debug)
 	sess, err := session.NewSessionWithOptions(options)
 	if err != nil {
 		return sess, err

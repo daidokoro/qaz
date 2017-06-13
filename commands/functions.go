@@ -121,7 +121,7 @@ var contains = func(s string, con string) bool {
 // template function maps
 
 var genTimeFunctions = template.FuncMap{
-	// simple additon function useful for counters in loops
+	// simple addition function useful for counters in loops
 	"add": func(a int, b int) int {
 		Log(fmt.Sprintln("Calling Template Function [add] with arguments:", a, b), level.debug)
 		return a + b
@@ -166,7 +166,7 @@ var genTimeFunctions = template.FuncMap{
 	// kms-encrypt - Encrypts PlainText using KMS key
 	"kms_encrypt": kmsEncrypt,
 
-	// kms-decrypt - Descrypts CipherText
+	// kms-decrypt - Decrypts CipherText
 	"kms_decrypt": kmsDecrypt,
 }
 
@@ -244,6 +244,6 @@ var deployTimeFunctions = template.FuncMap{
 	// kms-encrypt - Encrypts PlainText using KMS key
 	"kms_encrypt": kmsEncrypt,
 
-	// kms-decrypt - Descrypts CipherText
+	// kms-decrypt - Decrypts CipherText
 	"kms_decrypt": kmsDecrypt,
 }
