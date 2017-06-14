@@ -127,7 +127,7 @@ func (r *Repo) getAuth(opts *git.CloneOptions) error {
 
 	if r.User != "" {
 		if r.Secret == "" {
-			fmt.Printf("password:")
+			fmt.Printf(`Password for '%s':`, r.URL)
 			p, err := terminal.ReadPassword(int(syscall.Stdin))
 			if err != nil {
 				return err
