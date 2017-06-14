@@ -103,6 +103,8 @@ var (
 
 	lambdaInvoke = func(name string, payload string) (interface{}, error) {
 		f := awsLambda{name: name}
+		var m interface{}
+
 		if payload != "" {
 			f.payload = []byte(payload)
 		}
@@ -118,31 +120,12 @@ var (
 			return "", err
 		}
 
-		return f.response, nil
-	}
+		log.Debug(fmt.Sprintln("Lambda response:", f.response))
 
-	lambdaMap = func(name string, payload string) (map[string]interface{}, error) {
-		f := awsLambda{name: name}
-		m := make(map[string]interface{})
-
-		if payload != "" {
-			f.payload = []byte(payload)
-		}
-
-		sess, err := manager.GetSess(run.profile)
-		if err != nil {
-			log.Error(err.Error())
-			return m, err
-		}
-
-		if err := f.Invoke(sess); err != nil {
-			log.Error(err.Error())
-			return m, err
-		}
-
+		// parse json if possible
 		if err := json.Unmarshal([]byte(f.response), &m); err != nil {
-			log.Error(err.Error())
-			return m, err
+			log.Debug(err.Error())
+			return f.response, nil
 		}
 
 		return m, nil
@@ -165,7 +148,7 @@ var (
 	}
 
 	// gentime function maps
-	genTimeFunctions = template.FuncMap{
+	GenTimeFunctions = template.FuncMap{
 		// simple additon function useful for counters in loops
 		"add": func(a int, b int) int {
 			log.Debug(fmt.Sprintln("Calling Template Function [add] with arguments:", a, b))
@@ -211,9 +194,6 @@ var (
 		// invoke - invokes a lambda function and returns a raw string/interface{}
 		"invoke": lambdaInvoke,
 
-		// invokes - invokes a lambda function and returns a map[string]object
-		"invokes": lambdaMap,
-
 		// kms-encrypt - Encrypts PlainText using KMS key
 		"kms_encrypt": kmsEncrypt,
 
@@ -222,7 +202,7 @@ var (
 	}
 
 	// deploytime function maps
-	deployTimeFunctions = template.FuncMap{
+	DeployTimeFunctions = template.FuncMap{
 		// Fetching stackoutputs
 		"stack_output": func(target string) (string, error) {
 			log.Debug(fmt.Sprintf("Deploy-Time function resolving: %s", target))
@@ -295,9 +275,6 @@ var (
 
 		// invoke - invokes a lambda function and returns a raw string/interface{}
 		"invoke": lambdaInvoke,
-
-		// invokes - invokes a lambda function and returns a map[string]object
-		"invokes": lambdaMap,
 
 		// kms-encrypt - Encrypts PlainText using KMS key
 		"kms_encrypt": kmsEncrypt,

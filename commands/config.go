@@ -101,8 +101,8 @@ func Configure(confSource string, conf string) error {
 			DeployDelims:   &config.DeployDelimiter,
 			GenDelims:      &config.GenerateDelimiter,
 			TemplateValues: config.Vars(),
-			GenTimeFunc:    &genTimeFunctions,
-			DeployTimeFunc: &deployTimeFunctions,
+			GenTimeFunc:    &GenTimeFunctions,
+			DeployTimeFunc: &DeployTimeFunctions,
 			Project:        &config.Project,
 		}
 
