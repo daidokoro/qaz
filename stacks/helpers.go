@@ -4,7 +4,7 @@ import "fmt"
 
 // cleanup functions in create_failed or delete_failed states
 func (s *Stack) cleanup() error {
-	Log.Info(fmt.Sprintf("Running stack cleanup on [%s]", s.Name))
+	Log.Debug(fmt.Sprintf("Running stack cleanup on [%s]", s.Name))
 	resp, err := s.State()
 	if err != nil {
 		return err
