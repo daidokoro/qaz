@@ -94,7 +94,7 @@ var (
 				return
 			}
 
-			repo, err := repo.NewRepo(args[0])
+			repo, err := repo.NewRepo(args[0], run.gituser)
 			utils.HandleError(err)
 
 			// Passing repo to the global var
