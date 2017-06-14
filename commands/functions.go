@@ -18,12 +18,10 @@ import (
 
 // Common Functions - Both Deploy/Gen
 var (
-	kmsEncrypt = func(kid string, text string) (string, error) {
+	kmsEncrypt = func(kid string, text string) string {
+		log.Debug("running template function: [kms_encrypt]")
 		sess, err := manager.GetSess(run.profile)
-		if err != nil {
-			log.Error(err.Error())
-			return "", err
-		}
+		utils.HandleError(err)
 
 		svc := kms.New(sess)
 
@@ -33,54 +31,40 @@ var (
 		}
 
 		resp, err := svc.Encrypt(params)
-		if err != nil {
-			log.Error(err.Error())
-			return "", err
-		}
+		utils.HandleError(err)
 
-		return base64.StdEncoding.EncodeToString(resp.CiphertextBlob), nil
+		return base64.StdEncoding.EncodeToString(resp.CiphertextBlob)
 	}
 
-	kmsDecrypt = func(cipher string) (string, error) {
+	kmsDecrypt = func(cipher string) string {
+		log.Debug("running template function: [kms_decrypt]")
 		sess, err := manager.GetSess(run.profile)
-		if err != nil {
-			log.Error(err.Error())
-			return "", err
-		}
+		utils.HandleError(err)
 
 		svc := kms.New(sess)
 
 		ciph, err := base64.StdEncoding.DecodeString(cipher)
-		if err != nil {
-			log.Error(err.Error())
-			return "", err
-		}
+		utils.HandleError(err)
 
 		params := &kms.DecryptInput{
 			CiphertextBlob: []byte(ciph),
 		}
 
 		resp, err := svc.Decrypt(params)
-		if err != nil {
-			log.Error(err.Error())
-			return "", err
-		}
+		utils.HandleError(err)
 
-		return string(resp.Plaintext), nil
+		return string(resp.Plaintext)
 	}
 
-	httpGet = func(url string) (interface{}, error) {
+	httpGet = func(url string) interface{} {
 		log.Debug(fmt.Sprintln("Calling Template Function [GET] with arguments:", url))
 		resp, err := utils.Get(url)
-		if err != nil {
-			log.Error(err.Error())
-			return "", err
-		}
+		utils.HandleError(err)
 
-		return resp, nil
+		return resp
 	}
 
-	s3Read = func(url string, profile ...string) (string, error) {
+	s3Read = func(url string, profile ...string) string {
 		log.Debug(fmt.Sprintln("Calling Template Function [S3Read] with arguments:", url))
 
 		var p = run.profile
@@ -94,14 +78,13 @@ var (
 		utils.HandleError(err)
 
 		resp, err := bucket.S3Read(url, sess)
-		if err != nil {
-			log.Error(err.Error())
-			return "", err
-		}
-		return resp, nil
+		utils.HandleError(err)
+
+		return resp
 	}
 
-	lambdaInvoke = func(name string, payload string) (interface{}, error) {
+	lambdaInvoke = func(name string, payload string) interface{} {
+		log.Debug("running template function: [invoke]")
 		f := awsLambda{name: name}
 		var m interface{}
 
@@ -110,25 +93,20 @@ var (
 		}
 
 		sess, err := manager.GetSess(run.profile)
-		if err != nil {
-			log.Error(err.Error())
-			return "", err
-		}
+		utils.HandleError(err)
 
-		if err := f.Invoke(sess); err != nil {
-			log.Error(err.Error())
-			return "", err
-		}
+		err = f.Invoke(sess)
+		utils.HandleError(err)
 
 		log.Debug(fmt.Sprintln("Lambda response:", f.response))
 
 		// parse json if possible
 		if err := json.Unmarshal([]byte(f.response), &m); err != nil {
 			log.Debug(err.Error())
-			return f.response, nil
+			return f.response
 		}
 
-		return m, nil
+		return m
 	}
 
 	prefix = func(s string, pre string) bool {
@@ -162,15 +140,11 @@ var (
 		},
 
 		// cat function for reading text from a given file under the files folder
-		"cat": func(path string) (string, error) {
-
+		"cat": func(path string) string {
 			log.Debug(fmt.Sprintln("Calling Template Function [cat] with arguments:", path))
 			b, err := ioutil.ReadFile(path)
-			if err != nil {
-				log.Error(err.Error())
-				return "", err
-			}
-			return string(b), nil
+			utils.HandleError(err)
+			return string(b)
 		},
 
 		// suffix - returns true if string starts with given suffix
@@ -204,55 +178,52 @@ var (
 	// deploytime function maps
 	DeployTimeFunctions = template.FuncMap{
 		// Fetching stackoutputs
-		"stack_output": func(target string) (string, error) {
+		"stack_output": func(target string) string {
 			log.Debug(fmt.Sprintf("Deploy-Time function resolving: %s", target))
 			req := strings.Split(target, "::")
 
 			s := stacks[req[0]]
 
-			if err := s.Outputs(); err != nil {
-				return "", err
-			}
+			err := s.Outputs()
+			utils.HandleError(err)
 
 			for _, i := range s.Output.Stacks {
 				for _, o := range i.Outputs {
 					if *o.OutputKey == req[1] {
-						return *o.OutputValue, nil
+						return *o.OutputValue
 					}
 				}
 			}
 
-			return "", fmt.Errorf("Stack Output Not found - Stack:%s | Output:%s", req[0], req[1])
+			utils.HandleError(fmt.Errorf("Stack Output Not found - Stack:%s | Output:%s", req[0], req[1]))
+			return ""
 		},
 
-		"stack_output_ext": func(target string) (string, error) {
+		"stack_output_ext": func(target string) string {
 			log.Debug(fmt.Sprintf("Deploy-Time function resolving: %s", target))
 			req := strings.Split(target, "::")
 
 			sess, err := manager.GetSess(run.profile)
-			if err != nil {
-				log.Error(err.Error())
-				return "", nil
-			}
+			utils.HandleError(err)
 
 			s := stks.Stack{
 				Stackname: req[0],
 				Session:   sess,
 			}
 
-			if err := s.Outputs(); err != nil {
-				return "", err
-			}
+			err = s.Outputs()
+			utils.HandleError(err)
 
 			for _, i := range s.Output.Stacks {
 				for _, o := range i.Outputs {
 					if *o.OutputKey == req[1] {
-						return *o.OutputValue, nil
+						return *o.OutputValue
 					}
 				}
 			}
 
-			return "", fmt.Errorf("Stack Output Not found - Stack:%s | Output:%s", req[0], req[1])
+			utils.HandleError(fmt.Errorf("Stack Output Not found - Stack:%s | Output:%s", req[0], req[1]))
+			return ""
 		},
 
 		// suffix - returns true if string starts with given suffix
