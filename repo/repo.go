@@ -36,11 +36,15 @@ type Repo struct {
 var Log *logger.Logger
 
 // NewRepo - returns pointer to a new repo struct
-func NewRepo(url string) (*Repo, error) {
+func NewRepo(url, user string) (*Repo, error) {
 	r := &Repo{
 		fs:    memfs.New(),
 		Files: make(map[string]string),
 		URL:   url,
+	}
+
+	if user != "" {
+		r.User = user
 	}
 
 	if err := r.clone(); err != nil {
@@ -124,7 +128,6 @@ func (r *Repo) getAuth(opts *git.CloneOptions) error {
 		opts.Auth = sshAuth
 		return nil
 	}
-
 	if r.User != "" {
 		if r.Secret == "" {
 			fmt.Printf(`Password for '%s':`, r.URL)
