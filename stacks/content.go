@@ -11,7 +11,7 @@ import (
 )
 
 // FetchContent - checks the s.Source type, url/s3/file and calls the corresponding function
-func (s *Stack) fetchContent() error {
+func (s *Stack) FetchContent() error {
 	switch strings.Split(strings.ToLower(s.Source), ":")[0] {
 	case "http", "https":
 		Log.Debug(fmt.Sprintln("Source Type: [http] Detected, Fetching Source: ", s.Source))

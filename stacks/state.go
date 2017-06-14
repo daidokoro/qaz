@@ -26,7 +26,8 @@ func (s *Stack) StackExists() bool {
 	return false
 }
 
-func (s *Stack) state() (string, error) {
+// State - returns complete/failed/pending state of stack
+func (s *Stack) State() (string, error) {
 	svc := cloudformation.New(s.Session, &aws.Config{Credentials: s.creds()})
 
 	describeStacksInput := &cloudformation.DescribeStacksInput{

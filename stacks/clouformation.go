@@ -2,6 +2,7 @@ package stacks
 
 import (
 	"fmt"
+	"qaz/utils"
 	"sync"
 	"time"
 
@@ -115,7 +116,7 @@ func DeployHandler(runstacks map[string]string, stacks map[string]*Stack) {
 						return
 					}
 
-					chk, _ := dp.state()
+					chk, _ := dp.State()
 
 					switch chk {
 					case state.failed:
@@ -131,7 +132,7 @@ func DeployHandler(runstacks map[string]string, stacks map[string]*Stack) {
 					mutex.Unlock()
 				}
 
-				if all(depts, state.complete) {
+				if utils.All(depts, state.complete) {
 					// Deploy stack once dependencies clear
 					Log.Info(fmt.Sprintf("Deploying a template for [%s]", s.Name))
 
@@ -179,7 +180,7 @@ func TerminateHandler(runstacks map[string]string, stacks map[string]*Stack) {
 			// which depend on it, to finish terminating first.
 			for {
 				for _, stk := range stacks {
-					if stringIn(s.Name, stk.DependsOn) {
+					if utils.StringIn(s.Name, stk.DependsOn) {
 						Log.Info(fmt.Sprintf("[%s]: Depends on [%s].. Waiting for dependency to terminate", stk.Name, s.Name))
 						for _ = range tick.C {
 							if !stk.StackExists() {
