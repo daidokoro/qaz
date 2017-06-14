@@ -1,0 +1,16 @@
+region: us-east-1
+project: myproj
+
+global:
+
+stacks:
+  mystacksmall:
+    source: templates/single.yml
+    cf:
+      nodes: 2
+      instancetype: t2.nano
+  mystackbig:
+    source: templates/single.yml
+    cf:
+      nodes: 10
+      instancetype: c4.xlarge
