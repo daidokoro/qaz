@@ -22,7 +22,7 @@ var generateCmd = &cobra.Command{
 		var s string
 		var source string
 
-		err := configure(run.cfgSource, run.cfgRaw)
+		err := Configure(run.cfgSource, run.cfgRaw)
 		if err != nil {
 			utils.HandleError(err)
 			return

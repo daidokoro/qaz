@@ -63,8 +63,8 @@ func (c *Config) parameters(s *stks.Stack) {
 	}
 }
 
-// configure parses the config file abd setos stacjs abd ebv
-func configure(confSource string, conf string) error {
+// Configure parses the config file abd setos stacjs abd ebv
+func Configure(confSource string, conf string) error {
 
 	if conf == "" {
 		cfg, err := fetchContent(confSource)

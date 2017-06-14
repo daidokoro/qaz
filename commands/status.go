@@ -20,7 +20,7 @@ var (
 		PreRun: initialise,
 		Run: func(cmd *cobra.Command, args []string) {
 
-			err := configure(run.cfgSource, run.cfgRaw)
+			err := Configure(run.cfgSource, run.cfgRaw)
 			utils.HandleError(err)
 
 			for _, v := range stacks {
@@ -53,7 +53,7 @@ var (
 			var s string
 			var source string
 
-			err := configure(run.cfgSource, "")
+			err := Configure(run.cfgSource, "")
 			utils.HandleError(err)
 
 			if run.tplSource != "" {

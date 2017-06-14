@@ -31,7 +31,7 @@ var create = &cobra.Command{
 
 		run.changeName = args[0]
 
-		err := configure(run.cfgSource, run.cfgRaw)
+		err := Configure(run.cfgSource, run.cfgRaw)
 		utils.HandleError(err)
 
 		if run.tplSource != "" {
@@ -78,7 +78,7 @@ var rm = &cobra.Command{
 
 		run.changeName = args[0]
 
-		err := configure(run.cfgSource, run.cfgRaw)
+		err := Configure(run.cfgSource, run.cfgRaw)
 		utils.HandleError(err)
 
 		if _, ok := stacks[run.stackName]; !ok {
@@ -103,7 +103,7 @@ var list = &cobra.Command{
 			return
 		}
 
-		err := configure(run.cfgSource, run.cfgRaw)
+		err := Configure(run.cfgSource, run.cfgRaw)
 		if err != nil {
 			utils.HandleError(err)
 			return
@@ -138,7 +138,7 @@ var execute = &cobra.Command{
 
 		run.changeName = args[0]
 
-		err := configure(run.cfgSource, run.cfgRaw)
+		err := Configure(run.cfgSource, run.cfgRaw)
 		if err != nil {
 			utils.HandleError(err)
 			return
@@ -173,7 +173,7 @@ var desc = &cobra.Command{
 
 		run.changeName = args[0]
 
-		err := configure(run.cfgSource, run.cfgRaw)
+		err := Configure(run.cfgSource, run.cfgRaw)
 		if err != nil {
 			utils.HandleError(err)
 			return

@@ -28,7 +28,7 @@ var (
 		PreRun: initialise,
 		Run: func(cmd *cobra.Command, args []string) {
 
-			err := configure(run.cfgSource, run.cfgRaw)
+			err := Configure(run.cfgSource, run.cfgRaw)
 			utils.HandleError(err)
 
 			run.stacks = make(map[string]string)
@@ -112,7 +112,7 @@ var (
 				log.Debug(k)
 			}
 
-			err = configure(run.cfgSource, repo.Config)
+			err = Configure(run.cfgSource, repo.Config)
 			utils.HandleError(err)
 
 			//create run stacks
@@ -147,7 +147,7 @@ var (
 			var s string
 			var source string
 
-			err := configure(run.cfgSource, run.cfgRaw)
+			err := Configure(run.cfgSource, run.cfgRaw)
 			if err != nil {
 				utils.HandleError(err)
 				return
@@ -214,7 +214,7 @@ var (
 				}
 			}
 
-			err := configure(run.cfgSource, "")
+			err := Configure(run.cfgSource, "")
 			if err != nil {
 				utils.HandleError(err)
 				return

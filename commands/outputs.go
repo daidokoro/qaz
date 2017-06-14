@@ -26,7 +26,7 @@ var (
 				return
 			}
 
-			err := configure(run.cfgSource, run.cfgRaw)
+			err := Configure(run.cfgSource, run.cfgRaw)
 			utils.HandleError(err)
 
 			for _, s := range args {

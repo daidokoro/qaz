@@ -111,7 +111,7 @@ var (
 				utils.HandleError(fmt.Errorf("Please specify stack name..."))
 			}
 
-			err := configure(run.cfgSource, run.cfgRaw)
+			err := Configure(run.cfgSource, run.cfgRaw)
 			utils.HandleError(err)
 
 			for _, s := range args {
@@ -151,7 +151,7 @@ var (
 			// set stack value based on argument
 			s := args[0]
 
-			err := configure(run.cfgSource, run.cfgRaw)
+			err := Configure(run.cfgSource, run.cfgRaw)
 			utils.HandleError(err)
 
 			if _, ok := stacks[s]; !ok {
