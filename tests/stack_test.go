@@ -10,6 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 )
 
+// NOTE: I need to write more tests. Following the restructuring of the project, all previous tests are no long applicable. The reason for the tests
+// package is that most packages within qaz directly or explicitly rely on other packages within the project, making it difficult to write isolated
+// tests. Using this package approach I can import dependencies and run tests without conflicts. The downside is that there will be no way
+// to properly track coverage.
+
 var (
 	debugmode = true
 	colors    = false
