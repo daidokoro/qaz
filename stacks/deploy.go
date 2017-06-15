@@ -37,9 +37,13 @@ func (s *Stack) Deploy() error {
 		}
 	}
 
-	// NOTE: Add parameters flag here if params set
+	// NOTE: Add parameters and tags flag here if set
 	if len(s.Parameters) > 0 {
 		createParams.Parameters = s.Parameters
+	}
+
+	if len(s.Tags) > 0 {
+		createParams.Tags = s.Tags
 	}
 
 	// If IAM is being touched, add Capabilities

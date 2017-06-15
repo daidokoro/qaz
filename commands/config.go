@@ -27,6 +27,7 @@ type Config struct {
 		Source     string                 `yaml:"source,omitempty" json:"source,omitempty" hcl:"source,omitempty"`
 		Bucket     string                 `yaml:"bucket,omitempty" json:"bucket,omitempty" hcl:"bucket,omitempty"`
 		Role       string                 `yaml:"role,omitempty" json:"role,omitempty" hcl:"role,omitempty"`
+		Tags       []map[string]string    `yaml:"tags,omitempty" json:"tags,omitempty" hcl:"tags,omitempty"`
 		CF         map[string]interface{} `yaml:"cf,omitempty" json:"cf,omitempty" hcl:"cf,omitempty"`
 	} `yaml:"stacks" json:"stacks" hcl:"stacks"`
 }
@@ -55,6 +56,24 @@ func (c *Config) parameters(s *stks.Stack) {
 					s.Parameters = append(s.Parameters, &cloudformation.Parameter{
 						ParameterKey:   aws.String(k),
 						ParameterValue: aws.String(v),
+					})
+				}
+
+			}
+		}
+	}
+}
+
+// Adds stack tags to given stack based on config
+func (c *Config) tags(s *stks.Stack) {
+
+	for stk, val := range c.Stacks {
+		if s.Name == stk {
+			for _, param := range val.Tags {
+				for k, v := range param {
+					s.Tags = append(s.Tags, &cloudformation.Tag{
+						Key:   aws.String(k),
+						Value: aws.String(v),
 					})
 				}
 
@@ -116,8 +135,9 @@ func Configure(confSource string, conf string) error {
 
 		stacks[s].Session = sess
 
-		// set parameters, if any
+		// set parameters and tags, if any
 		config.parameters(stacks[s])
+		config.tags(stacks[s])
 	}
 
 	return nil

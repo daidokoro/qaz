@@ -39,6 +39,7 @@ type Stack struct {
 	Parameters     []*cloudformation.Parameter
 	Output         *cloudformation.DescribeStacksOutput
 	Policy         string
+	Tags           []*cloudformation.Tag
 	Session        *session.Session
 	Profile        string
 	Source         string
@@ -51,6 +52,7 @@ type Stack struct {
 	GenDelims      *string
 	TemplateValues map[string]interface{}
 	Debug          bool
+	Timeout        int64
 }
 
 // SetStackName - sets the stackname with struct
