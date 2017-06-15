@@ -42,7 +42,7 @@ func (s *Stack) Change(req, changename string) error {
 			if err != nil {
 				Log.Warn(fmt.Sprintf("Received Error when checking if [%s] exists: %s", s.Bucket, err.Error()))
 			}
-
+			fmt.Println("This is test")
 			if !exists {
 				Log.Info(fmt.Sprintf(("Creating Bucket [%s]"), s.Bucket))
 				if err = bucket.Create(s.Bucket, s.Session); err != nil {
