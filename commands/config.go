@@ -28,6 +28,7 @@ type Config struct {
 		Bucket     string                 `yaml:"bucket,omitempty" json:"bucket,omitempty" hcl:"bucket,omitempty"`
 		Role       string                 `yaml:"role,omitempty" json:"role,omitempty" hcl:"role,omitempty"`
 		Tags       []map[string]string    `yaml:"tags,omitempty" json:"tags,omitempty" hcl:"tags,omitempty"`
+		Timeout    int64                  `yaml:"timeout,omitempty" json:"timeout,omitempty" hcl:"timeout,omitempty"`
 		CF         map[string]interface{} `yaml:"cf,omitempty" json:"cf,omitempty" hcl:"cf,omitempty"`
 	} `yaml:"stacks" json:"stacks" hcl:"stacks"`
 }
@@ -123,6 +124,7 @@ func Configure(confSource string, conf string) error {
 			GenTimeFunc:    &GenTimeFunctions,
 			DeployTimeFunc: &DeployTimeFunctions,
 			Project:        &config.Project,
+			Timeout:        v.Timeout,
 		}
 
 		stacks[s].SetStackName()
@@ -138,6 +140,7 @@ func Configure(confSource string, conf string) error {
 		// set parameters and tags, if any
 		config.parameters(stacks[s])
 		config.tags(stacks[s])
+
 	}
 
 	return nil
