@@ -17,8 +17,9 @@ var changeCmd = &cobra.Command{
 }
 
 var create = &cobra.Command{
-	Use:   "create",
-	Short: "Create Changet-Set",
+	Use:    "create",
+	Short:  "Create Changet-Set",
+	PreRun: initialise,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		var s string
@@ -26,6 +27,11 @@ var create = &cobra.Command{
 
 		if len(args) < 1 {
 			fmt.Println("Please provide Change-Set Name...")
+			return
+		}
+
+		if run.stackName == "" && run.tplSource == "" {
+			fmt.Println("Please specify stack name using --stack, -s  or -t, --template...")
 			return
 		}
 
@@ -39,8 +45,8 @@ var create = &cobra.Command{
 			utils.HandleError(err)
 		}
 
-		if len(args) > 0 {
-			s = args[0]
+		if run.stackName != "" && s == "" {
+			s = run.stackName
 		}
 
 		// check if stack exists in config
@@ -58,12 +64,15 @@ var create = &cobra.Command{
 		err = stacks[s].Change("create", run.changeName)
 		utils.HandleError(err)
 
+		log.Info(fmt.Sprintf("change-set [%s] creation successful", run.changeName))
+
 	},
 }
 
 var rm = &cobra.Command{
-	Use:   "rm",
-	Short: "Delete Change-Set",
+	Use:    "rm",
+	Short:  "Delete Change-Set",
+	PreRun: initialise,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) < 1 {
@@ -94,8 +103,9 @@ var rm = &cobra.Command{
 }
 
 var list = &cobra.Command{
-	Use:   "list",
-	Short: "List Change-Sets",
+	Use:    "list",
+	Short:  "List Change-Sets",
+	PreRun: initialise,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if run.stackName == "" {
@@ -104,10 +114,7 @@ var list = &cobra.Command{
 		}
 
 		err := Configure(run.cfgSource, run.cfgRaw)
-		if err != nil {
-			utils.HandleError(err)
-			return
-		}
+		utils.HandleError(err)
 
 		if _, ok := stacks[run.stackName]; !ok {
 			utils.HandleError(fmt.Errorf("Stack not found: [%s]", run.stackName))
@@ -122,8 +129,9 @@ var list = &cobra.Command{
 }
 
 var execute = &cobra.Command{
-	Use:   "execute",
-	Short: "Execute Change-Set",
+	Use:    "execute",
+	Short:  "Execute Change-Set",
+	PreRun: initialise,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) < 1 {
@@ -153,12 +161,15 @@ var execute = &cobra.Command{
 		if err := s.Change("execute", run.changeName); err != nil {
 			utils.HandleError(err)
 		}
+
+		log.Info(fmt.Sprintf("change-set [%s] execution successful", run.changeName))
 	},
 }
 
 var desc = &cobra.Command{
-	Use:   "desc",
-	Short: "Describe Change-Set",
+	Use:    "desc",
+	Short:  "Describe Change-Set",
+	PreRun: initialise,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) < 1 {
