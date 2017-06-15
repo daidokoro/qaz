@@ -27,6 +27,15 @@ func (s *Stack) Update() error {
 		TemplateBody: aws.String(s.Template),
 	}
 
+	// NOTE: Add parameters and tags flag here if set
+	if len(s.Parameters) > 0 {
+		updateParams.Parameters = s.Parameters
+	}
+
+	if len(s.Tags) > 0 {
+		updateParams.Tags = s.Tags
+	}
+
 	// If bucket - upload to s3
 	if s.Bucket != "" {
 		exists, err := bucket.Exists(s.Bucket, s.Session)
