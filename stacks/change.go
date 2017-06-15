@@ -29,6 +29,11 @@ func (s *Stack) Change(req, changename string) error {
 			ChangeSetName: aws.String(changename),
 		}
 
+		// add tags if set
+		if len(s.Tags) > 0 {
+			params.Tags = s.Tags
+		}
+
 		Log.Debug(fmt.Sprintf("Updated Template:\n%s", s.Template))
 
 		// If bucket - upload to s3
