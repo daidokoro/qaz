@@ -596,8 +596,7 @@ func (s *stack) deployTimeParser() error {
 	values := config.vars()
 
 	// Add metadata specific to the stack we're working with to the parser
-	values["stack"] = s.name
-	values["currentstack"] = values[s.name]
+	values["stack"] = values[s.name]
 	values["parameters"] = s.parameters
 
 	t.Execute(&doc, values)
@@ -629,8 +628,7 @@ func (s *stack) genTimeParser() error {
 	values := config.vars()
 
 	// Add metadata specific to the stack we're working with to the parser
-	values["stack"] = s.name
-	values["currentstack"] = values[s.name]
+	values["stack"] = values[s.name]
 	values["parameters"] = s.parameters
 
 	t.Execute(&doc, values)

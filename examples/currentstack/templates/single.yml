@@ -1,11 +1,11 @@
-Description: Test Stack deployed by qaz {{.currentstack}}
+Description: Test Stack deployed by qaz
 AWSTemplateFormatVersion: '2010-09-09'
 Resources:
-  {{- range $i, $_ := loop .currentstack.nodes }}
+  {{- range $i, $_ := loop .stack.nodes }}
   MyInstance{{ $i }}:
     Type: "AWS::EC2::Instance"
     Properties:
-      InstanceType: {{$.currentstack.instancetype}}
+      InstanceType: {{$.stack.instancetype}}
       KeyName: "mykey"
       ImageID: "ami-e3c3b8f4"
   {{- end -}}
