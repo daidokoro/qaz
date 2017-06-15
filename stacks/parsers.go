@@ -22,8 +22,9 @@ func (s *Stack) DeployTimeParser() error {
 	var doc bytes.Buffer
 
 	// Add metadata specific to the stack we're working with to the parser
-	s.TemplateValues["stack"] = s.Name
+	s.TemplateValues["stack"] = s.TemplateValues[s.Name]
 	s.TemplateValues["parameters"] = s.Parameters
+	s.TemplateValues["name"] = s.Name
 
 	t.Execute(&doc, s.TemplateValues)
 	s.Template = doc.String()
@@ -52,8 +53,9 @@ func (s *Stack) GenTimeParser() error {
 	var doc bytes.Buffer
 
 	// Add metadata specific to the stack we're working with to the parser
-	s.TemplateValues["stack"] = s.Name
+	s.TemplateValues["stack"] = s.TemplateValues[s.Name]
 	s.TemplateValues["parameters"] = s.Parameters
+	s.TemplateValues["name"] = s.Name
 
 	t.Execute(&doc, s.TemplateValues)
 	s.Template = doc.String()
