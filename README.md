@@ -20,7 +20,7 @@ Qaz emphasizes minimal abstraction from the underlying AWS Cloudformation Platfo
 
 - Advanced template functionality & custom built-in template functions
 
-- Support for Cloudformation templates written in JSON & YAML
+- Support for Cloudformation templates written in JSON, YAML & [HCL](https://github.com/hashicorp/hcl)
 
 - Dynamic deploy script generation utilising the built-in templating functionality
 
