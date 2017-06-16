@@ -25,7 +25,7 @@ func (s *sessionManager) GetSess(p string) (*session.Session, error) {
 	}
 
 	if v, ok := s.sessions[p]; ok {
-		Log(fmt.Sprintf("Session Detected: [%s]", p), level.debug)
+		log.Debug(fmt.Sprintf("Session Detected: [%s]", p))
 		return v, nil
 	}
 
@@ -39,7 +39,7 @@ func (s *sessionManager) GetSess(p string) (*session.Session, error) {
 		options.Config = aws.Config{Region: &s.region}
 	}
 
-	Log(fmt.Sprintf("Creating AWS Session with options: Region: %s, Profile: %s ", region, run.profile), level.debug)
+	log.Debug(fmt.Sprintf("Creating AWS Session with options: Regioin: %s, Profile: %s ", region, run.profile))
 	sess, err := session.NewSessionWithOptions(options)
 	if err != nil {
 		return sess, err

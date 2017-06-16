@@ -2,10 +2,13 @@ package commands
 
 import (
 	"fmt"
+	"github.com/daidokoro/qaz/utils"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/spf13/cobra"
 )
 
 type awsLambda struct {
@@ -25,7 +28,7 @@ func (a *awsLambda) Invoke(sess *session.Session) error {
 		params.Payload = a.payload
 	}
 
-	Log(fmt.Sprintln("Calling [Invoke] with parameters:", params), level.debug)
+	log.Debug(fmt.Sprintln("Calling [Invoke] with parameters:", params))
 	resp, err := svc.Invoke(params)
 
 	if err != nil {
@@ -38,6 +41,39 @@ func (a *awsLambda) Invoke(sess *session.Session) error {
 
 	a.response = string(resp.Payload)
 
-	Log(fmt.Sprintln("Lambda response:", a.response), level.debug)
+	log.Debug(fmt.Sprintln("Lambda response:", a.response))
 	return nil
+}
+
+// invoke command
+var invokeCmd = &cobra.Command{
+	Use:    "invoke",
+	Short:  "Invoke AWS Lambda Functions",
+	PreRun: initialise,
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if len(args) < 1 {
+			fmt.Println("No Lambda Function specified")
+			return
+		}
+
+		sess, err := manager.GetSess(run.profile)
+		utils.HandleError(err)
+
+		f := awsLambda{name: args[0]}
+
+		if run.funcEvent != "" {
+			f.payload = []byte(run.funcEvent)
+		}
+
+		if err := f.Invoke(sess); err != nil {
+			if strings.Contains(err.Error(), "Unhandled") {
+				log.Error(fmt.Sprintf("Unhandled Exception: Potential Issue with Lambda Function Logic: %s...\n", f.name))
+			}
+			utils.HandleError(err)
+		}
+
+		fmt.Println(f.response)
+
+	},
 }

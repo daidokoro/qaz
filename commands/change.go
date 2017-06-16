@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"github.com/daidokoro/qaz/utils"
 
 	"github.com/spf13/cobra"
 )
@@ -16,8 +17,9 @@ var changeCmd = &cobra.Command{
 }
 
 var create = &cobra.Command{
-	Use:   "create",
-	Short: "Create Changet-Set",
+	Use:    "create",
+	Short:  "Create Changet-Set",
+	PreRun: initialise,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		var s string
@@ -28,52 +30,49 @@ var create = &cobra.Command{
 			return
 		}
 
-		run.changeName = args[0]
-
-		err := configReader(run.cfgSource, run.cfgRaw)
-		if err != nil {
-			handleError(err)
+		if run.stackName == "" && run.tplSource == "" {
+			fmt.Println("Please specify stack name using --stack, -s  or -t, --template...")
 			return
 		}
 
+		run.changeName = args[0]
+
+		err := Configure(run.cfgSource, run.cfgRaw)
+		utils.HandleError(err)
+
 		if run.tplSource != "" {
-			s, source, err = getSource(run.tplSource)
-			if err != nil {
-				handleError(err)
-				return
-			}
+			s, source, err = utils.GetSource(run.tplSource)
+			utils.HandleError(err)
 		}
 
-		if len(args) > 0 {
-			s = args[0]
+		if run.stackName != "" && s == "" {
+			s = run.stackName
 		}
 
 		// check if stack exists in config
 		if _, ok := stacks[s]; !ok {
-			handleError(fmt.Errorf("Stack [%s] not found in config", s))
-			return
+			utils.HandleError(fmt.Errorf("Stack [%s] not found in config", s))
 		}
 
-		if stacks[s].source == "" {
-			stacks[s].source = source
+		if stacks[s].Source == "" {
+			stacks[s].Source = source
 		}
 
-		if err = stacks[s].genTimeParser(); err != nil {
-			handleError(err)
-			return
-		}
+		err = stacks[s].GenTimeParser()
+		utils.HandleError(err)
 
-		if err := stacks[s].change("create"); err != nil {
-			handleError(err)
-			return
-		}
+		err = stacks[s].Change("create", run.changeName)
+		utils.HandleError(err)
+
+		log.Info(fmt.Sprintf("change-set [%s] creation successful", run.changeName))
 
 	},
 }
 
 var rm = &cobra.Command{
-	Use:   "rm",
-	Short: "Delete Change-Set",
+	Use:    "rm",
+	Short:  "Delete Change-Set",
+	PreRun: initialise,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) < 1 {
@@ -88,28 +87,25 @@ var rm = &cobra.Command{
 
 		run.changeName = args[0]
 
-		err := configReader(run.cfgSource, run.cfgRaw)
-		if err != nil {
-			handleError(err)
-			return
-		}
+		err := Configure(run.cfgSource, run.cfgRaw)
+		utils.HandleError(err)
 
 		if _, ok := stacks[run.stackName]; !ok {
-			handleError(fmt.Errorf("Stack not found: [%s]", run.stackName))
+			utils.HandleError(fmt.Errorf("Stack not found: [%s]", run.stackName))
 		}
 
 		s := stacks[run.stackName]
 
-		if err := s.change("rm"); err != nil {
-			handleError(err)
-		}
+		err = s.Change("rm", run.changeName)
+		utils.HandleError(err)
 
 	},
 }
 
 var list = &cobra.Command{
-	Use:   "list",
-	Short: "List Change-Sets",
+	Use:    "list",
+	Short:  "List Change-Sets",
+	PreRun: initialise,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if run.stackName == "" {
@@ -117,27 +113,25 @@ var list = &cobra.Command{
 			return
 		}
 
-		err := configReader(run.cfgSource, run.cfgRaw)
-		if err != nil {
-			handleError(err)
-			return
-		}
+		err := Configure(run.cfgSource, run.cfgRaw)
+		utils.HandleError(err)
 
 		if _, ok := stacks[run.stackName]; !ok {
-			handleError(fmt.Errorf("Stack not found: [%s]", run.stackName))
+			utils.HandleError(fmt.Errorf("Stack not found: [%s]", run.stackName))
 		}
 
 		s := stacks[run.stackName]
 
-		if err := s.change("list"); err != nil {
-			handleError(err)
+		if err := s.Change("list", run.changeName); err != nil {
+			utils.HandleError(err)
 		}
 	},
 }
 
 var execute = &cobra.Command{
-	Use:   "execute",
-	Short: "Execute Change-Set",
+	Use:    "execute",
+	Short:  "Execute Change-Set",
+	PreRun: initialise,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) < 1 {
@@ -152,27 +146,30 @@ var execute = &cobra.Command{
 
 		run.changeName = args[0]
 
-		err := configReader(run.cfgSource, run.cfgRaw)
+		err := Configure(run.cfgSource, run.cfgRaw)
 		if err != nil {
-			handleError(err)
+			utils.HandleError(err)
 			return
 		}
 
 		if _, ok := stacks[run.stackName]; !ok {
-			handleError(fmt.Errorf("Stack not found: [%s]", run.stackName))
+			utils.HandleError(fmt.Errorf("Stack not found: [%s]", run.stackName))
 		}
 
 		s := stacks[run.stackName]
 
-		if err := s.change("execute"); err != nil {
-			handleError(err)
+		if err := s.Change("execute", run.changeName); err != nil {
+			utils.HandleError(err)
 		}
+
+		log.Info(fmt.Sprintf("change-set [%s] execution successful", run.changeName))
 	},
 }
 
 var desc = &cobra.Command{
-	Use:   "desc",
-	Short: "Describe Change-Set",
+	Use:    "desc",
+	Short:  "Describe Change-Set",
+	PreRun: initialise,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) < 1 {
@@ -187,20 +184,20 @@ var desc = &cobra.Command{
 
 		run.changeName = args[0]
 
-		err := configReader(run.cfgSource, run.cfgRaw)
+		err := Configure(run.cfgSource, run.cfgRaw)
 		if err != nil {
-			handleError(err)
+			utils.HandleError(err)
 			return
 		}
 
 		if _, ok := stacks[run.stackName]; !ok {
-			handleError(fmt.Errorf("Stack not found: [%s]", run.stackName))
+			utils.HandleError(fmt.Errorf("Stack not found: [%s]", run.stackName))
 		}
 
 		s := stacks[run.stackName]
 
-		if err := s.change("desc"); err != nil {
-			handleError(err)
+		if err := s.Change("desc", run.changeName); err != nil {
+			utils.HandleError(err)
 		}
 	},
 }

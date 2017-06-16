@@ -1,10 +1,12 @@
-package commands
+package bucket
 
 import (
 	"bytes"
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/daidokoro/qaz/logger"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -13,14 +15,11 @@ import (
 
 // -- Contains all things S3
 
+// Log define logger
+var Log *logger.Logger
+
 // S3Read - Reads the content of a given s3 url endpoint and returns the content string.
-func S3Read(url string) (string, error) {
-
-	sess, err := manager.GetSess(run.profile)
-	if err != nil {
-		return "", err
-	}
-
+func S3Read(url string, sess *session.Session) (string, error) {
 	svc := s3.New(sess)
 
 	// Parse s3 url
@@ -32,7 +31,7 @@ func S3Read(url string) (string, error) {
 		Key:    aws.String(key),
 	}
 
-	Log(fmt.Sprintln("Calling S3 [GetObject] with parameters:", params), level.debug)
+	Log.Debug(fmt.Sprintln("Calling S3 [GetObject] with parameters:", params))
 	resp, err := svc.GetObject(params)
 	if err != nil {
 		return "", err
@@ -40,9 +39,10 @@ func S3Read(url string) (string, error) {
 
 	buf := new(bytes.Buffer)
 
-	Log("Reading from S3 Response Body", level.debug)
+	Log.Debug("Reading from S3 Response Body")
 	buf.ReadFrom(resp.Body)
 	return buf.String(), nil
+
 }
 
 // S3write - Writes a file to s3 and returns the presigned url
@@ -57,7 +57,7 @@ func S3write(bucket string, key string, body string, sess *session.Session) (str
 		},
 	}
 
-	Log(fmt.Sprintln("Calling S3 [PutObject] with parameters:", params), level.debug)
+	Log.Debug(fmt.Sprintln("Calling S3 [PutObject] with parameters:", params))
 	_, err := svc.PutObject(params)
 	if err != nil {
 		return "", err
@@ -77,15 +77,15 @@ func S3write(bucket string, key string, body string, sess *session.Session) (str
 
 }
 
-// CreateBucket - create s3 bucket
-func CreateBucket(bucket string, sess *session.Session) error {
+// Create - create s3 bucket
+func Create(bucket string, sess *session.Session) error {
 	svc := s3.New(sess)
 
 	params := &s3.CreateBucketInput{
 		Bucket: &bucket,
 	}
 
-	Log(fmt.Sprintln("Calling S3 [CreateBucket] with parameters:", params), level.debug)
+	Log.Debug(fmt.Sprintln("Calling S3 [CreateBucket] with parameters:", params))
 	_, err := svc.CreateBucket(params)
 	if err != nil {
 		return err
@@ -96,16 +96,17 @@ func CreateBucket(bucket string, sess *session.Session) error {
 	}
 
 	return nil
+
 }
 
-// BucketExists - checks if bucket exists - if err, then its assumed that the bucket does not exist.
-func BucketExists(bucket string, sess *session.Session) (bool, error) {
+// Exists - checks if bucket exists - if err, then its assumed that the bucket does not exist.
+func Exists(bucket string, sess *session.Session) (bool, error) {
 	svc := s3.New(sess)
 	params := &s3.HeadBucketInput{
 		Bucket: &bucket,
 	}
 
-	Log(fmt.Sprintln("Calling S3 [HeadBucket] with parameters:", params), level.debug)
+	Log.Debug(fmt.Sprintln("Calling S3 [HeadBucket] with parameters:", params))
 	_, err := svc.HeadBucket(params)
 	if err != nil {
 		return false, err

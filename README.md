@@ -8,7 +8,7 @@
 ![Go Report Card](https://goreportcard.com/badge/github.com/daidokoro/qaz)
 
 
-__Qaz__ is a _cloud native_ AWS Cloudformation Template Management CLI tool inspired by the Bora project by [@pkazmierczak](https://github.com/pkazmierczak) that focuses on simplifying the process of deploying infrastructure on AWS via Cloudformation by utilising the Go Templates Library and custom functions to generate diverse and configurable templates.
+__Qaz__ is a _cloud native_ AWS Cloudformation Template Management CLI tool that focuses on simplifying the process of deploying infrastructure on AWS via Cloudformation by utilising the Go Templates Library and custom functions to generate diverse and configurable templates.
 
 For Qaz, being _cloud native_ means having no explicit local dependencies and utilising resources within the AWS Ecosystem to extend functionality. As a result Qaz supports various methods for dynamically generating infrastructure via Cloudformation.
 
@@ -137,6 +137,11 @@ Qaz is now in __beta__, no more breaking changes to come. The focus from this po
 - More Deploy/Gen-Time Functions
 
 --
+
+## Credits
+
+- [pkazmierczak](https://github.com/pkazmierczak) - _Bora_ was the spark for this project...
+
 
 # Contributing
 
