@@ -3,9 +3,9 @@ package commands
 import (
 	"fmt"
 	"io/ioutil"
-	"qaz/bucket"
-	stks "qaz/stacks"
-	"qaz/utils"
+	"github.com/daidokoro/qaz/bucket"
+	stks "github.com/daidokoro/qaz/stacks"
+	"github.com/daidokoro/qaz/utils"
 	"strings"
 	"text/template"
 

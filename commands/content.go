@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"qaz/bucket"
-	"qaz/utils"
+	"github.com/daidokoro/qaz/bucket"
+	"github.com/daidokoro/qaz/utils"
 	"regexp"
 	"strings"
 )

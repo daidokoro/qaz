@@ -2,8 +2,8 @@ package tests
 
 import (
 	"fmt"
-	"qaz/logger"
-	stks "qaz/stacks"
+	"github.com/daidokoro/qaz/logger"
+	stks "github.com/daidokoro/qaz/stacks"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"

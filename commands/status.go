@@ -2,10 +2,10 @@ package commands
 
 import (
 	"fmt"
-	"qaz/utils"
+	"github.com/daidokoro/qaz/utils"
 	"strings"
 
-	stks "qaz/stacks"
+	stks "github.com/daidokoro/qaz/stacks"
 
 	"github.com/spf13/cobra"
 )

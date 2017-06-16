@@ -2,7 +2,7 @@ package commands
 
 import (
 	"fmt"
-	"qaz/utils"
+	"github.com/daidokoro/qaz/utils"
 
 	"github.com/spf13/cobra"
 )

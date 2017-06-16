@@ -11,7 +11,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"qaz/logger"
+	"github.com/daidokoro/qaz/logger"
 	"strconv"
 	"strings"
 	"time"

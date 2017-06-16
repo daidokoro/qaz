@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"qaz/bucket"
+	"github.com/daidokoro/qaz/bucket"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"

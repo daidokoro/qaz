@@ -2,7 +2,7 @@ package stacks
 
 import (
 	"fmt"
-	"qaz/utils"
+	"github.com/daidokoro/qaz/utils"
 	"sync"
 	"time"
 

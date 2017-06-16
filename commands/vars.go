@@ -1,9 +1,9 @@
 package commands
 
 import (
-	"qaz/logger"
-	"qaz/repo"
-	stks "qaz/stacks"
+	"github.com/daidokoro/qaz/logger"
+	"github.com/daidokoro/qaz/repo"
+	stks "github.com/daidokoro/qaz/stacks"
 	"sync"
 )
 

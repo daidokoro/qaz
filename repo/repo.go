@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"qaz/logger"
+	"github.com/daidokoro/qaz/logger"
 	"strings"
 	"syscall"
 

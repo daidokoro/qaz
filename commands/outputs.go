@@ -3,9 +3,9 @@ package commands
 import (
 	"encoding/json"
 	"fmt"
-	"qaz/utils"
+	"github.com/daidokoro/qaz/utils"
 
-	stks "qaz/stacks"
+	stks "github.com/daidokoro/qaz/stacks"
 
 	"github.com/spf13/cobra"
 )

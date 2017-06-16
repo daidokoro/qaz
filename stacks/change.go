@@ -3,7 +3,7 @@ package stacks
 import (
 	"encoding/json"
 	"fmt"
-	"qaz/bucket"
+	"github.com/daidokoro/qaz/bucket"
 	"strings"
 	"time"
 

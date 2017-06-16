@@ -2,7 +2,7 @@ package commands
 
 import (
 	"fmt"
-	"qaz/utils"
+	"github.com/daidokoro/qaz/utils"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
