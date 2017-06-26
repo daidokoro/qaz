@@ -1,10 +1,11 @@
 package commands
 
 import (
+	"sync"
+
 	"github.com/daidokoro/qaz/logger"
 	"github.com/daidokoro/qaz/repo"
 	stks "github.com/daidokoro/qaz/stacks"
-	"sync"
 )
 
 var (
