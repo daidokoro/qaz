@@ -4,7 +4,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/ttacon/chalk"
+	"github.com/fatih/color"
 )
 
 // ColorMap - Used to map a particular color to a cf status phrase - returns lowercase strings in color.
@@ -21,13 +21,13 @@ func (l *Logger) ColorMap(s string) string {
 
 	switch v {
 	case "COMPLETE":
-		result = chalk.Green.Color(s)
+		result = color.New(color.BgGreen).Add(color.Bold).SprintFunc()(s)
 	case "PROGRESS":
-		result = chalk.Yellow.Color(s)
+		result = color.New(color.BgYellow).Add(color.Bold).SprintFunc()(s)
 	case "FAILED":
-		result = chalk.Red.Color(s)
+		result = color.New(color.BgRed).Add(color.Bold).SprintFunc()(s)
 	case "SKIPPED":
-		result = chalk.Blue.Color(s)
+		result = color.New(color.BgHiBlue).Add(color.Bold).SprintFunc()(s)
 	default:
 		// Unidentified, just returns the same string
 		return strings.ToLower(s)
@@ -36,7 +36,7 @@ func (l *Logger) ColorMap(s string) string {
 }
 
 // ColorString - Returns colored string
-func (l *Logger) ColorString(s, color string) string {
+func (l *Logger) ColorString(s, col string) string {
 
 	// If Windows, disable colorS
 	if runtime.GOOS == "windows" || *l.Colors {
@@ -44,17 +44,17 @@ func (l *Logger) ColorString(s, color string) string {
 	}
 
 	var result string
-	switch strings.ToLower(color) {
+	switch strings.ToLower(col) {
 	case "green":
-		result = chalk.Green.Color(s)
+		result = color.New(color.BgGreen).Add(color.Bold).SprintFunc()(s)
 	case "yellow":
-		result = chalk.Yellow.Color(s)
+		result = color.New(color.BgYellow).Add(color.Bold).SprintFunc()(s)
 	case "red":
-		result = chalk.Red.Color(s)
+		result = color.New(color.BgRed).Add(color.Bold).SprintFunc()(s)
 	case "magenta":
-		result = chalk.Magenta.Color(s)
+		result = color.New(color.BgMagenta).Add(color.Bold).SprintFunc()(s)
 	case "cyan":
-		result = chalk.Cyan.Color(s)
+		result = color.New(color.BgCyan).Add(color.Bold).SprintFunc()(s)
 	default:
 		// Unidentified, just returns the same string
 		return s
