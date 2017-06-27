@@ -3,9 +3,11 @@ package stacks
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/daidokoro/qaz/bucket"
+	"regexp"
 	"strings"
 	"time"
+
+	"github.com/daidokoro/qaz/bucket"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
@@ -159,12 +161,21 @@ func (s *Stack) Change(req, changename string) error {
 			return err
 		}
 
-		o, err := json.MarshalIndent(resp, "", "  ")
+		o, err := json.MarshalIndent(resp.Changes, "", "  ")
 		if err != nil {
 			return err
 		}
 
-		fmt.Printf("%s\n", o)
+		reg, err := regexp.Compile(".+?:(\n| )")
+		if err != nil {
+			return err
+		}
+
+		out := reg.ReplaceAllStringFunc(string(o), func(s string) string {
+			return Log.ColorString(s, "cyan")
+		})
+
+		fmt.Printf("%s\n", out)
 	}
 
 	return nil
