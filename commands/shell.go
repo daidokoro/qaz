@@ -415,7 +415,7 @@ func initShell(p string, s *ishell.Shell) {
 				// create checklist
 				choices := c.Checklist(
 					stklist,
-					fmt.Sprintf("select stacks to %s:", log.ColorString("Deploy", "cyan")),
+					fmt.Sprintf("select stacks to %s:", log.ColorString("set-policy", "yellow")),
 					nil,
 				)
 
