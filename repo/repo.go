@@ -7,18 +7,19 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"github.com/daidokoro/qaz/logger"
 	"strings"
 	"syscall"
 
+	"github.com/daidokoro/qaz/logger"
+
 	"golang.org/x/crypto/ssh/terminal"
 
+	git "github.com/daidokoro/go-git"
+	"github.com/daidokoro/go-git/plumbing/transport/http"
+	"github.com/daidokoro/go-git/plumbing/transport/ssh"
+	"github.com/daidokoro/go-git/storage/memory"
 	billy "gopkg.in/src-d/go-billy.v2"
 	"gopkg.in/src-d/go-billy.v2/memfs"
-	git "gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport/http"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
-	"gopkg.in/src-d/go-git.v4/storage/memory"
 )
 
 // Repo used to manage git repo based deployments
