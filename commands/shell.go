@@ -396,6 +396,62 @@ func initShell(p string, s *ishell.Shell) {
 				}
 			},
 		},
+
+		// set-policy command
+		&ishell.Cmd{
+			Name:     "set-policy",
+			Help:     "set stack policies based on configured value",
+			LongHelp: "set-policy [stack]",
+			Func: func(c *ishell.Context) {
+				run.stacks = make(map[string]string)
+				// stack list
+				stklist := make([]string, len(stacks))
+				i := 0
+				for k := range stacks {
+					stklist[i] = k
+					i++
+				}
+
+				// create checklist
+				choices := c.Checklist(
+					stklist,
+					fmt.Sprintf("select stacks to %s:", log.ColorString("Deploy", "cyan")),
+					nil,
+				)
+
+				// define run.stacks
+				run.stacks = make(map[string]string)
+				for _, i := range choices {
+					if i < 0 {
+						fmt.Printf("--\nPress %s to return\n--\n", log.ColorString("ENTER", "green"))
+						return
+					}
+					run.stacks[stklist[i]] = ""
+				}
+
+				for s := range run.stacks {
+					wg.Add(1)
+					go func(s string) {
+						if _, ok := stacks[s]; !ok {
+							log.Error(fmt.Sprintf("Stack [%s] not found in config", s))
+							wg.Done()
+							return
+						}
+
+						if err := stacks[s].StackPolicy(); err != nil {
+							log.Error(err.Error())
+						}
+
+						wg.Done()
+						return
+
+					}(s)
+				}
+
+				wg.Wait()
+
+			},
+		},
 	}
 
 	// set prompt
