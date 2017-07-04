@@ -126,6 +126,10 @@ var (
 		return make([]struct{}, n)
 	}
 
+	literal = func(str string) string {
+		return fmt.Sprintf("%#v", str)
+	}
+
 	// gentime function maps
 	GenTimeFunctions = template.FuncMap{
 		// simple additon function useful for counters in loops
@@ -147,6 +151,9 @@ var (
 			utils.HandleError(err)
 			return string(b)
 		},
+
+		// literal - return raw/literal string with special chars and all
+		"literal": literal,
 
 		// suffix - returns true if string starts with given suffix
 		"suffix": suffix,
@@ -238,6 +245,9 @@ var (
 
 		// loop - useful to range over an int (rather than a slice, map, or channel). see examples/loop
 		"loop": loop,
+
+		// literal - return raw/literal string with special chars and all
+		"literal": literal,
 
 		// Get get does an HTTP Get request of the given url and returns the output string
 		"GET": httpGet,
