@@ -24,6 +24,7 @@ func (l *Logger) ColorMap(s string) string {
 		"UPDATE_COMPLETE":
 		result = color.New(color.FgGreen).Add(color.Bold).SprintFunc()(s)
 	case
+		"CREATE_IN_PROGRESS",
 		"DELETE_IN_PROGRESS",
 		"REVIEW_IN_PROGRESS",
 		"UPDATE_COMPLETE_CLEANUP_IN_PROGRESS",
