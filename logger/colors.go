@@ -15,22 +15,23 @@ func (l *Logger) ColorMap(s string) string {
 		return strings.ToLower(s)
 	}
 
-	v := strings.Split(s, "_")[len(strings.Split(s, "_"))-1]
-
 	var result string
 
-	switch v {
-	case "COMPLETE":
+	switch s {
+	case
+		"CREATE_COMPLETE",
+		"DELETE_COMPLETE",
+		"UPDATE_COMPLETE":
 		result = color.New(color.FgGreen).Add(color.Bold).SprintFunc()(s)
-	case "PROGRESS":
+	case
+		"DELETE_IN_PROGRESS",
+		"REVIEW_IN_PROGRESS",
+		"UPDATE_COMPLETE_CLEANUP_IN_PROGRESS",
+		"UPDATE_IN_PROGRESS":
 		result = color.New(color.FgYellow).Add(color.Bold).SprintFunc()(s)
-	case "FAILED":
-		result = color.New(color.FgRed).Add(color.Bold).SprintFunc()(s)
-	case "SKIPPED":
-		result = color.New(color.FgHiBlue).Add(color.Bold).SprintFunc()(s)
 	default:
-		// Unidentified, just returns the same string
-		return strings.ToLower(s)
+		// NOTE: all other status are red
+		result = color.New(color.FgRed).Add(color.Bold).SprintFunc()(s)
 	}
 	return strings.ToLower(result)
 }
