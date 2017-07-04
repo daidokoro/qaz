@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
-	"qaz/utils"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/daidokoro/qaz/utils"
 
 	yaml "gopkg.in/yaml.v2"
 
@@ -335,8 +336,8 @@ func initShell(p string, s *ishell.Shell) {
 
 				// random chcange-set name
 				run.changeName = fmt.Sprintf(
-					"%s%s",
-					s,
+					"%s-change-%s",
+					stacks[s].Stackname,
 					strconv.Itoa((rand.Int())),
 				)
 
