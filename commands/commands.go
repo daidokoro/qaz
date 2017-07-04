@@ -108,7 +108,7 @@ var (
 		Run: func(cmd *cobra.Command, args []string) {
 
 			if len(args) == 0 {
-				utils.HandleError(fmt.Errorf("Please specify stack name..."))
+				utils.HandleError(fmt.Errorf("please specify stack name"))
 			}
 
 			err := Configure(run.cfgSource, run.cfgRaw)
@@ -144,7 +144,7 @@ var (
 		Run: func(cmd *cobra.Command, args []string) {
 
 			if len(args) == 0 {
-				utils.HandleError(fmt.Errorf("Please specify stack name..."))
+				utils.HandleError(fmt.Errorf("please specify stack name"))
 				return
 			}
 
