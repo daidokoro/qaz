@@ -3,7 +3,6 @@ package stacks
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/daidokoro/qaz/bucket"
 	"strings"
 	"time"
 
@@ -17,7 +16,7 @@ func (s *Stack) Change(req, changename string) error {
 
 	switch req {
 
-	case "create":
+	case "create", "transform":
 		// Resolve Deploy-Time functions
 		err := s.DeployTimeParser()
 		if err != nil {
@@ -29,6 +28,10 @@ func (s *Stack) Change(req, changename string) error {
 			ChangeSetName: aws.String(changename),
 		}
 
+		if req == "transform" {
+			params.ChangeSetType = aws.String("CREATE")
+		}
+
 		// add tags if set
 		if len(s.Tags) > 0 {
 			params.Tags = s.Tags
@@ -37,26 +40,10 @@ func (s *Stack) Change(req, changename string) error {
 		Log.Debug(fmt.Sprintf("Updated Template:\n%s", s.Template))
 
 		// If bucket - upload to s3
-		var (
-			exists bool
-			url    string
-		)
+		var url string
 
 		if s.Bucket != "" {
-			exists, err = bucket.Exists(s.Bucket, s.Session)
-			if err != nil {
-				Log.Warn(fmt.Sprintf("Received Error when checking if [%s] exists: %s", s.Bucket, err.Error()))
-			}
-			fmt.Println("This is test")
-			if !exists {
-				Log.Info(fmt.Sprintf(("Creating Bucket [%s]"), s.Bucket))
-				if err = bucket.Create(s.Bucket, s.Session); err != nil {
-					return err
-				}
-			}
-			t := time.Now()
-			tStamp := fmt.Sprintf("%d-%d-%d_%d%d", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute())
-			url, err = bucket.S3write(s.Bucket, fmt.Sprintf("%s_%s.template", s.Stackname, tStamp), s.Template, s.Session)
+			url, err = resolveBucket(s)
 			if err != nil {
 				return err
 			}
