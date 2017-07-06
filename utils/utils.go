@@ -11,10 +11,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"github.com/daidokoro/qaz/logger"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/daidokoro/qaz/logger"
 )
 
 // Log defines logger
@@ -112,9 +113,9 @@ func GetSource(src string) (string, string, error) {
 }
 
 // HandleError - exits on error
-func HandleError(msg interface{}) {
-	if msg != nil {
-		Log.Error(msg.(error).Error())
+func HandleError(err error) {
+	if err != nil {
+		Log.Error(err.Error())
 		os.Exit(1)
 	}
 }
