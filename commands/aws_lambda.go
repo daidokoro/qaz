@@ -2,8 +2,10 @@ package commands
 
 import (
 	"fmt"
-	"github.com/daidokoro/qaz/utils"
+	"io/ioutil"
 	"strings"
+
+	"github.com/daidokoro/qaz/utils"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -63,7 +65,15 @@ var invokeCmd = &cobra.Command{
 		f := awsLambda{name: args[0]}
 
 		if run.funcEvent != "" {
-			f.payload = []byte(run.funcEvent)
+			if strings.HasPrefix(run.funcEvent, "@") {
+				input := strings.Replace(run.funcEvent, "@", "", -1)
+				log.Debug(fmt.Sprintf("file input detected [%s], opening file", input))
+				event, err := ioutil.ReadFile(input)
+				utils.HandleError(err)
+				f.payload = event
+			} else {
+				f.payload = []byte(run.funcEvent)
+			}
 		}
 
 		if err := f.Invoke(sess); err != nil {
