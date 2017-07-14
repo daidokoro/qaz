@@ -43,3 +43,41 @@ func resolveBucket(s *Stack) (string, error) {
 	}
 	return url, nil
 }
+
+// Wait - wait Until status is complete
+func Wait(getStatus func(s ...string) (string, error), args ...string) error {
+	tick := time.NewTicker(time.Millisecond * 1500)
+	defer tick.Stop()
+
+	var stat string
+	var err error
+
+	for _ = range tick.C {
+		if len(args) > 0 {
+			stat, err = getStatus(args[0])
+		} else {
+			stat, err = getStatus()
+		}
+
+		if err != nil {
+			return err
+		}
+		switch stat {
+		case
+			"FAILED",
+			"CREATE_COMPLETE",
+			"DELETE_COMPLETE",
+			"UPDATE_ROLLBACK_FAILED",
+			"ROLLBACK_FAILED",
+			"DELETE_FAILED",
+			"CREATE_FAILED",
+			"ROLLBACK_COMPLETE",
+			"UPDATE_ROLLBACK_COMPLETE":
+			return nil
+		default:
+			continue
+		}
+	}
+
+	return nil
+}
