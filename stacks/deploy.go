@@ -81,16 +81,11 @@ func (s *Stack) Deploy() error {
 	}
 
 	go s.tail("CREATE", done)
-	describeStacksInput := &cloudformation.DescribeStacksInput{
-		StackName: aws.String(s.Stackname),
-	}
-
-	Log.Debug(fmt.Sprintln("Calling [WaitUntilStackCreateComplete] with parameters:", describeStacksInput))
-	if err := svc.WaitUntilStackCreateComplete(describeStacksInput); err != nil {
+	if err := Wait(s.StackStatus); err != nil {
 		return err
 	}
 
-	Log.Info(fmt.Sprintf("Deployment successful: [%s]", s.Stackname))
+	Log.Info(fmt.Sprintf("deployment successful: [%s]", s.Stackname))
 
 	done <- true
 	return nil
