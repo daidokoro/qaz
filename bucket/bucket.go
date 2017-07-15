@@ -3,6 +3,7 @@ package bucket
 import (
 	"bytes"
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
@@ -19,12 +20,17 @@ import (
 var Log *logger.Logger
 
 // S3Read - Reads the content of a given s3 url endpoint and returns the content string.
-func S3Read(url string, sess *session.Session) (string, error) {
+func S3Read(URL string, sess *session.Session) (string, error) {
 	svc := s3.New(sess)
 
+	src, err := url.Parse(URL)
+	if err != nil {
+		return "", err
+	}
+
 	// Parse s3 url
-	bucket := strings.Split(strings.Replace(strings.ToLower(url), `s3://`, "", -1), `/`)[0]
-	key := strings.Replace(strings.ToLower(url), fmt.Sprintf("s3://%s/", bucket), "", -1)
+	bucket := src.Scheme
+	key := strings.TrimPrefix(src.Path, "/")
 
 	params := &s3.GetObjectInput{
 		Bucket: aws.String(bucket),
