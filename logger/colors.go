@@ -48,15 +48,15 @@ func (l *Logger) ColorString(s, col string) string {
 	var result string
 	switch strings.ToLower(col) {
 	case "green":
-		result = color.New(color.FgGreen).Add(color.Bold).SprintFunc()(s)
+		result = color.New(color.FgGreen).Add().SprintFunc()(s)
 	case "yellow":
-		result = color.New(color.FgYellow).Add(color.Bold).SprintFunc()(s)
+		result = color.New(color.FgYellow).Add().SprintFunc()(s)
 	case "red":
-		result = color.New(color.FgRed).Add(color.Bold).SprintFunc()(s)
+		result = color.New(color.FgRed).Add().SprintFunc()(s)
 	case "magenta":
-		result = color.New(color.FgMagenta).Add(color.Bold).SprintFunc()(s)
+		result = color.New(color.FgMagenta).Add().SprintFunc()(s)
 	case "cyan":
-		result = color.New(color.FgCyan).Add(color.Bold).SprintFunc()(s)
+		result = color.New(color.FgCyan).Add().SprintFunc()(s)
 	default:
 		// Unidentified, just returns the same string
 		return s
