@@ -4,16 +4,24 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"github.com/daidokoro/qaz/bucket"
-	"github.com/daidokoro/qaz/utils"
+	"net/url"
 	"regexp"
 	"strings"
+
+	"github.com/daidokoro/qaz/bucket"
+	"github.com/daidokoro/qaz/utils"
 )
 
 // TODO: Come up with a better way to do this
 // fetchContent - checks the source type, url/s3/file and calls the corresponding function
 func fetchContent(source string) (string, error) {
-	switch strings.Split(strings.ToLower(source), ":")[0] {
+
+	src, err := url.Parse(source)
+	if err != nil {
+		return "", err
+	}
+
+	switch src.Scheme {
 	case "http", "https":
 		log.Debug(fmt.Sprintln("Source Type: [http] Detected, Fetching Source: ", source))
 		resp, err := utils.Get(source)
