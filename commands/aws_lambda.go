@@ -55,7 +55,7 @@ var invokeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) < 1 {
-			fmt.Println("No Lambda Function specified")
+			log.Warn("no lambda function specified")
 			return
 		}
 
@@ -78,7 +78,7 @@ var invokeCmd = &cobra.Command{
 
 		if err := f.Invoke(sess); err != nil {
 			if strings.Contains(err.Error(), "Unhandled") {
-				log.Error(fmt.Sprintf("Unhandled Exception: Potential Issue with Lambda Function Logic: %s...\n", f.name))
+				log.Error(fmt.Sprintf("Unhandled Exception: Potential Issue with Lambda Function Logic: %s\n", f.name))
 			}
 			utils.HandleError(err)
 		}
