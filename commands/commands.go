@@ -165,7 +165,7 @@ var (
 			output, err := yaml.Marshal(values)
 			utils.HandleError(err)
 
-			reg, err := regexp.Compile(".+?:(\n| )")
+			reg, err := regexp.Compile(stks.OutputRegex)
 			utils.HandleError(err)
 
 			resp := reg.ReplaceAllStringFunc(string(output), func(s string) string {
