@@ -4,15 +4,22 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"github.com/daidokoro/qaz/bucket"
-	"github.com/daidokoro/qaz/utils"
+	"net/url"
 	"regexp"
 	"strings"
+
+	"github.com/daidokoro/qaz/bucket"
+	"github.com/daidokoro/qaz/utils"
 )
 
 // FetchContent - checks the s.Source type, url/s3/file and calls the corresponding function
 func (s *Stack) FetchContent() error {
-	switch strings.Split(strings.ToLower(s.Source), ":")[0] {
+	src, err := url.Parse(s.Source)
+	if err != nil {
+		return err
+	}
+
+	switch src.Scheme {
 	case "http", "https":
 		Log.Debug(fmt.Sprintln("Source Type: [http] Detected, Fetching Source: ", s.Source))
 		resp, err := utils.Get(s.Source)
@@ -31,7 +38,7 @@ func (s *Stack) FetchContent() error {
 
 	case "lambda":
 		Log.Debug(fmt.Sprintln("Source Type: [lambda] Detected, Fetching Source: ", s.Source))
-		lambdaSrc := strings.Split(strings.Replace(s.Source, "lambda:", "", -1), "@")
+		lambdaSrc := strings.Split(src.Opaque, "@")
 
 		var raw interface{}
 		if err := json.Unmarshal([]byte(lambdaSrc[0]), &raw); err != nil {
