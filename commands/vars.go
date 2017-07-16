@@ -3,9 +3,10 @@ package commands
 import (
 	"sync"
 
+	stks "github.com/daidokoro/qaz/stacks"
+
 	"github.com/daidokoro/qaz/logger"
 	"github.com/daidokoro/qaz/repo"
-	stks "github.com/daidokoro/qaz/stacks"
 )
 
 var (
@@ -25,6 +26,9 @@ var (
 const (
 	configENV     = "QAZ_CONFIG"
 	defaultconfig = "config.yml"
+
+	// OutputRegex for printing yaml/json output
+	OutputRegex = `(?m)^[ ]*([^\r\n:]+?)\s*:`
 )
 
 // run.var used as a central point for command data from flags
