@@ -40,30 +40,30 @@ func (s *Stack) tail(c string, done <-chan bool) {
 
 			Log.Debug(fmt.Sprintln("Response:", stackevents))
 
-			for _, event := range stackevents.StackEvents {
+			event := stackevents.StackEvents[0]
 
-				statusReason := ""
-				if strings.Contains(*event.ResourceStatus, "FAILED") {
-					statusReason = *event.ResourceStatusReason
-				}
-
-				line := strings.Join([]string{
-					*event.StackName,
-					Log.ColorMap(*event.ResourceStatus),
-					*event.ResourceType,
-					*event.LogicalResourceId,
-					statusReason,
-				}, " - ")
-
-				if _, ok := printed[line]; !ok {
-					event := strings.Split(*event.ResourceStatus, "_")[0]
-					if event == c || c == "" || strings.Contains(strings.ToLower(event), "rollback") {
-						Log.Info(strings.Trim(line, "- "))
-					}
-
-					printed[line] = nil
-				}
+			statusReason := ""
+			if strings.Contains(*event.ResourceStatus, "FAILED") {
+				statusReason = *event.ResourceStatusReason
 			}
+
+			line := strings.Join([]string{
+				*event.StackName,
+				Log.ColorMap(*event.ResourceStatus),
+				*event.ResourceType,
+				*event.LogicalResourceId,
+				statusReason,
+			}, " - ")
+
+			if _, ok := printed[line]; !ok {
+				evt := strings.Split(*event.ResourceStatus, "_")[0]
+				if evt == c || c == "" || strings.Contains(strings.ToLower(evt), "rollback") {
+					Log.Info(strings.Trim(line, "- "))
+				}
+
+				printed[line] = nil
+			}
+
 		}
 
 	}
