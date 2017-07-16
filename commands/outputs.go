@@ -3,6 +3,8 @@ package commands
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
+
 	"github.com/daidokoro/qaz/utils"
 
 	stks "github.com/daidokoro/qaz/stacks"
@@ -37,9 +39,9 @@ var (
 
 				wg.Add(1)
 				go func(s string) {
+					defer wg.Done()
 					if err := stacks[s].Outputs(); err != nil {
 						log.Error(err.Error())
-						wg.Done()
 						return
 					}
 
@@ -48,10 +50,17 @@ var (
 						if err != nil {
 							log.Error(err.Error())
 						}
-						fmt.Println(string(m))
-					}
 
-					wg.Done()
+						reg, err := regexp.Compile(OutputRegex)
+						utils.HandleError(err)
+
+						resp := reg.ReplaceAllStringFunc(string(m), func(s string) string {
+							return log.ColorString(s, "cyan")
+						})
+
+						fmt.Println(resp)
+					}
+					return
 				}(s)
 			}
 			wg.Wait()
