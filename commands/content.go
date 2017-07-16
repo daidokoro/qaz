@@ -90,6 +90,8 @@ func fetchContent(source string) (string, error) {
 		if err != nil {
 			return "", err
 		}
+
+		log.Debug(fmt.Sprintln("config file read:", string(b)))
 		return string(b), nil
 	}
 }
