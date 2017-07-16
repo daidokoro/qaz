@@ -2,8 +2,10 @@ package commands
 
 import (
 	"fmt"
-	"github.com/daidokoro/qaz/utils"
+	"regexp"
 	"strings"
+
+	"github.com/daidokoro/qaz/utils"
 
 	"github.com/spf13/cobra"
 )
@@ -58,6 +60,14 @@ var generateCmd = &cobra.Command{
 			utils.HandleError(err)
 			return
 		}
-		fmt.Println(stacks[s].Template)
+
+		reg, err := regexp.Compile(OutputRegex)
+		utils.HandleError(err)
+
+		resp := reg.ReplaceAllStringFunc(string(stacks[s].Template), func(s string) string {
+			return log.ColorString(s, "cyan")
+		})
+
+		fmt.Println(resp)
 	},
 }
