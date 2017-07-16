@@ -12,8 +12,9 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/daidokoro/ishell"
 	stks "github.com/daidokoro/qaz/stacks"
+
+	"github.com/daidokoro/ishell"
 	"github.com/spf13/cobra"
 )
 
@@ -88,7 +89,7 @@ func initShell(p string, s *ishell.Shell) {
 			LongHelp: "outputs [stack]",
 			Func: func(c *ishell.Context) {
 				if len(c.Args) < 1 {
-					log.Warn("Please specify stack(s) to check")
+					log.Warn("please specify stack(s) to check")
 					return
 				}
 
@@ -101,9 +102,9 @@ func initShell(p string, s *ishell.Shell) {
 
 					wg.Add(1)
 					go func(s string) {
+						defer wg.Done()
 						if err := stacks[s].Outputs(); err != nil {
 							log.Error(err.Error())
-							wg.Done()
 							return
 						}
 
@@ -112,10 +113,18 @@ func initShell(p string, s *ishell.Shell) {
 							if err != nil {
 								log.Error(err.Error())
 							}
-							fmt.Println(string(m))
+
+							reg, err := regexp.Compile(OutputRegex)
+							utils.HandleError(err)
+
+							resp := reg.ReplaceAllStringFunc(string(m), func(s string) string {
+								return log.ColorString(s, "cyan")
+							})
+
+							fmt.Println(resp)
 						}
 
-						wg.Done()
+						return
 					}(s)
 				}
 				wg.Wait()
@@ -278,7 +287,15 @@ func initShell(p string, s *ishell.Shell) {
 					log.Error(err.Error())
 					return
 				}
-				fmt.Println(stacks[s].Template)
+
+				reg, err := regexp.Compile(OutputRegex)
+				utils.HandleError(err)
+
+				resp := reg.ReplaceAllStringFunc(string(stacks[s].Template), func(s string) string {
+					return log.ColorString(s, "cyan")
+				})
+
+				fmt.Println(resp)
 			},
 		},
 
@@ -451,6 +468,27 @@ func initShell(p string, s *ishell.Shell) {
 
 				wg.Wait()
 
+			},
+		},
+
+		// reload command
+		&ishell.Cmd{
+			Name:     "reload",
+			Help:     "reload Qaz configuration source into shell environment",
+			LongHelp: "reload",
+			Func: func(c *ishell.Context) {
+				log.Debug(fmt.Sprintln(stacks))
+				// off load stacks
+				for k := range stacks {
+					delete(stacks, k)
+				}
+
+				log.Debug(fmt.Sprintln(stacks))
+
+				// re-read config
+				err := Configure(run.cfgSource, run.cfgRaw)
+				utils.HandleError(err)
+				log.Info(fmt.Sprintf("config reloaded: [%s]", run.cfgSource))
 			},
 		},
 	}
