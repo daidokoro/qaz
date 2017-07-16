@@ -41,8 +41,14 @@ Qaz emphasizes minimal abstraction from the underlying AWS Cloudformation Platfo
 - Simultaneous Cross-Account or Cross-Region Stack Deployments.
 
 - Support for fetching templates and configuration via Lambda Execution allows for dynamically generating Cloudformation using any of the Languages supported in AWS Lambda, (_nodejs, python, java_)
+
 - __Troposphere__ support via Lambda.
+
 - Deploy Cloudformation directly from your Git Repo (__New!__)
+
+- Support for [AWS Serverless Architecture Model (SAM) Templates](https://github.com/awslabs/serverless-application-model)
+
+- Interactive Shell Mode
 
 
 ## Installation
@@ -112,9 +118,11 @@ Available Commands:
   invoke      Invoke AWS Lambda Functions
   outputs     Prints stack outputs
   set-policy  Set Stack Policies based on configured value
+  shell       Qaz interactive shell - loads the specified config into an interactive shell
   status      Prints status of deployed/un-deployed stacks
   terminate   Terminates stacks
   update      Updates a given stack
+  values      Print stack values from config in YAML format
 
 Flags:
       --debug            Run in debug mode...
@@ -135,12 +143,13 @@ Qaz is now in __beta__, no more breaking changes to come. The focus from this po
 
 - More Comprehensive Documentation
 - More Deploy/Gen-Time Functions
+- Tests!!
 
 --
 
 ## Credits
 
-- [pkazmierczak](https://github.com/pkazmierczak) - _Bora_ was the spark for this project...
+- [pkazmierczak](https://github.com/pkazmierczak) - Qaz was originally a fork of the __Bora__ Project
 
 
 # Contributing
