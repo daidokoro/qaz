@@ -21,11 +21,13 @@ func (l *Logger) ColorMap(s string) string {
 	case
 		"CREATE_COMPLETE",
 		"DELETE_COMPLETE",
-		"UPDATE_COMPLETE":
+		"UPDATE_COMPLETE",
+		"UPDATE_ROLLBACK_COMPLETE":
 		result = color.New(color.FgGreen).Add(color.Bold).SprintFunc()(s)
 	case
 		"DELETE_IN_PROGRESS",
 		"REVIEW_IN_PROGRESS",
+		"UPDATE_ROLLBACK_IN_PROGRESS",
 		"UPDATE_COMPLETE_CLEANUP_IN_PROGRESS",
 		"UPDATE_IN_PROGRESS":
 		result = color.New(color.FgYellow).Add(color.Bold).SprintFunc()(s)
