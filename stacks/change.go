@@ -2,6 +2,8 @@ package stacks
 
 import (
 	"fmt"
+	"github.com/daidokoro/qaz/utils"
+	"regexp"
 	"strings"
 	"time"
 
@@ -158,12 +160,19 @@ func (s *Stack) Change(req, changename string) error {
 			return err
 		}
 
-		o, err := yaml.Marshal(resp)
+		o, err := yaml.Marshal(resp.Changes)
 		if err != nil {
 			return err
 		}
 
-		fmt.Printf("%s\n", o)
+		reg, err := regexp.Compile(OutputRegex)
+		utils.HandleError(err)
+
+		out := reg.ReplaceAllStringFunc(string(o), func(s string) string {
+			return Log.ColorString(s, "cyan")
+		})
+
+		fmt.Printf(out)
 	}
 
 	return nil
