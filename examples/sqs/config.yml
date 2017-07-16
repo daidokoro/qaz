@@ -6,6 +6,7 @@ project: "example-dev"
 stacks:
   # Define sqs stack here
   sqs:
+    source: https://raw.githubusercontent.com/daidokoro/qaz/master/examples/sqs/templates/sqs.yml
     cf:
       Queues:
         - QueueName: "daido"

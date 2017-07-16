@@ -3,11 +3,11 @@ region: eu-west-1
 
 project: encrypt
 
-global:
-
 stacks:
-  kms-lambda:
+  kmsLambda:
+    source: https://raw.githubusercontent.com/daidokoro/qaz/master/examples/encryption/templates/kms-lambda.yml
     cf:
+      code: https://raw.githubusercontent.com/daidokoro/qaz/master/examples/encryption/lambda.py
 
   custom:
     depends_on:
