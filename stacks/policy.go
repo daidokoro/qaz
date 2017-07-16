@@ -12,7 +12,7 @@ import (
 func (s *Stack) StackPolicy() error {
 
 	if s.Policy == "" {
-		return fmt.Errorf("Empty Stack Policy value detected...")
+		return fmt.Errorf("empty stack policy value detected")
 	}
 
 	svc := cloudformation.New(s.Session, &aws.Config{Credentials: s.creds()})

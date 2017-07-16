@@ -2,8 +2,10 @@ package commands
 
 import (
 	"fmt"
-	"github.com/daidokoro/qaz/utils"
+	"io/ioutil"
 	"strings"
+
+	"github.com/daidokoro/qaz/utils"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -53,7 +55,7 @@ var invokeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) < 1 {
-			fmt.Println("No Lambda Function specified")
+			log.Warn("no lambda function specified")
 			return
 		}
 
@@ -63,12 +65,20 @@ var invokeCmd = &cobra.Command{
 		f := awsLambda{name: args[0]}
 
 		if run.funcEvent != "" {
-			f.payload = []byte(run.funcEvent)
+			if strings.HasPrefix(run.funcEvent, "@") {
+				input := strings.Replace(run.funcEvent, "@", "", -1)
+				log.Debug(fmt.Sprintf("file input detected [%s], opening file", input))
+				event, err := ioutil.ReadFile(input)
+				utils.HandleError(err)
+				f.payload = event
+			} else {
+				f.payload = []byte(run.funcEvent)
+			}
 		}
 
 		if err := f.Invoke(sess); err != nil {
 			if strings.Contains(err.Error(), "Unhandled") {
-				log.Error(fmt.Sprintf("Unhandled Exception: Potential Issue with Lambda Function Logic: %s...\n", f.name))
+				log.Error(fmt.Sprintf("Unhandled Exception: Potential Issue with Lambda Function Logic: %s\n", f.name))
 			}
 			utils.HandleError(err)
 		}

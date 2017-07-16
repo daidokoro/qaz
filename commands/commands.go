@@ -9,9 +9,10 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
+	stks "github.com/daidokoro/qaz/stacks"
+
 	"github.com/daidokoro/qaz/bucket"
 	"github.com/daidokoro/qaz/repo"
-	stks "github.com/daidokoro/qaz/stacks"
 	"github.com/daidokoro/qaz/utils"
 
 	"github.com/CrowdSurge/banner"
@@ -108,7 +109,7 @@ var (
 		Run: func(cmd *cobra.Command, args []string) {
 
 			if len(args) == 0 {
-				utils.HandleError(fmt.Errorf("Please specify stack name..."))
+				utils.HandleError(fmt.Errorf("please specify stack name"))
 			}
 
 			err := Configure(run.cfgSource, run.cfgRaw)
@@ -144,7 +145,7 @@ var (
 		Run: func(cmd *cobra.Command, args []string) {
 
 			if len(args) == 0 {
-				utils.HandleError(fmt.Errorf("Please specify stack name..."))
+				utils.HandleError(fmt.Errorf("please specify stack name"))
 				return
 			}
 
@@ -164,7 +165,7 @@ var (
 			output, err := yaml.Marshal(values)
 			utils.HandleError(err)
 
-			reg, err := regexp.Compile(".+?:(\n| )")
+			reg, err := regexp.Compile(OutputRegex)
 			utils.HandleError(err)
 
 			resp := reg.ReplaceAllStringFunc(string(output), func(s string) string {

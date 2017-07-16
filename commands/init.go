@@ -57,6 +57,7 @@ func init() {
 		gitDeployCmd,
 		policyCmd,
 		valuesCmd,
+		shellCmd,
 	} {
 		cmd.(*cobra.Command).Flags().StringVarP(&run.cfgSource, "config", "c", defaultConfig(), "path to config file")
 	}
@@ -100,6 +101,7 @@ func init() {
 		policyCmd,
 		gitDeployCmd,
 		valuesCmd,
+		shellCmd,
 	)
 
 }

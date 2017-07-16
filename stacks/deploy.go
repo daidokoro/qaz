@@ -4,16 +4,20 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
-
-	"github.com/daidokoro/qaz/bucket"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 )
 
+// TODO: this function's pretty bad, waaaay too long, need to break it apart
+
 // Deploy - Launch Cloudformation Stack based on config values
 func (s *Stack) Deploy() error {
+
+	// if serverless deploy
+	if strings.Contains(s.Template, "AWS::Serverless") {
+		return s.DeployServerless()
+	}
 
 	err := s.DeployTimeParser()
 	if err != nil {
@@ -61,20 +65,7 @@ func (s *Stack) Deploy() error {
 
 	// If bucket - upload to s3
 	if s.Bucket != "" {
-		exists, err := bucket.Exists(s.Bucket, s.Session)
-		if err != nil {
-			Log.Warn(fmt.Sprintf("Received Error when checking if [%s] exists: %s", s.Bucket, err.Error()))
-		}
-
-		if !exists {
-			Log.Info(fmt.Sprintf(("Creating Bucket [%s]"), s.Bucket))
-			if err = bucket.Create(s.Bucket, s.Session); err != nil {
-				return err
-			}
-		}
-		t := time.Now()
-		tStamp := fmt.Sprintf("%d-%d-%d_%d%d", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute())
-		url, err := bucket.S3write(s.Bucket, fmt.Sprintf("%s_%s.Template", s.Stackname, tStamp), s.Template, s.Session)
+		url, err := resolveBucket(s)
 		if err != nil {
 			return err
 		}
@@ -90,16 +81,11 @@ func (s *Stack) Deploy() error {
 	}
 
 	go s.tail("CREATE", done)
-	describeStacksInput := &cloudformation.DescribeStacksInput{
-		StackName: aws.String(s.Stackname),
-	}
-
-	Log.Debug(fmt.Sprintln("Calling [WaitUntilStackCreateComplete] with parameters:", describeStacksInput))
-	if err := svc.WaitUntilStackCreateComplete(describeStacksInput); err != nil {
+	if err := Wait(s.StackStatus); err != nil {
 		return err
 	}
 
-	Log.Info(fmt.Sprintf("Deployment successful: [%s]", s.Stackname))
+	Log.Info(fmt.Sprintf("deployment successful: [%s]", s.Stackname))
 
 	done <- true
 	return nil

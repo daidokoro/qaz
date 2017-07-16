@@ -25,6 +25,9 @@ var (
 
 	// Git repo for stack deployment
 	Git *repo.Repo
+
+	// OutputRegex for printing yaml/json output
+	OutputRegex = `(?m)^[ ]*([^\r\n:]+?)\s*:`
 )
 
 // Stack - holds all meaningful information about a particular stack.

@@ -1,16 +1,28 @@
 package stacks
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/daidokoro/qaz/utils"
 	"regexp"
 	"strings"
 	"time"
 
-	"github.com/daidokoro/qaz/bucket"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
+)
+
+const (
+	transform        = "transform"
+	create           = "create"
+	rm               = "rm"
+	list             = "list"
+	execute          = "execute"
+	desc             = "desc"
+	serverless       = "serverless"
+	iamCapable       = "AWS::IAM"
+	transformCapable = "AWS::Serverless"
 )
 
 // Change - Manage Cloudformation Change-Sets
@@ -19,7 +31,7 @@ func (s *Stack) Change(req, changename string) error {
 
 	switch req {
 
-	case "create":
+	case create, transform:
 		// Resolve Deploy-Time functions
 		err := s.DeployTimeParser()
 		if err != nil {
@@ -31,6 +43,10 @@ func (s *Stack) Change(req, changename string) error {
 			ChangeSetName: aws.String(changename),
 		}
 
+		if req == transform {
+			params.ChangeSetType = aws.String("CREATE")
+		}
+
 		// add tags if set
 		if len(s.Tags) > 0 {
 			params.Tags = s.Tags
@@ -39,26 +55,10 @@ func (s *Stack) Change(req, changename string) error {
 		Log.Debug(fmt.Sprintf("Updated Template:\n%s", s.Template))
 
 		// If bucket - upload to s3
-		var (
-			exists bool
-			url    string
-		)
+		var url string
 
 		if s.Bucket != "" {
-			exists, err = bucket.Exists(s.Bucket, s.Session)
-			if err != nil {
-				Log.Warn(fmt.Sprintf("Received Error when checking if [%s] exists: %s", s.Bucket, err.Error()))
-			}
-			fmt.Println("This is test")
-			if !exists {
-				Log.Info(fmt.Sprintf(("Creating Bucket [%s]"), s.Bucket))
-				if err = bucket.Create(s.Bucket, s.Session); err != nil {
-					return err
-				}
-			}
-			t := time.Now()
-			tStamp := fmt.Sprintf("%d-%d-%d_%d%d", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute())
-			url, err = bucket.S3write(s.Bucket, fmt.Sprintf("%s_%s.template", s.Stackname, tStamp), s.Template, s.Session)
+			url, err = resolveBucket(s)
 			if err != nil {
 				return err
 			}
@@ -68,13 +68,14 @@ func (s *Stack) Change(req, changename string) error {
 		}
 
 		// If IAM is bening touched, add Capabilities
-		if strings.Contains(s.Template, "AWS::IAM") {
+		if strings.Contains(s.Template, iamCapable) || strings.Contains(s.Template, transformCapable) {
 			params.Capabilities = []*string{
 				aws.String(cloudformation.CapabilityCapabilityIam),
 				aws.String(cloudformation.CapabilityCapabilityNamedIam),
 			}
 		}
 
+		Log.Debug(fmt.Sprintln("calling [CreateChangeSet] with parameters:", params))
 		if _, err = svc.CreateChangeSet(params); err != nil {
 			return err
 		}
@@ -84,23 +85,18 @@ func (s *Stack) Change(req, changename string) error {
 			ChangeSetName: aws.String(changename),
 		}
 
-		for {
-			// Waiting for PENDING state to change
-			resp, err := svc.DescribeChangeSet(describeParams)
-			if err != nil {
-				return err
-			}
-
-			Log.Info(fmt.Sprintf("Creating Change-Set: [%s] - %s - %s", changename, Log.ColorMap(*resp.Status), s.Stackname))
-
-			if *resp.Status == "CREATE_COMPLETE" || *resp.Status == "FAILED" {
-				break
-			}
-
-			time.Sleep(time.Second * 1)
+		if err = Wait(s.ChangeSetStatus, changename); err != nil {
+			return err
 		}
 
-	case "rm":
+		resp, err := svc.DescribeChangeSet(describeParams)
+		if err != nil {
+			return err
+		}
+		Log.Info(fmt.Sprintf("creating change-set: [%s] - %s - %s", changename, Log.ColorMap(*resp.Status), s.Stackname))
+		return nil
+
+	case rm:
 		params := &cloudformation.DeleteChangeSetInput{
 			ChangeSetName: aws.String(changename),
 			StackName:     aws.String(s.Stackname),
@@ -112,7 +108,7 @@ func (s *Stack) Change(req, changename string) error {
 
 		Log.Info(fmt.Sprintf("Change-Set: [%s] deleted", changename))
 
-	case "list":
+	case list:
 		params := &cloudformation.ListChangeSetsInput{
 			StackName: aws.String(s.Stackname),
 		}
@@ -126,7 +122,7 @@ func (s *Stack) Change(req, changename string) error {
 			Log.Info(fmt.Sprintf("%s%s - Change-Set: [%s] - Status: [%s]", Log.ColorString("@", "magenta"), i.CreationTime.Format(time.RFC850), *i.ChangeSetName, *i.ExecutionStatus))
 		}
 
-	case "execute":
+	case execute, serverless:
 		done := make(chan bool)
 		params := &cloudformation.ExecuteChangeSetInput{
 			StackName:     aws.String(s.Stackname),
@@ -141,16 +137,19 @@ func (s *Stack) Change(req, changename string) error {
 			StackName: aws.String(s.Stackname),
 		}
 
-		go s.tail("UPDATE", done)
+		if req != serverless {
+			go s.tail("UPDATE", done)
 
-		Log.Debug(fmt.Sprintln("Calling [WaitUntilStackUpdateComplete] with parameters:", describeStacksInput))
-		if err := svc.WaitUntilStackUpdateComplete(describeStacksInput); err != nil {
-			return err
+			Log.Debug(fmt.Sprintln("Calling [WaitUntilStackUpdateComplete] with parameters:", describeStacksInput))
+			if err := svc.WaitUntilStackUpdateComplete(describeStacksInput); err != nil {
+				return err
+			}
+			done <- true
 		}
 
-		done <- true
+		Log.Info("change-set executed successfully")
 
-	case "desc":
+	case desc:
 		params := &cloudformation.DescribeChangeSetInput{
 			ChangeSetName: aws.String(changename),
 			StackName:     aws.String(s.Stackname),
@@ -161,21 +160,19 @@ func (s *Stack) Change(req, changename string) error {
 			return err
 		}
 
-		o, err := json.MarshalIndent(resp.Changes, "", "  ")
+		o, err := yaml.Marshal(resp.Changes)
 		if err != nil {
 			return err
 		}
 
-		reg, err := regexp.Compile(".+?:(\n| )")
-		if err != nil {
-			return err
-		}
+		reg, err := regexp.Compile(OutputRegex)
+		utils.HandleError(err)
 
 		out := reg.ReplaceAllStringFunc(string(o), func(s string) string {
 			return Log.ColorString(s, "cyan")
 		})
 
-		fmt.Printf("%s\n", out)
+		fmt.Printf(out)
 	}
 
 	return nil

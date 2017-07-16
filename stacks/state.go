@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 )
 
-// StackExists - Returns true if stack exists in AWS Account
+// StackExists - Returns true if stack exists in AWS Account, returns false if err when checking
 func (s *Stack) StackExists() bool {
 	svc := cloudformation.New(s.Session, &aws.Config{Credentials: s.creds()})
 
@@ -49,4 +49,39 @@ func (s *Stack) State() (string, error) {
 		return state.failed, nil
 	}
 	return "", nil
+}
+
+// ChangeSetStatus - returns the literal change-set status
+func (s *Stack) ChangeSetStatus(args ...string) (string, error) {
+	svc := cloudformation.New(s.Session, &aws.Config{Credentials: s.creds()})
+
+	params := &cloudformation.DescribeChangeSetInput{
+		StackName:     aws.String(s.Stackname),
+		ChangeSetName: &args[0],
+	}
+
+	Log.Debug(fmt.Sprintln("Calling [DescribeChangeSet] with parameters: ", params))
+	status, err := svc.DescribeChangeSet(params)
+	if err != nil {
+		return "", err
+	}
+
+	return *status.Status, nil
+
+}
+
+// StackStatus - return the literal stack status
+func (s *Stack) StackStatus(args ...string) (string, error) {
+	svc := cloudformation.New(s.Session, &aws.Config{Credentials: s.creds()})
+	params := &cloudformation.DescribeStacksInput{
+		StackName: aws.String(s.Stackname),
+	}
+
+	Log.Debug(fmt.Sprintln("Calling [DescribeStacks] with parameters: ", params))
+	status, err := svc.DescribeStacks(params)
+	if err != nil {
+		return "", err
+	}
+
+	return *status.Stacks[0].StackStatus, nil
 }
