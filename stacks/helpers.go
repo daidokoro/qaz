@@ -2,7 +2,7 @@ package stacks
 
 import (
 	"fmt"
-	"qaz/bucket"
+	"github.com/daidokoro/qaz/bucket"
 	"time"
 )
 
