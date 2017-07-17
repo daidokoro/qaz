@@ -102,7 +102,7 @@ var (
 			gitrepo = *repo
 
 			// Add keys
-			gitrepo.RSA = run.gitrsa
+			gitrepo.RSA = &run.gitrsa
 
 			// add repo
 			stks.Git = &gitrepo
