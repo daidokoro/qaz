@@ -95,14 +95,11 @@ var (
 				return
 			}
 
-			repo, err := repo.NewRepo(args[0], run.gituser)
+			repo, err := repo.NewRepo(args[0], run.gituser, run.gitrsa)
 			utils.HandleError(err)
 
 			// Passing repo to the global var
 			gitrepo = *repo
-
-			// Add keys
-			gitrepo.RSA = &run.gitrsa
 
 			// add repo
 			stks.Git = &gitrepo

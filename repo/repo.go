@@ -28,7 +28,7 @@ type Repo struct {
 	fs     *memfs.Memory
 	Files  map[string]string
 	Config string
-	RSA    *string
+	RSA    string
 	User   string
 	Secret string
 }
@@ -37,11 +37,12 @@ type Repo struct {
 var Log *logger.Logger
 
 // NewRepo - returns pointer to a new repo struct
-func NewRepo(url, user string) (*Repo, error) {
+func NewRepo(url, user, rsa string) (*Repo, error) {
 	r := &Repo{
 		fs:    memfs.New(),
 		Files: make(map[string]string),
 		URL:   url,
+		RSA:   rsa,
 	}
 
 	if user != "" {
@@ -121,7 +122,7 @@ func (r *Repo) getAuth(opts *git.CloneOptions) error {
 	if strings.HasPrefix(r.URL, "git@") {
 		Log.Debug(fmt.Sprintln("SSH Source URL detected, attempting to use SSH Keys:", r.RSA))
 
-		sshAuth, err := ssh.NewPublicKeysFromFile("git", *r.RSA, "")
+		sshAuth, err := ssh.NewPublicKeysFromFile("git", r.RSA, "")
 		if err != nil {
 			return err
 		}
