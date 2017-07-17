@@ -2,10 +2,11 @@ package stacks
 
 import (
 	"fmt"
-	"github.com/daidokoro/qaz/utils"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/daidokoro/qaz/utils"
 
 	yaml "gopkg.in/yaml.v2"
 

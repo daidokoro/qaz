@@ -2,8 +2,9 @@ package stacks
 
 import (
 	"fmt"
-	"github.com/daidokoro/qaz/bucket"
 	"time"
+
+	"github.com/daidokoro/qaz/bucket"
 )
 
 // cleanup functions in create_failed or delete_failed states

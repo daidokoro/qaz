@@ -85,8 +85,8 @@ func (s *Stack) Deploy() error {
 		return err
 	}
 
+	done <- true
 	Log.Info(fmt.Sprintf("deployment successful: [%s]", s.Stackname))
 
-	done <- true
 	return nil
 }
