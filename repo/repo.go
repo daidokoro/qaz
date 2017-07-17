@@ -119,7 +119,7 @@ func (r *Repo) readFiles(root []billy.FileInfo, dirname string) error {
 
 func (r *Repo) getAuth(opts *git.CloneOptions) error {
 	if strings.HasPrefix(r.URL, "git@") {
-		Log.Debug("SSH Source URL detected, attempting to use SSH Keys")
+		Log.Debug(fmt.Sprintln("SSH Source URL detected, attempting to use SSH Keys:", r.RSA))
 
 		sshAuth, err := ssh.NewPublicKeysFromFile("git", r.RSA, "")
 		if err != nil {
