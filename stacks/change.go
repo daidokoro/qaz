@@ -86,6 +86,7 @@ func (s *Stack) Change(req, changename string) error {
 			ChangeSetName: aws.String(changename),
 		}
 
+		Log.Info(fmt.Sprintf("creating change-set: [%s] - %s", changename, s.Stackname))
 		if err = Wait(s.ChangeSetStatus, changename); err != nil {
 			return err
 		}
@@ -94,7 +95,7 @@ func (s *Stack) Change(req, changename string) error {
 		if err != nil {
 			return err
 		}
-		Log.Info(fmt.Sprintf("creating change-set: [%s] - %s - %s", changename, Log.ColorMap(*resp.Status), s.Stackname))
+		Log.Info(fmt.Sprintf("created change-set: [%s] - %s - %s", changename, Log.ColorMap(*resp.Status), s.Stackname))
 		return nil
 
 	case rm:
