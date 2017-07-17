@@ -2,9 +2,10 @@ package commands
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/daidokoro/qaz/repo"
 	"github.com/daidokoro/qaz/utils"
-	"strings"
 
 	stks "github.com/daidokoro/qaz/stacks"
 
@@ -99,6 +100,9 @@ var (
 
 			// Passing repo to the global var
 			gitrepo = *repo
+
+			// Add keys
+			gitrepo.RSA = run.gitrsa
 
 			// add repo
 			stks.Git = &gitrepo
