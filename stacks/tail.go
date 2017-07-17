@@ -20,11 +20,8 @@ func (s *Stack) tail(c string, done <-chan bool) {
 	// used to track what lines have already been printed, to prevent dubplicate output
 	printed := make(map[string]interface{})
 
-	// create a ticker - 1.5 seconds
-	tick := time.NewTicker(time.Millisecond * 1500)
-	defer tick.Stop()
-
-	for _ = range tick.C {
+	// NOTE: for loop with instant start ticker
+	for ch := time.Tick(time.Millisecond * 1300); ; <-ch {
 		select {
 		case <-done:
 			Log.Debug("Tail run.Completed")
