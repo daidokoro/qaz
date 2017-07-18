@@ -38,9 +38,10 @@ func init() {
 	RootCmd.PersistentFlags().StringVarP(&run.profile, "profile", "p", "default", "configured aws profile")
 	RootCmd.PersistentFlags().BoolVarP(&run.debug, "debug", "", false, "Run in debug mode...")
 
-	// Define Invoke Flags
+	// Define Lambda Invoke Flags
 	invokeCmd.Flags().StringVarP(&region, "region", "r", "eu-west-1", "AWS Region")
 	invokeCmd.Flags().StringVarP(&run.funcEvent, "event", "e", "", "JSON Event data for AWS Lambda invoke")
+	invokeCmd.Flags().BoolVarP(&run.lambdAsync, "async", "x", false, "invoke lambda function asynchronously ")
 
 	// Define Changes Command
 	changeCmd.AddCommand(create, rm, list, execute, desc)

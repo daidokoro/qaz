@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"io/ioutil"
+	"strconv"
 	"strings"
 
 	"github.com/daidokoro/qaz/utils"
@@ -30,9 +31,12 @@ func (a *awsLambda) Invoke(sess *session.Session) error {
 		params.Payload = a.payload
 	}
 
+	if run.lambdAsync {
+		params.InvocationType = aws.String("Event")
+	}
+
 	log.Debug(fmt.Sprintln("Calling [Invoke] with parameters:", params))
 	resp, err := svc.Invoke(params)
-
 	if err != nil {
 		return err
 	}
@@ -43,15 +47,24 @@ func (a *awsLambda) Invoke(sess *session.Session) error {
 
 	a.response = string(resp.Payload)
 
-	log.Debug(fmt.Sprintln("Lambda response:", a.response))
+	if run.lambdAsync {
+		code := strconv.FormatInt(*resp.StatusCode, 10)
+		log.Info(
+			fmt.Sprintln("lambda async response code:", log.ColorString(code, "green")),
+		)
+		return nil
+	}
+
+	log.Debug(fmt.Sprintln("lambda response:", a.response))
 	return nil
 }
 
 // invoke command
 var invokeCmd = &cobra.Command{
-	Use:    "invoke",
-	Short:  "Invoke AWS Lambda Functions",
-	PreRun: initialise,
+	Use:     "invoke",
+	Short:   "Invoke AWS Lambda Functions",
+	Example: "qaz invoke some_function --event @path/to/event.json",
+	PreRun:  initialise,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) < 1 {
@@ -83,7 +96,9 @@ var invokeCmd = &cobra.Command{
 			utils.HandleError(err)
 		}
 
-		fmt.Println(f.response)
-
+		if !run.lambdAsync {
+			fmt.Println(f.response)
+		}
+		return
 	},
 }

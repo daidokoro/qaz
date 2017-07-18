@@ -43,6 +43,7 @@ var run = struct {
 	request    string
 	debug      bool
 	funcEvent  string
+	lambdAsync bool
 	changeName string
 	stackName  string
 	rollback   bool
