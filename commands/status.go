@@ -2,8 +2,9 @@ package commands
 
 import (
 	"fmt"
-	"github.com/daidokoro/qaz/utils"
 	"strings"
+
+	"github.com/daidokoro/qaz/utils"
 
 	stks "github.com/daidokoro/qaz/stacks"
 
@@ -67,7 +68,7 @@ var (
 
 			// check if stack exists in config
 			if _, ok := stacks[s]; !ok {
-				utils.HandleError(fmt.Errorf("Stack [%s] not found in config", s))
+				utils.HandleError(fmt.Errorf("stack [%s] not found in config", s))
 			}
 
 			if stacks[s].Source == "" {
@@ -75,7 +76,7 @@ var (
 			}
 
 			name := fmt.Sprintf("%s-%s", config.Project, s)
-			fmt.Println("Validating template for", name)
+			log.Info(fmt.Sprintln("validating template:", name))
 
 			err = stacks[s].GenTimeParser()
 			utils.HandleError(err)
