@@ -68,6 +68,15 @@ func (s *Stack) Change(req, changename string) error {
 			params.TemplateBody = &s.Template
 		}
 
+		// NOTE: Add parameters and tags flag here if set
+		if len(s.Parameters) > 0 {
+			params.Parameters = s.Parameters
+		}
+
+		if len(s.Tags) > 0 {
+			params.Tags = s.Tags
+		}
+
 		// If IAM is bening touched, add Capabilities
 		if strings.Contains(s.Template, iamCapable) || strings.Contains(s.Template, transformCapable) {
 			params.Capabilities = []*string{
