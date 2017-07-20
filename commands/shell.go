@@ -323,7 +323,7 @@ func initShell(p string, s *ishell.Shell) {
 				}
 
 				name := fmt.Sprintf("%s-%s", config.Project, s)
-				fmt.Println("Validating template for", name)
+				log.Debug(fmt.Sprintln("validating template for", name))
 
 				if err := stacks[s].GenTimeParser(); err != nil {
 					log.Error(err.Error())

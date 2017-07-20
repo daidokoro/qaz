@@ -76,7 +76,7 @@ var (
 			}
 
 			name := fmt.Sprintf("%s-%s", config.Project, s)
-			log.Info(fmt.Sprintln("validating template:", name))
+			log.Debug(fmt.Sprintln("validating template for", name))
 
 			err = stacks[s].GenTimeParser()
 			utils.HandleError(err)
