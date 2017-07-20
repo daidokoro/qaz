@@ -40,8 +40,10 @@ func (s *Stack) tail(c string, done <-chan bool) {
 			event := stackevents.StackEvents[0]
 
 			statusReason := ""
+			var lg = Log.Info
 			if strings.Contains(*event.ResourceStatus, "FAILED") {
 				statusReason = *event.ResourceStatusReason
+				lg = Log.Error
 			}
 
 			line := strings.Join([]string{
@@ -55,7 +57,7 @@ func (s *Stack) tail(c string, done <-chan bool) {
 			if _, ok := printed[line]; !ok {
 				evt := strings.Split(*event.ResourceStatus, "_")[0]
 				if evt == c || c == "" || strings.Contains(strings.ToLower(evt), "rollback") {
-					Log.Info(strings.Trim(line, "- "))
+					lg(strings.Trim(line, "- "))
 				}
 
 				printed[line] = nil
