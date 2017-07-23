@@ -3,7 +3,6 @@ package stacks
 import (
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
@@ -23,37 +22,28 @@ func (s *Stack) terminate() error {
 		StackName: aws.String(s.Stackname),
 	}
 
+	// create wait handler for tail
+	var tailinput = TailServiceInput{
+		printed: make(map[string]interface{}),
+		stk:     *s,
+		command: "DELETE",
+	}
+
+	go tailWait(done, &tailinput)
+
 	Log.Debug(fmt.Sprintln("Calling [DeleteStack] with parameters:", params))
-	_, err := svc.DeleteStack(params)
-
-	go s.tail("DELETE", done)
-
-	if err != nil {
+	if _, err := svc.DeleteStack(params); err != nil {
 		done <- true
 		return errors.New(fmt.Sprintln("Deleting failed: ", err))
 	}
 
-	// describeStacksInput := &cloudformation.DescribeStacksInput{
-	// 	StackName: aws.String(s.Stackname),
-	// }
-	//
-	// Log(fmt.Sprintln("Calling [WaitUntilStackDeleteComplete] with parameters:", describeStacksInput), level.debug)
-	//
-	// if err := svc.WaitUntilStackDeleteComplete(describeStacksInput); err != nil {
-	// 	return err
-	// }
-
-	// NOTE: The [WaitUntilStackDeleteComplete] api call suddenly stopped playing nice.
-	// Implemented this crude loop as a patch fix for now
-	for {
-		if !s.StackExists() {
-			done <- true
-			break
-		}
-
-		time.Sleep(time.Second * 1)
+	if err := svc.WaitUntilStackDeleteComplete(&cloudformation.DescribeStacksInput{
+		StackName: aws.String(s.Stackname),
+	}); err != nil {
+		return err
 	}
 
+	done <- true
 	Log.Info(fmt.Sprintf("Deletion successful: [%s]", s.Stackname))
 
 	return nil
