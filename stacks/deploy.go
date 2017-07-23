@@ -65,7 +65,8 @@ func (s *Stack) Deploy() error {
 
 	// If bucket - upload to s3
 	if s.Bucket != "" {
-		url, err := resolveBucket(s)
+		var url string
+		url, err = resolveBucket(s)
 		if err != nil {
 			return err
 		}
@@ -75,18 +76,30 @@ func (s *Stack) Deploy() error {
 	}
 
 	Log.Debug(fmt.Sprintln("Calling [CreateStack] with parameters:", createParams))
-	if _, err := svc.CreateStack(createParams); err != nil {
+	if _, err = svc.CreateStack(createParams); err != nil {
 		return errors.New(fmt.Sprintln("Deploying failed: ", err.Error()))
 
 	}
 
-	go s.tail("CREATE", done)
-	if err := Wait(s.StackStatus); err != nil {
+	// go s.tail("CREATE", done)
+	var tailinput = TailServiceInput{
+		printed: make(map[string]interface{}),
+		stk:     *s,
+		command: "CREATE",
+	}
+
+	go tailWait(done, &tailinput)
+
+	err = svc.WaitUntilStackCreateComplete(&cloudformation.DescribeStacksInput{
+		StackName: aws.String(s.Stackname),
+	})
+
+	if err != nil {
 		return err
 	}
 
 	done <- true
-	Log.Info(fmt.Sprintf("deployment successful: [%s]", s.Stackname))
+	Log.Info(fmt.Sprintf("deployment completed: [%s]", s.Stackname))
 
 	return nil
 }

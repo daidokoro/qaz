@@ -2,9 +2,10 @@ package stacks
 
 import (
 	"fmt"
-	"github.com/daidokoro/qaz/utils"
 	"sync"
 	"time"
+
+	"github.com/daidokoro/qaz/utils"
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
@@ -58,6 +59,10 @@ func Exports(session *session.Session) error {
 func DeployHandler(runstacks map[string]string, stacks map[string]*Stack) {
 	// status -  pending, failed, completed
 	var status = make(map[string]string)
+
+	// kick off tail mechanism
+	tail = make(chan *TailServiceInput)
+	go TailService(tail)
 
 	for _, stk := range stacks {
 
@@ -161,6 +166,10 @@ func DeployHandler(runstacks map[string]string, stacks map[string]*Stack) {
 
 // TerminateHandler - Handles terminating stacks in the correct order
 func TerminateHandler(runstacks map[string]string, stacks map[string]*Stack) {
+	// kick off tail mechanism
+	tail = make(chan *TailServiceInput)
+	go TailService(tail)
+
 	for _, stk := range stacks {
 		if _, ok := runstacks[stk.Name]; !ok && len(runstacks) > 0 {
 			Log.Debug(fmt.Sprintf("%s: not in run.stacks, skipping", stk.Name))
