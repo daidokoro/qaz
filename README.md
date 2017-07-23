@@ -69,8 +69,6 @@ Or, you may need _sudo_:
 curl https://raw.githubusercontent.com/daidokoro/qaz/master/install.sh | sudo sh
 ```
 
-Windows EXE _coming soon_....
-
 ## Requirements
 qaz requires:
 
