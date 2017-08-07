@@ -131,18 +131,16 @@ func Configure(confSource string, conf string) error {
 		return fmt.Errorf("failed to run template functions in config: %s", err)
 	}
 
-	fmt.Println(config.String)
-
 	log.Debug("checking Config for HCL format...")
 	if err := hcl.Unmarshal([]byte(config.String), &config); err != nil {
 		// fmt.Println(err)
 		log.Debug(fmt.Sprintln("failed to parse hcl... moving to JSON/YAML...", err.Error()))
-		if err := yaml.Unmarshal([]byte(conf), &config); err != nil {
+		if err := yaml.Unmarshal([]byte(config.String), &config); err != nil {
 			return err
 		}
 	}
 
-	log.Debug(fmt.Sprintln("Config File Read:", config))
+	log.Debug(fmt.Sprintln("Config File Read:", config.Project))
 
 	stacks = make(map[string]*stks.Stack)
 
