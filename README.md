@@ -10,6 +10,10 @@
 
 __Qaz__ is a _cloud native_ AWS Cloudformation Template Management CLI tool that focuses on simplifying the process of deploying infrastructure on AWS via Cloudformation by utilising the Go Templates Library and custom functions to generate diverse and configurable templates.
 
+ <p align="center">
+  <img src="images/simple_flow.png">
+</p>
+
 For Qaz, being _cloud native_ means having no explicit local dependencies and utilising resources within the AWS Ecosystem to extend functionality. As a result Qaz supports various methods for dynamically generating infrastructure via Cloudformation.
 
 Qaz emphasizes minimal abstraction from the underlying AWS Cloudformation Platform. It instead enhances customisability and re-usability of templates through dynamic template creation and logic.
