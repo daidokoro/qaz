@@ -1,11 +1,14 @@
 package commands
 
 import (
+	"bytes"
 	"fmt"
+	"text/template"
 
 	yaml "gopkg.in/yaml.v2"
 
 	stks "github.com/daidokoro/qaz/stacks"
+	"github.com/daidokoro/qaz/utils"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
@@ -14,6 +17,7 @@ import (
 
 // Config type for handling yaml config files
 type Config struct {
+	String            string                 `yaml:"-" json:"-" hcl:"-"`
 	Region            string                 `yaml:"region,omitempty" json:"region,omitempty" hcl:"region,omitempty"`
 	Project           string                 `yaml:"project" json:"project" hcl:"project"`
 	GenerateDelimiter string                 `yaml:"gen_time,omitempty" json:"gen_time,omitempty" hcl:"gen_time,omitempty"`
@@ -83,6 +87,33 @@ func (c *Config) tags(s *stks.Stack) {
 	}
 }
 
+// execute gentime/deploytime functions in config
+func (c *Config) callFunctions() error {
+
+	log.Debug("calling functions in config file")
+	// define Delims
+	left, right := func() (string, string) {
+		if utils.IsJSON(c.String) || utils.IsHCL(c.String) {
+			return "${", "}"
+		}
+		return "!", "\n"
+	}()
+
+	// create template
+	t, err := template.New("config-template").Delims(left, right).Funcs(GenTimeFunctions).Parse(c.String)
+	if err != nil {
+		return err
+	}
+
+	// so that we can write to string
+	var doc bytes.Buffer
+
+	t.Execute(&doc, nil)
+	c.String = doc.String()
+	log.Debug(fmt.Sprintln("config:", c.String))
+	return nil
+}
+
 // Configure parses the config file abd setos stacjs abd ebv
 func Configure(confSource string, conf string) error {
 
@@ -92,11 +123,18 @@ func Configure(confSource string, conf string) error {
 			return err
 		}
 
-		conf = cfg
+		config.String = cfg
 	}
 
+	// execute Functions
+	if err := config.callFunctions(); err != nil {
+		return fmt.Errorf("failed to run template functions in config: %s", err)
+	}
+
+	fmt.Println(config.String)
+
 	log.Debug("checking Config for HCL format...")
-	if err := hcl.Unmarshal([]byte(conf), &config); err != nil {
+	if err := hcl.Unmarshal([]byte(config.String), &config); err != nil {
 		// fmt.Println(err)
 		log.Debug(fmt.Sprintln("failed to parse hcl... moving to JSON/YAML...", err.Error()))
 		if err := yaml.Unmarshal([]byte(conf), &config); err != nil {
