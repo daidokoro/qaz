@@ -344,23 +344,16 @@ func initShell(p string, s *ishell.Shell) {
 				var s string
 
 				if len(c.Args) < 1 {
-					log.Warn(fmt.Sprintf("Please specify stack name..."))
+					log.Warn(fmt.Sprintf("please specify stack name..."))
 					return
 				}
 
 				// define stack name
 				s = c.Args[0]
 
-				// random chcange-set name
-				run.changeName = fmt.Sprintf(
-					"%s-change-%s",
-					stacks[s].Stackname,
-					strconv.Itoa((rand.Int())),
-				)
-
 				// check if stack exists in config
 				if _, ok := stacks[s]; !ok {
-					log.Error(fmt.Sprintf("Stack [%s] not found in config", s))
+					log.Error(fmt.Sprintf("stack [%s] not found in config", s))
 					return
 				}
 
@@ -368,6 +361,13 @@ func initShell(p string, s *ishell.Shell) {
 					log.Error("source not found in config file...")
 					return
 				}
+
+				// random chcange-set name
+				run.changeName = fmt.Sprintf(
+					"%s-change-%s",
+					stacks[s].Stackname,
+					strconv.Itoa((rand.Int())),
+				)
 
 				if err := stacks[s].GenTimeParser(); err != nil {
 					log.Error(err.Error())
