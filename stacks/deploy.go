@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/fatih/color"
 )
 
 // TODO: this function's pretty bad, waaaay too long, need to break it apart
@@ -99,7 +100,10 @@ func (s *Stack) Deploy() error {
 	}
 
 	done <- true
-	Log.Info(fmt.Sprintf("deployment completed: [%s]", s.Stackname))
+	Log.Info(fmt.Sprintf(
+		"deployment completed: %s",
+		color.New(color.FgWhite).Add(color.Bold).SprintFunc()(fmt.Sprintf("[%s]", s.Stackname)),
+	))
 
 	return nil
 }
