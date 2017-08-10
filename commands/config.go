@@ -96,7 +96,7 @@ func (c *Config) callFunctions() error {
 		if utils.IsJSON(c.String) || utils.IsHCL(c.String) {
 			return "${", "}"
 		}
-		return "!", "\n"
+		return "!!", "\n"
 	}()
 
 	// create template
