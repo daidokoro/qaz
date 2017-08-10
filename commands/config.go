@@ -124,6 +124,8 @@ func Configure(confSource string, conf string) error {
 		}
 
 		config.String = cfg
+	} else {
+		config.String = conf
 	}
 
 	// execute Functions
