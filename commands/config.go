@@ -110,7 +110,7 @@ func (c *Config) callFunctions() error {
 
 	t.Execute(&doc, nil)
 	c.String = doc.String()
-	log.Debug(fmt.Sprintln("config:", c.String))
+	log.Debug("config: %s", c.String)
 	return nil
 }
 
@@ -136,13 +136,13 @@ func Configure(confSource string, conf string) error {
 	log.Debug("checking Config for HCL format...")
 	if err := hcl.Unmarshal([]byte(config.String), &config); err != nil {
 		// fmt.Println(err)
-		log.Debug(fmt.Sprintln("failed to parse hcl... moving to JSON/YAML...", err.Error()))
+		log.Debug("failed to parse hcl... moving to JSON/YAML... error: %v", err)
 		if err := yaml.Unmarshal([]byte(config.String), &config); err != nil {
 			return err
 		}
 	}
 
-	log.Debug(fmt.Sprintln("Config File Read:", config.Project))
+	log.Debug("Config File Read: %s", config.Project)
 
 	stacks = make(map[string]*stks.Stack)
 

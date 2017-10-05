@@ -2,7 +2,6 @@ package commands
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/url"
 	"regexp"
@@ -23,14 +22,14 @@ func fetchContent(source string) (string, error) {
 
 	switch src.Scheme {
 	case "http", "https":
-		log.Debug(fmt.Sprintln("Source Type: [http] Detected, Fetching Source: ", source))
+		log.Debug("Source Type: [http] Detected, Fetching Source: [%s]", source)
 		resp, err := utils.Get(source)
 		if err != nil {
 			return "", err
 		}
 		return resp, nil
 	case "s3":
-		log.Debug(fmt.Sprintln("Source Type: [s3] Detected, Fetching Source: ", source))
+		log.Debug("Source Type: [s3] Detected, Fetching Source: [%s]", source)
 		sess, err := manager.GetSess(run.profile)
 		utils.HandleError(err)
 
@@ -40,7 +39,7 @@ func fetchContent(source string) (string, error) {
 		}
 		return resp, nil
 	case "lambda":
-		log.Debug(fmt.Sprintln("Source Type: [lambda] Detected, Fetching Source: ", source))
+		log.Debug("Source Type: [lambda] Detected, Fetching Source: %s", source)
 		lambdaSrc := strings.Split(strings.Replace(source, "lambda:", "", -1), "@")
 
 		var raw interface{}
@@ -75,23 +74,23 @@ func fetchContent(source string) (string, error) {
 
 	default:
 		if gitrepo.URL != "" {
-			log.Debug(fmt.Sprintln("Source Type: [git-repo file] Detected, Fetching Source: ", source))
+			log.Debug("Source Type: [git-repo file] Detected, Fetching Source: %s", source)
 			out, ok := gitrepo.Files[source]
 			if ok {
 				return out, nil
 			} else if !ok {
-				log.Warn(fmt.Sprintf("config [%s] not found in git repo - checking local file system", source))
+				log.Warn("config [%s] not found in git repo - checking local file system", source)
 			}
 
 		}
 
-		log.Debug(fmt.Sprintln("Source Type: [file] Detected, Fetching Source: ", source))
+		log.Debug("Source Type: [file] Detected, Fetching Source: [%s]", source)
 		b, err := ioutil.ReadFile(source)
 		if err != nil {
 			return "", err
 		}
 
-		log.Debug(fmt.Sprintln("config file read:", string(b)))
+		log.Debug("config file read: %s", string(b))
 		return string(b), nil
 	}
 }

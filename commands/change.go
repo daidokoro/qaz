@@ -65,7 +65,7 @@ var create = &cobra.Command{
 		err = stacks[s].Change("create", run.changeName)
 		utils.HandleError(err)
 
-		log.Info(fmt.Sprintf("change-set [%s] creation successful", run.changeName))
+		log.Info("change-set [%s] creation successful", run.changeName)
 
 	},
 }
@@ -163,7 +163,7 @@ var execute = &cobra.Command{
 			utils.HandleError(err)
 		}
 
-		log.Info(fmt.Sprintf("change-set [%s] execution successful", run.changeName))
+		log.Info("change-set [%s] execution successful", run.changeName)
 	},
 }
 

@@ -21,7 +21,7 @@ import (
 
 // initialise - adds, logging and repo vars to dependecny functions
 var initialise = func(cmd *cobra.Command, args []string) {
-	log.Debug(fmt.Sprintf("Initialising Command [%s]", cmd.Name()))
+	log.Debug("initialising command [%s]", cmd.Name())
 	// add logging
 	stks.Log = &log
 	bucket.Log = &log
@@ -161,7 +161,7 @@ var (
 
 			values := stacks[s].TemplateValues[s].(map[string]interface{})
 
-			log.Debug(fmt.Sprintln("Converting stack outputs to JSON from:", values))
+			log.Debug("Converting stack outputs to JSON from: %s", values)
 			output, err := yaml.Marshal(values)
 			utils.HandleError(err)
 
