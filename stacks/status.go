@@ -17,7 +17,7 @@ func (s *Stack) Status() error {
 		StackName: aws.String(s.Stackname),
 	}
 
-	Log.Debug(fmt.Sprintln("Calling [DescribeStacks] with parameters:", describeStacksInput))
+	Log.Debug("calling [DescribeStacks] with parameters: %s", describeStacksInput)
 	status, err := svc.DescribeStacks(describeStacksInput)
 
 	if err != nil {

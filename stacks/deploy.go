@@ -25,7 +25,7 @@ func (s *Stack) Deploy() error {
 		return err
 	}
 
-	Log.Debug(fmt.Sprintf("Updated Template:\n%s", s.Template))
+	Log.Debug("Updated Template:\n%s", s.Template)
 	done := make(chan bool)
 	svc := cloudformation.New(s.Session, &aws.Config{Credentials: s.creds()})
 
@@ -76,7 +76,7 @@ func (s *Stack) Deploy() error {
 		createParams.TemplateBody = &s.Template
 	}
 
-	Log.Debug(fmt.Sprintln("Calling [CreateStack] with parameters:", createParams))
+	Log.Debug("Calling [CreateStack] with parameters: %s", createParams)
 	if _, err = svc.CreateStack(createParams); err != nil {
 		return errors.New(fmt.Sprintln("Deploying failed: ", err.Error()))
 
@@ -100,10 +100,10 @@ func (s *Stack) Deploy() error {
 	}
 
 	done <- true
-	Log.Info(fmt.Sprintf(
+	Log.Info(
 		"deployment completed: %s",
 		color.New(color.FgWhite).Add(color.Bold).SprintFunc()(fmt.Sprintf("[%s]", s.Stackname)),
-	))
+	)
 
 	return nil
 }

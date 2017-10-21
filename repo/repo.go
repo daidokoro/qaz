@@ -80,10 +80,10 @@ func (r *Repo) clone() error {
 		return err
 	}
 
-	Log.Debug(fmt.Sprintln("calling [git clone] with params:", opts))
+	Log.Debug("calling [git clone] with params: %s", opts)
 
 	// Clones the repository into the worktree (fs) and storer all the .git
-	Log.Info(fmt.Sprintf("fetching git repo: [%s]\n--", filepath.Base(r.URL)))
+	Log.Info("fetching git repo: [%s]\n--", filepath.Base(r.URL))
 	if _, err := git.Clone(store, r.fs, opts); err != nil {
 		return err
 	}
@@ -94,7 +94,7 @@ func (r *Repo) clone() error {
 }
 
 func (r *Repo) readFiles(root []billy.FileInfo, dirname string) error {
-	Log.Debug(fmt.Sprintf("writing repo files to memory filesystem [%s]", dirname))
+	Log.Debug("writing repo files to memory filesystem [%s]", dirname)
 	for _, i := range root {
 		path := filepath.Join(dirname, i.Name())
 		if i.IsDir() {
@@ -120,7 +120,7 @@ func (r *Repo) readFiles(root []billy.FileInfo, dirname string) error {
 
 func (r *Repo) getAuth(opts *git.CloneOptions) error {
 	if strings.HasPrefix(r.URL, "git@") {
-		Log.Debug(fmt.Sprintln("SSH Source URL detected, attempting to use SSH Keys:", r.RSA))
+		Log.Debug("SSH Source URL detected, attempting to use SSH Keys: %s", r.RSA)
 
 		sshAuth, err := ssh.NewPublicKeysFromFile("git", r.RSA, "")
 		if err != nil {

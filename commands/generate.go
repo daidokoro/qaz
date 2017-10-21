@@ -53,7 +53,7 @@ var generateCmd = &cobra.Command{
 		}
 
 		name := fmt.Sprintf("%s-%s", project, s)
-		log.Debug(fmt.Sprintln("Generating a template for ", name))
+		log.Debug("generating a template for %s", name)
 
 		err = stacks[s].GenTimeParser()
 		if err != nil {

@@ -28,7 +28,7 @@ var (
 				wg.Add(1)
 				go func(s *stks.Stack) {
 					if err := s.Status(); err != nil {
-						log.Error(fmt.Sprintf("failed to fetch status for [%s]: %s", s.Stackname, err.Error()))
+						log.Error("failed to fetch status for [%s]: %v", s.Stackname, err)
 					}
 					wg.Done()
 				}(v)
@@ -76,7 +76,7 @@ var (
 			}
 
 			name := fmt.Sprintf("%s-%s", config.Project, s)
-			log.Debug(fmt.Sprintln("validating template for", name))
+			log.Info("validating template: %s", name)
 
 			err = stacks[s].GenTimeParser()
 			utils.HandleError(err)

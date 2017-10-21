@@ -2,7 +2,6 @@ package stacks
 
 import (
 	"bytes"
-	"fmt"
 	"text/template"
 )
 
@@ -28,7 +27,7 @@ func (s *Stack) DeployTimeParser() error {
 
 	t.Execute(&doc, s.TemplateValues)
 	s.Template = doc.String()
-	Log.Debug(fmt.Sprintf("Deploy Time Template Generate:\n%s", s.Template))
+	Log.Debug("Deploy Time Template Generate:\n%s", s.Template)
 
 	return nil
 }

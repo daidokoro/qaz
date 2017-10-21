@@ -1,8 +1,6 @@
 package commands
 
 import (
-	"fmt"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -25,7 +23,7 @@ func (s *sessionManager) GetSess(p string) (*session.Session, error) {
 	}
 
 	if v, ok := s.sessions[p]; ok {
-		log.Debug(fmt.Sprintf("Session Detected: [%s]", p))
+		log.Debug("Session Detected: [%s]", p)
 		return v, nil
 	}
 
@@ -39,7 +37,7 @@ func (s *sessionManager) GetSess(p string) (*session.Session, error) {
 		options.Config = aws.Config{Region: &s.region}
 	}
 
-	log.Debug(fmt.Sprintf("Creating AWS Session with options: Regioin: %s, Profile: %s ", region, run.profile))
+	log.Debug("Creating AWS Session with options: Regioin: %s, Profile: %s ", region, run.profile)
 	sess, err := session.NewSessionWithOptions(options)
 	if err != nil {
 		return sess, err

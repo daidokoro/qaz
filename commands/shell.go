@@ -61,7 +61,7 @@ func initShell(p string, s *ishell.Shell) {
 					wg.Add(1)
 					go func(s *stks.Stack) {
 						if err := s.Status(); err != nil {
-							log.Error(fmt.Sprintf("failed to fetch status for [%s]: %s", s.Stackname, err.Error()))
+							log.Error("failed to fetch status for [%s]: %v", s.Stackname, err)
 						}
 						wg.Done()
 					}(v)
@@ -96,7 +96,7 @@ func initShell(p string, s *ishell.Shell) {
 				for _, s := range c.Args {
 					// check if stack exists
 					if _, ok := stacks[s]; !ok {
-						log.Error(fmt.Sprintf("%s: does not Exist in Config", s))
+						log.Error("%s: does not exist in config", s)
 						return
 					}
 
@@ -139,7 +139,7 @@ func initShell(p string, s *ishell.Shell) {
 			Func: func(c *ishell.Context) {
 
 				if len(c.Args) < 1 {
-					log.Warn(fmt.Sprintf("Please specify stack name..."))
+					log.Warn("please specify stack name...")
 					return
 				}
 
@@ -147,13 +147,13 @@ func initShell(p string, s *ishell.Shell) {
 				s := c.Args[0]
 
 				if _, ok := stacks[s]; !ok {
-					log.Error(fmt.Sprintf("Stack [%s] not found in config", s))
+					log.Error("stack [%s] not found in config", s)
 					return
 				}
 
 				values := stacks[s].TemplateValues[s].(map[string]interface{})
 
-				log.Debug(fmt.Sprintln("Converting stack outputs to JSON from:", values))
+				log.Debug("converting stack outputs to JSON from: %s", values)
 				output, err := yaml.Marshal(values)
 				if err != nil {
 					log.Error(err.Error())
@@ -271,7 +271,7 @@ func initShell(p string, s *ishell.Shell) {
 
 				// check if stack exists in config
 				if _, ok := stacks[s]; !ok {
-					log.Error(fmt.Sprintf("Stack [%s] not found in config", s))
+					log.Error("stack [%s] not found in config", s)
 					return
 				}
 
@@ -281,7 +281,7 @@ func initShell(p string, s *ishell.Shell) {
 				}
 
 				name := fmt.Sprintf("%s-%s", project, s)
-				log.Debug(fmt.Sprintln("Generating a template for ", name))
+				log.Debug("generating a template for [%s]", name)
 
 				if err := stacks[s].GenTimeParser(); err != nil {
 					log.Error(err.Error())
@@ -313,7 +313,7 @@ func initShell(p string, s *ishell.Shell) {
 
 				// check if stack exists in config
 				if _, ok := stacks[s]; !ok {
-					log.Error(fmt.Sprintf("Stack [%s] not found in config", s))
+					log.Error("stack [%s] not found in config", s)
 					return
 				}
 
@@ -323,7 +323,7 @@ func initShell(p string, s *ishell.Shell) {
 				}
 
 				name := fmt.Sprintf("%s-%s", config.Project, s)
-				log.Debug(fmt.Sprintln("validating template for", name))
+				log.Debug("validating template for %s", name)
 
 				if err := stacks[s].GenTimeParser(); err != nil {
 					log.Error(err.Error())
@@ -344,7 +344,7 @@ func initShell(p string, s *ishell.Shell) {
 				var s string
 
 				if len(c.Args) < 1 {
-					log.Warn(fmt.Sprintf("please specify stack name..."))
+					log.Warn("please specify stack name...")
 					return
 				}
 
@@ -353,7 +353,7 @@ func initShell(p string, s *ishell.Shell) {
 
 				// check if stack exists in config
 				if _, ok := stacks[s]; !ok {
-					log.Error(fmt.Sprintf("stack [%s] not found in config", s))
+					log.Error("stack [%s] not found in config", s)
 					return
 				}
 
@@ -451,7 +451,7 @@ func initShell(p string, s *ishell.Shell) {
 					wg.Add(1)
 					go func(s string) {
 						if _, ok := stacks[s]; !ok {
-							log.Error(fmt.Sprintf("Stack [%s] not found in config", s))
+							log.Error("stack [%s] not found in config", s)
 							wg.Done()
 							return
 						}
@@ -477,18 +477,18 @@ func initShell(p string, s *ishell.Shell) {
 			Help:     "reload Qaz configuration source into shell environment",
 			LongHelp: "reload",
 			Func: func(c *ishell.Context) {
-				log.Debug(fmt.Sprintln(stacks))
+				log.Debug("%v", stacks)
 				// off load stacks
 				for k := range stacks {
 					delete(stacks, k)
 				}
 
-				log.Debug(fmt.Sprintln(stacks))
+				log.Debug("%v", stacks)
 
 				// re-read config
 				err := Configure(run.cfgSource, run.cfgRaw)
 				utils.HandleError(err)
-				log.Info(fmt.Sprintf("config reloaded: [%s]", run.cfgSource))
+				log.Info("config reloaded: [%s]", run.cfgSource)
 			},
 		},
 	}

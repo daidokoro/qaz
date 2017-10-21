@@ -1,7 +1,6 @@
 package stacks
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -16,7 +15,7 @@ func (s *Stack) StackExists() bool {
 		StackName: aws.String(s.Stackname),
 	}
 
-	Log.Debug(fmt.Sprintln("Calling [DescribeStacks] with parameters:", describeStacksInput))
+	Log.Debug("Calling [DescribeStacks] with parameters: %s", describeStacksInput)
 	_, err := svc.DescribeStacks(describeStacksInput)
 
 	if err == nil {
@@ -34,7 +33,7 @@ func (s *Stack) State() (string, error) {
 		StackName: aws.String(s.Stackname),
 	}
 
-	Log.Debug(fmt.Sprintln("Calling [DescribeStacks] with parameters: ", describeStacksInput))
+	Log.Debug("calling [DescribeStacks] with parameters: %s", describeStacksInput)
 	status, err := svc.DescribeStacks(describeStacksInput)
 	if err != nil {
 		if strings.Contains(err.Error(), "not exist") {
@@ -60,7 +59,7 @@ func (s *Stack) ChangeSetStatus(args ...string) (string, error) {
 		ChangeSetName: &args[0],
 	}
 
-	Log.Debug(fmt.Sprintln("Calling [DescribeChangeSet] with parameters: ", params))
+	Log.Debug("calling [DescribeChangeSet] with parameters: %s", params)
 	status, err := svc.DescribeChangeSet(params)
 	if err != nil {
 		return "", err
@@ -77,7 +76,7 @@ func (s *Stack) StackStatus(args ...string) (string, error) {
 		StackName: aws.String(s.Stackname),
 	}
 
-	Log.Debug(fmt.Sprintln("Calling [DescribeStacks] with parameters: ", params))
+	Log.Debug("calling [DescribeStacks] with parameters: %s", params)
 	status, err := svc.DescribeStacks(params)
 	if err != nil {
 		return "", err

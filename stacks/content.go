@@ -2,7 +2,6 @@ package stacks
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/url"
 	"regexp"
@@ -21,14 +20,14 @@ func (s *Stack) FetchContent() error {
 
 	switch src.Scheme {
 	case "http", "https":
-		Log.Debug(fmt.Sprintln("Source Type: [http] Detected, Fetching Source: ", s.Source))
+		Log.Debug("Source Type: [http] Detected, Fetching Source: %s ", s.Source)
 		resp, err := utils.Get(s.Source)
 		if err != nil {
 			return err
 		}
 		s.Template = resp
 	case "s3":
-		Log.Debug(fmt.Sprintln("Source Type: [s3] Detected, Fetching Source: ", s.Source))
+		Log.Debug("Source Type: [s3] Detected, Fetching Source: %s", s.Source)
 		resp, err := bucket.S3Read(s.Source, s.Session)
 		if err != nil {
 			return err
@@ -37,7 +36,7 @@ func (s *Stack) FetchContent() error {
 		s.Template = resp
 
 	case "lambda":
-		Log.Debug(fmt.Sprintln("Source Type: [lambda] Detected, Fetching Source: ", s.Source))
+		Log.Debug("Source Type: [lambda] Detected, Fetching Source: %s", s.Source)
 		lambdaSrc := strings.Split(src.Opaque, "@")
 
 		var raw interface{}
@@ -70,18 +69,18 @@ func (s *Stack) FetchContent() error {
 
 	default:
 		if Git.URL != "" {
-			Log.Debug(fmt.Sprintln("Source Type: [git-repo file] Detected, Fetching Source: ", s.Source))
+			Log.Debug("Source Type: [git-repo file] Detected, Fetching Source: %s", s.Source)
 			out, ok := Git.Files[s.Source]
 			if ok {
 				s.Template = out
 				return nil
 			} else if !ok {
-				Log.Warn(fmt.Sprintf("config [%s] not found in git repo - checking local file system", s.Source))
+				Log.Warn("config [%s] not found in git repo - checking local file system", s.Source)
 			}
 
 		}
 
-		Log.Debug(fmt.Sprintln("Source Type: [file] Detected, Fetching Source: ", s.Source))
+		Log.Debug("Source Type: [file] Detected, Fetching Source: %s", s.Source)
 		b, err := ioutil.ReadFile(s.Source)
 		if err != nil {
 			return err

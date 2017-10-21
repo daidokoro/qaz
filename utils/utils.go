@@ -53,7 +53,7 @@ func All(a []string, s string) bool {
 
 // StringIn - returns true if string in array
 func StringIn(s string, a []string) bool {
-	Log.Debug(fmt.Sprintf("Checking If [%s] is in: %s", s, a))
+	Log.Debug("checking If [%s] is in: %s", s, a)
 	for _, str := range a {
 		if str == s {
 			return true

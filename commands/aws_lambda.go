@@ -49,9 +49,7 @@ func (a *awsLambda) Invoke(sess *session.Session) error {
 
 	if run.lambdAsync {
 		code := strconv.FormatInt(*resp.StatusCode, 10)
-		log.Info(
-			fmt.Sprintln("lambda async response code:", log.ColorString(code, "green")),
-		)
+		log.Info("lambda async response code: %s", log.ColorString(code, "green"))
 		return nil
 	}
 

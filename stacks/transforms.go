@@ -12,11 +12,11 @@ import (
 // DeployServerless deploys SAMs Cloudformation templates
 func (s *Stack) DeployServerless() error {
 	changename := fmt.Sprintf("%s-change-set", s.Stackname)
-	Log.Info(fmt.Sprintf(
+	Log.Info(
 		"%s [SAM] deploy detected via [%s]: deploying serverless template via change-set",
 		Log.ColorString("serverless", "cyan"),
 		s.Stackname,
-	))
+	)
 
 	if err := s.Change(transform, changename); err != nil {
 		return err
@@ -33,15 +33,15 @@ func (s *Stack) DeployServerless() error {
 		StackName: aws.String(s.Stackname),
 	}
 
-	Log.Debug(fmt.Sprintln("Calling [WaitUntilStackCreateComplete] with parameters:", describeStacksInput))
+	Log.Debug("Calling [WaitUntilStackCreateComplete] with parameters: %s", describeStacksInput)
 	if err := svc.WaitUntilStackCreateComplete(describeStacksInput); err != nil {
 		return err
 	}
 
-	Log.Info(fmt.Sprintf(
+	Log.Info(
 		"%s [SAM] - deploy completed - %s",
 		Log.ColorString("serverless", "cyan"),
 		s.Stackname,
-	))
+	)
 	return nil
 }

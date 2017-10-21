@@ -18,13 +18,13 @@ func (s *Stack) Check() error {
 		TemplateBody: aws.String(s.Template),
 	}
 
-	Log.Debug(fmt.Sprintf("Calling [ValidateTemplate] with parameters:\n%s"+"\n--\n", params))
+	Log.Debug("Calling [ValidateTemplate] with parameters:\n%s"+"\n--\n", params)
 	resp, err := svc.ValidateTemplate(params)
 	if err != nil {
 		return err
 	}
 
-	Log.Info(fmt.Sprintf("valid!\n--\n"))
+	Log.Info("valid!\n--\n")
 
 	resp.GoString()
 
