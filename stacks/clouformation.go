@@ -11,26 +11,37 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 )
 
-// State - struct for handling stack deploy/terminate statuses
-var state = struct {
+// stat type for handling all stack states
+type status struct {
+	sync.Mutex
+	cache    map[string]string
 	pending  string
 	failed   string
 	complete string
-}{
+}
+
+func (s *status) update(name, ste string) {
+	s.Lock()
+	defer s.Unlock()
+	Log.Debug("Updating Stack Status Map: %s - %s", name, ste)
+	s.cache[name] = ste
+	return
+}
+
+func (s *status) get(name string) string {
+	s.Lock()
+	defer s.Unlock()
+	if v, ok := s.cache[name]; ok {
+		return v
+	}
+	return ""
+}
+
+var state = status{
+	cache:    make(map[string]string),
 	complete: "complete",
 	pending:  "pending",
 	failed:   "failed",
-}
-
-// mutex - used to sync access to cross thread variables
-var mutex = &sync.Mutex{}
-
-// updateState - Locks cross channel object and updates value
-func updateState(statusMap map[string]string, name string, status string) {
-	Log.Debug("Updating Stack Status Map: %s - %s", name, status)
-	mutex.Lock()
-	statusMap[name] = status
-	mutex.Unlock()
 }
 
 // Exports - prints all cloudformation exports
@@ -57,8 +68,6 @@ func Exports(session *session.Session) error {
 
 // DeployHandler - Handles deploying stacks in the corrcet order
 func DeployHandler(runstacks map[string]string, stacks map[string]*Stack) {
-	// status -  pending, failed, completed
-	var status = make(map[string]string)
 
 	// kick off tail mechanism
 	tail = make(chan *TailServiceInput)
@@ -74,7 +83,8 @@ func DeployHandler(runstacks map[string]string, stacks map[string]*Stack) {
 		if stk.StackExists() {
 			if err := stk.cleanup(); err != nil {
 				Log.Error("failed to remove stack: [%s] - %v", stk.Name, err)
-				updateState(status, stk.Name, state.failed)
+				// updateState(status, stk.Name, state.failed)
+				state.update(stk.Name, state.failed)
 			}
 
 			if stk.StackExists() {
@@ -83,7 +93,7 @@ func DeployHandler(runstacks map[string]string, stacks map[string]*Stack) {
 			}
 
 		}
-		updateState(status, stk.Name, state.pending)
+		state.update(stk.Name, state.pending)
 
 		if len(stk.DependsOn) == 0 {
 			wg.Add(1)
@@ -97,7 +107,7 @@ func DeployHandler(runstacks map[string]string, stacks map[string]*Stack) {
 					Log.Error(err.Error())
 				}
 
-				updateState(status, s.Name, state.complete)
+				state.update(s.Name, state.complete)
 
 				// TODO: add deploy Logic here
 				return
@@ -125,16 +135,15 @@ func DeployHandler(runstacks map[string]string, stacks map[string]*Stack) {
 
 					switch chk {
 					case state.failed:
-						updateState(status, dp.Name, state.failed)
+						state.update(dp.Name, state.failed)
 					case state.complete:
-						updateState(status, dp.Name, state.complete)
+						state.update(dp.Name, state.complete)
 					default:
-						updateState(status, dp.Name, state.pending)
+						state.update(dp.Name, state.pending)
 					}
 
-					mutex.Lock()
-					depts = append(depts, status[dept])
-					mutex.Unlock()
+					depts = append(depts, state.get(dept))
+
 				}
 
 				if utils.All(depts, state.complete) {
