@@ -38,6 +38,7 @@ func (s *Stack) DeployServerless() error {
 		return err
 	}
 
+	done <- true
 	Log.Info(
 		"%s [SAM] - deploy completed - %s",
 		Log.ColorString("serverless", "cyan"),
