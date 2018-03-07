@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sync"
 
 	yaml "gopkg.in/yaml.v2"
 
@@ -107,7 +108,7 @@ var (
 		Example: "qaz set-policy <stack name>",
 		PreRun:  initialise,
 		Run: func(cmd *cobra.Command, args []string) {
-
+			var wg sync.WaitGroup
 			if len(args) == 0 {
 				utils.HandleError(fmt.Errorf("please specify stack name"))
 			}
@@ -118,11 +119,11 @@ var (
 			for _, s := range args {
 				wg.Add(1)
 				go func(s string) {
-					if _, ok := stacks[s]; !ok {
+					if _, ok := stacks.Get(s); !ok {
 						utils.HandleError(fmt.Errorf("Stack [%s] not found in config", s))
 					}
 
-					err := stacks[s].StackPolicy()
+					err := stacks.MustGet(s).StackPolicy()
 					utils.HandleError(err)
 
 					wg.Done()
@@ -155,11 +156,11 @@ var (
 			err := Configure(run.cfgSource, run.cfgRaw)
 			utils.HandleError(err)
 
-			if _, ok := stacks[s]; !ok {
+			if _, ok := stacks.Get(s); !ok {
 				utils.HandleError(fmt.Errorf("Stack [%s] not found in config", s))
 			}
 
-			values := stacks[s].TemplateValues[s].(map[string]interface{})
+			values := stacks.MustGet(s).TemplateValues[s].(map[string]interface{})
 
 			log.Debug("Converting stack outputs to JSON from: %s", values)
 			output, err := yaml.Marshal(values)

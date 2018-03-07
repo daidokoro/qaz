@@ -34,49 +34,48 @@ var (
 
 			run.stacks = make(map[string]string)
 
-			// Add run.stacks based on templates Flags
+			// Add run.stacks based on [templates] Flags
 			for _, src := range run.tplSources {
 				s, source, err := utils.GetSource(src)
 				utils.HandleError(err)
-				run.stacks[s] = source
+				if _, ok := stacks.Get(s); !ok {
+					utils.HandleError(fmt.Errorf("stacks [%s] not found in config", s))
+				}
+				stacks.MustGet(s).Source = source
+				stacks.MustGet(s).Actioned = true
 			}
 
-			// Add all stacks with defined sources if all
+			// Add all stacks with defined sources if actioned
 			if run.all {
-				for s, v := range stacks {
-					// so flag values aren't overwritten
-					if _, ok := run.stacks[s]; !ok {
-						run.stacks[s] = v.Source
-					}
-				}
+				stacks.Range(func(_ string, s *stks.Stack) bool {
+					s.Actioned = true
+					return true
+				})
 			}
 
 			// Add run.stacks based on Args
 			if len(args) > 0 && !run.all {
-				for _, stk := range args {
-					if _, ok := stacks[stk]; !ok {
-						utils.HandleError(fmt.Errorf("Stack [%s] not found in conig", stk))
+				for _, s := range args {
+					if _, ok := stacks.Get(s); !ok {
+						utils.HandleError(fmt.Errorf("stacks [%s] not found in config", s))
 					}
-					run.stacks[stk] = stacks[stk].Source
+					stacks.MustGet(s).Actioned = true
 				}
 			}
 
-			for s, src := range run.stacks {
-				if stacks[s].Source == "" {
-					stacks[s].Source = src
+			// run gentimeParser
+			stacks.Range(func(_ string, s *stks.Stack) bool {
+				if !s.Actioned {
+					return true
 				}
-
-				err := stacks[s].GenTimeParser()
-				utils.HandleError(err)
-
-				// Handle missing stacks
-				if stacks[s] == nil {
-					utils.HandleError(fmt.Errorf("Missing Stack in %s: [%s]", run.cfgSource, s))
+				if err := s.GenTimeParser(); err != nil {
+					utils.HandleError(err)
 				}
-			}
+				return true
+			})
 
 			// Deploy Stacks
-			stks.DeployHandler(run.stacks, stacks)
+			stks.DeployHandler(&stacks)
 
 		},
 	}
@@ -116,18 +115,15 @@ var (
 			err = Configure(run.cfgSource, repo.Config)
 			utils.HandleError(err)
 
-			//create run stacks
-			run.stacks = make(map[string]string)
-
-			for s, v := range stacks {
-				// populate run stacks
-				run.stacks[s] = v.Source
-				err := stacks[s].GenTimeParser()
-				utils.HandleError(err)
-			}
+			//create set actioned stacks
+			stacks.Range(func(_ string, s *stks.Stack) bool {
+				s.Actioned = true
+				utils.HandleError(s.GenTimeParser())
+				return true
+			})
 
 			// Deploy Stacks
-			stks.DeployHandler(run.stacks, stacks)
+			stks.DeployHandler(&stacks)
 
 		},
 	}
@@ -154,45 +150,30 @@ var (
 				return
 			}
 
-			if run.tplSource != "" {
+			switch {
+
+			case run.tplSource != "":
 				s, source, err = utils.GetSource(run.tplSource)
-				if err != nil {
-					utils.HandleError(err)
-					return
+				utils.HandleError(err)
+
+			case len(args) > 0:
+				s = args[0]
+				if _, ok := stacks.Get(s); !ok {
+					utils.HandleError(fmt.Errorf("stacks [%s] not found in config", s))
 				}
 			}
 
-			if len(args) > 0 {
-				s = args[0]
+			// check stack exists
+			if _, ok := stacks.Get(s); !ok {
+				utils.HandleError(fmt.Errorf("stacks [%s] not found in config", s))
 			}
 
-			// check if stack exists in config
-			if _, ok := stacks[s]; !ok {
-				utils.HandleError(fmt.Errorf("Stack [%s] not found in config", s))
-				return
+			if source != "" {
+				stacks.MustGet(s).Source = source
 			}
 
-			if stacks[s].Source == "" {
-				stacks[s].Source = source
-			}
-
-			err = stacks[s].GenTimeParser()
-			if err != nil {
-				utils.HandleError(err)
-				return
-			}
-
-			// Handle missing stacks
-			if stacks[s] == nil {
-				utils.HandleError(fmt.Errorf("Missing Stack in %s: [%s]", run.cfgSource, s))
-				return
-			}
-
-			if err := stacks[s].Update(); err != nil {
-				utils.HandleError(err)
-				return
-			}
-
+			utils.HandleError(stacks.MustGet(s).GenTimeParser())
+			utils.HandleError(stacks.MustGet(s).Update())
 		},
 	}
 
@@ -203,26 +184,25 @@ var (
 		PreRun: initialise,
 		Run: func(cmd *cobra.Command, args []string) {
 
-			if !run.all {
-				run.stacks = make(map[string]string)
-				for _, stk := range args {
-					run.stacks[stk] = ""
-				}
-
-				if len(run.stacks) == 0 {
-					log.Warn("No stack specified for termination")
-					return
-				}
-			}
-
-			err := Configure(run.cfgSource, "")
-			if err != nil {
-				utils.HandleError(err)
+			if len(args) < 1 {
+				log.Warn("No stack specified for termination")
 				return
 			}
 
+			err := Configure(run.cfgSource, "")
+			utils.HandleError(err)
+
+			if !run.all {
+				for _, s := range args {
+					if _, ok := stacks.Get(s); !ok {
+						utils.HandleError(fmt.Errorf("stacks [%s] not found in config", s))
+					}
+					stacks.MustGet(s).Actioned = true
+				}
+			}
+
 			// Terminate Stacks
-			stks.TerminateHandler(run.stacks, stacks)
+			stks.TerminateHandler(&stacks)
 		},
 	}
 )

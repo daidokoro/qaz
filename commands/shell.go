@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/daidokoro/qaz/utils"
 
@@ -44,6 +45,7 @@ var (
 )
 
 func initShell(p string, s *ishell.Shell) {
+	var wg sync.WaitGroup
 	// display welcome info.
 	s.Println(fmt.Sprintf(
 		"\n%s Shell Mode\n--\nTry \"help\" for a list of commands\n",
@@ -57,17 +59,20 @@ func initShell(p string, s *ishell.Shell) {
 			Name: "status",
 			Help: "Prints status of deployed/un-deployed stacks",
 			Func: func(c *ishell.Context) {
-				for _, v := range stacks {
-					wg.Add(1)
-					go func(s *stks.Stack) {
+				var w sync.WaitGroup
+				stacks.Range(func(k string, s *stks.Stack) bool {
+					w.Add(1)
+					go func() {
+						defer w.Done()
 						if err := s.Status(); err != nil {
 							log.Error("failed to fetch status for [%s]: %v", s.Stackname, err)
 						}
-						wg.Done()
-					}(v)
+					}()
+					return true
+				})
 
-				}
-				wg.Wait()
+				w.Wait()
+				return
 			},
 		},
 
@@ -76,9 +81,10 @@ func initShell(p string, s *ishell.Shell) {
 			Name: "ls",
 			Help: "list all stacks defined in project config",
 			Func: func(c *ishell.Context) {
-				for k := range stacks {
+				stacks.Range(func(k string, s *stks.Stack) bool {
 					fmt.Println(k)
-				}
+					return true
+				})
 			},
 		},
 
@@ -95,7 +101,7 @@ func initShell(p string, s *ishell.Shell) {
 
 				for _, s := range c.Args {
 					// check if stack exists
-					if _, ok := stacks[s]; !ok {
+					if _, ok := stacks.Get(s); !ok {
 						log.Error("%s: does not exist in config", s)
 						return
 					}
@@ -103,12 +109,12 @@ func initShell(p string, s *ishell.Shell) {
 					wg.Add(1)
 					go func(s string) {
 						defer wg.Done()
-						if err := stacks[s].Outputs(); err != nil {
+						if err := stacks.MustGet(s).Outputs(); err != nil {
 							log.Error(err.Error())
 							return
 						}
 
-						for _, i := range stacks[s].Output.Stacks {
+						for _, i := range stacks.MustGet(s).Output.Stacks {
 							m, err := json.MarshalIndent(i.Outputs, "", "  ")
 							if err != nil {
 								log.Error(err.Error())
@@ -146,12 +152,12 @@ func initShell(p string, s *ishell.Shell) {
 				// set stack value based on argument
 				s := c.Args[0]
 
-				if _, ok := stacks[s]; !ok {
+				if _, ok := stacks.Get(s); !ok {
 					log.Error("stack [%s] not found in config", s)
 					return
 				}
 
-				values := stacks[s].TemplateValues[s].(map[string]interface{})
+				values := stacks.MustGet(s).TemplateValues[s].(map[string]interface{})
 
 				log.Debug("converting stack outputs to JSON from: %s", values)
 				output, err := yaml.Marshal(values)
@@ -179,14 +185,12 @@ func initShell(p string, s *ishell.Shell) {
 			Name: "deploy",
 			Help: "Deploys stack(s) to AWS",
 			Func: func(c *ishell.Context) {
-				run.stacks = make(map[string]string)
 				// stack list
-				stklist := make([]string, len(stacks))
-				i := 0
-				for k := range stacks {
-					stklist[i] = k
-					i++
-				}
+				var stklist []string
+				stacks.Range(func(k string, _ *stks.Stack) bool {
+					stklist = append(stklist, k)
+					return true
+				})
 
 				// create checklist
 				choices := c.Checklist(
@@ -195,25 +199,31 @@ func initShell(p string, s *ishell.Shell) {
 					nil,
 				)
 
-				// define run.stacks
-				run.stacks = make(map[string]string)
+				// define actioned stacks
 				for _, i := range choices {
 					if i < 0 {
 						fmt.Printf("--\nPress %s to return\n--\n", log.ColorString("ENTER", "green"))
 						return
 					}
-					run.stacks[stklist[i]] = ""
+
+					stacks.MustGet(stklist[i]).Actioned = true
 				}
 
-				for s := range run.stacks {
-					if err := stacks[s].GenTimeParser(); err != nil {
-						log.Error(err.Error())
-						return
+				// run actioned stacks
+				stacks.Range(func(k string, s *stks.Stack) bool {
+					if !s.Actioned {
+						return true
 					}
-				}
+
+					if err := s.GenTimeParser(); err != nil {
+						log.Error(err.Error())
+						return false
+					}
+					return true
+				})
 
 				// Deploy Stacks
-				stks.DeployHandler(run.stacks, stacks)
+				stks.DeployHandler(&stacks)
 				fmt.Printf("--\nPress %s to return\n--\n", log.ColorString("ENTER", "green"))
 				return
 			},
@@ -225,12 +235,11 @@ func initShell(p string, s *ishell.Shell) {
 			Help: "Terminate stacks",
 			Func: func(c *ishell.Context) {
 				// stack list
-				stklist := make([]string, len(stacks))
-				i := 0
-				for k := range stacks {
-					stklist[i] = k
-					i++
-				}
+				var stklist []string
+				stacks.Range(func(k string, _ *stks.Stack) bool {
+					stklist = append(stklist, k)
+					return true
+				})
 
 				// create checklist
 				choices := c.Checklist(
@@ -240,17 +249,16 @@ func initShell(p string, s *ishell.Shell) {
 				)
 
 				// define run.stacks
-				run.stacks = make(map[string]string)
 				for _, i := range choices {
 					if i < 0 {
 						fmt.Printf("--\nPress %s to return\n--\n", log.ColorString("ENTER", "green"))
 						return
 					}
-					run.stacks[stklist[i]] = ""
+					stacks.MustGet(stklist[i]).Actioned = true
 				}
 
 				// Terminate Stacks
-				stks.TerminateHandler(run.stacks, stacks)
+				stks.TerminateHandler(&stacks)
 				fmt.Printf("--\nPress %s to return\n--\n", log.ColorString("ENTER", "green"))
 				return
 
@@ -270,12 +278,12 @@ func initShell(p string, s *ishell.Shell) {
 				}
 
 				// check if stack exists in config
-				if _, ok := stacks[s]; !ok {
+				if _, ok := stacks.Get(s); !ok {
 					log.Error("stack [%s] not found in config", s)
 					return
 				}
 
-				if stacks[s].Source == "" {
+				if stacks.MustGet(s).Source == "" {
 					log.Error("source not found in config file...")
 					return
 				}
@@ -283,7 +291,7 @@ func initShell(p string, s *ishell.Shell) {
 				name := fmt.Sprintf("%s-%s", project, s)
 				log.Debug("generating a template for [%s]", name)
 
-				if err := stacks[s].GenTimeParser(); err != nil {
+				if err := stacks.MustGet(s).GenTimeParser(); err != nil {
 					log.Error(err.Error())
 					return
 				}
@@ -291,7 +299,7 @@ func initShell(p string, s *ishell.Shell) {
 				reg, err := regexp.Compile(OutputRegex)
 				utils.HandleError(err)
 
-				resp := reg.ReplaceAllStringFunc(string(stacks[s].Template), func(s string) string {
+				resp := reg.ReplaceAllStringFunc(string(stacks.MustGet(s).Template), func(s string) string {
 					return log.ColorString(s, "cyan")
 				})
 
@@ -312,12 +320,12 @@ func initShell(p string, s *ishell.Shell) {
 				}
 
 				// check if stack exists in config
-				if _, ok := stacks[s]; !ok {
+				if _, ok := stacks.Get(s); !ok {
 					log.Error("stack [%s] not found in config", s)
 					return
 				}
 
-				if stacks[s].Source == "" {
+				if stacks.MustGet(s).Source == "" {
 					log.Error("source not found in config file...")
 					return
 				}
@@ -325,11 +333,11 @@ func initShell(p string, s *ishell.Shell) {
 				name := fmt.Sprintf("%s-%s", config.Project, s)
 				log.Debug("validating template for %s", name)
 
-				if err := stacks[s].GenTimeParser(); err != nil {
+				if err := stacks.MustGet(s).GenTimeParser(); err != nil {
 					log.Error(err.Error())
 				}
 
-				if err := stacks[s].Check(); err != nil {
+				if err := stacks.MustGet(s).Check(); err != nil {
 					log.Error(err.Error())
 				}
 			},
@@ -352,12 +360,12 @@ func initShell(p string, s *ishell.Shell) {
 				s = c.Args[0]
 
 				// check if stack exists in config
-				if _, ok := stacks[s]; !ok {
+				if _, ok := stacks.Get(s); !ok {
 					log.Error("stack [%s] not found in config", s)
 					return
 				}
 
-				if stacks[s].Source == "" {
+				if stacks.MustGet(s).Source == "" {
 					log.Error("source not found in config file...")
 					return
 				}
@@ -365,22 +373,22 @@ func initShell(p string, s *ishell.Shell) {
 				// random chcange-set name
 				run.changeName = fmt.Sprintf(
 					"%s-change-%s",
-					stacks[s].Stackname,
+					stacks.MustGet(s).Stackname,
 					strconv.Itoa((rand.Int())),
 				)
 
-				if err := stacks[s].GenTimeParser(); err != nil {
+				if err := stacks.MustGet(s).GenTimeParser(); err != nil {
 					log.Error(err.Error())
 					return
 				}
 
-				if err := stacks[s].Change("create", run.changeName); err != nil {
+				if err := stacks.MustGet(s).Change("create", run.changeName); err != nil {
 					log.Error(err.Error())
 					return
 				}
 
 				// descrupt change-set
-				if err := stacks[s].Change("desc", run.changeName); err != nil {
+				if err := stacks.MustGet(s).Change("desc", run.changeName); err != nil {
 					log.Error(err.Error())
 					return
 				}
@@ -395,14 +403,14 @@ func initShell(p string, s *ishell.Shell) {
 					resp := c.ReadLine()
 					switch strings.ToLower(resp) {
 					case "y":
-						if err := stacks[s].Change("execute", run.changeName); err != nil {
+						if err := stacks.MustGet(s).Change("execute", run.changeName); err != nil {
 							log.Error(err.Error())
 							return
 						}
 						log.Info("update completed successfully...")
 						return
 					case "n":
-						if err := stacks[s].Change("rm", run.changeName); err != nil {
+						if err := stacks.MustGet(s).Change("rm", run.changeName); err != nil {
 							log.Error(err.Error())
 							return
 						}
@@ -421,14 +429,13 @@ func initShell(p string, s *ishell.Shell) {
 			Help:     "set stack policies based on configured value",
 			LongHelp: "set-policy [stack]",
 			Func: func(c *ishell.Context) {
-				run.stacks = make(map[string]string)
+				var wg sync.WaitGroup
 				// stack list
-				stklist := make([]string, len(stacks))
-				i := 0
-				for k := range stacks {
-					stklist[i] = k
-					i++
-				}
+				stklist := make([]string, stacks.Count())
+				stacks.Range(func(k string, _ *stks.Stack) bool {
+					stklist = append(stklist, k)
+					return true
+				})
 
 				// create checklist
 				choices := c.Checklist(
@@ -438,33 +445,30 @@ func initShell(p string, s *ishell.Shell) {
 				)
 
 				// define run.stacks
-				run.stacks = make(map[string]string)
 				for _, i := range choices {
 					if i < 0 {
 						fmt.Printf("--\nPress %s to return\n--\n", log.ColorString("ENTER", "green"))
 						return
 					}
-					run.stacks[stklist[i]] = ""
+					stacks.MustGet(stklist[i]).Actioned = true
 				}
 
-				for s := range run.stacks {
+				stacks.Range(func(k string, s *stks.Stack) bool {
+					if !s.Actioned {
+						return true
+					}
+
 					wg.Add(1)
-					go func(s string) {
-						if _, ok := stacks[s]; !ok {
-							log.Error("stack [%s] not found in config", s)
-							wg.Done()
+					go func() {
+						defer wg.Done()
+						if err := s.StackPolicy(); err != nil {
+							log.Error("%v", err)
 							return
 						}
-
-						if err := stacks[s].StackPolicy(); err != nil {
-							log.Error(err.Error())
-						}
-
-						wg.Done()
 						return
-
-					}(s)
-				}
+					}()
+					return true
+				})
 
 				wg.Wait()
 
@@ -477,13 +481,8 @@ func initShell(p string, s *ishell.Shell) {
 			Help:     "reload Qaz configuration source into shell environment",
 			LongHelp: "reload",
 			Func: func(c *ishell.Context) {
-				log.Debug("%v", stacks)
-				// off load stacks
-				for k := range stacks {
-					delete(stacks, k)
-				}
-
-				log.Debug("%v", stacks)
+				// off load stacks by redeclaring stack map
+				stacks = stks.Map{}
 
 				// re-read config
 				err := Configure(run.cfgSource, run.cfgRaw)

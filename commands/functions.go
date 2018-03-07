@@ -190,10 +190,8 @@ var (
 			log.Debug("Deploy-Time function resolving: %s", target)
 			req := strings.Split(target, "::")
 
-			s := stacks[req[0]]
-
-			err := s.Outputs()
-			utils.HandleError(err)
+			s := stacks.MustGet(req[0])
+			utils.HandleError(s.Outputs())
 
 			for _, i := range s.Output.Stacks {
 				for _, o := range i.Outputs {
@@ -202,7 +200,6 @@ var (
 					}
 				}
 			}
-
 			utils.HandleError(fmt.Errorf("Stack Output Not found - Stack:%s | Output:%s", req[0], req[1]))
 			return ""
 		},
