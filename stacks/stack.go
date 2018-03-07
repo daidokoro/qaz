@@ -56,6 +56,11 @@ type Stack struct {
 	TemplateValues map[string]interface{}
 	Debug          bool
 	Timeout        int64
+
+	// Actioned in this context means the stack name
+	// has been passed explicitly as an arguement and
+	// should be processed
+	Actioned bool
 }
 
 // SetStackName - sets the stackname with struct
