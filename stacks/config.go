@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/daidokoro/qaz/utils"
 )
 
 // Config type for handling yaml config files
@@ -88,16 +87,9 @@ func (c *Config) Tags(s *Stack) *Config {
 func (c *Config) CallFunctions(fmap template.FuncMap) error {
 
 	Log.Debug("calling functions in config file")
-	// define Delims
-	left, right := func() (string, string) {
-		if utils.IsJSON(c.String) || utils.IsHCL(c.String) {
-			return "${", "}"
-		}
-		return "!!", ";"
-	}()
 
 	// create template
-	t, err := template.New("config-template").Delims(left, right).Funcs(fmap).Parse(c.String)
+	t, err := template.New("config-template").Delims(`{{`, `}}`).Funcs(fmap).Parse(c.String)
 	if err != nil {
 		return err
 	}
