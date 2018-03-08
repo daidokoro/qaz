@@ -28,7 +28,7 @@ func S3Read(URL string, sess *session.Session) (string, error) {
 	}
 
 	// Parse s3 url
-	bucket := src.Scheme
+	bucket := src.Host
 	key := strings.TrimPrefix(src.Path, "/")
 
 	params := &s3.GetObjectInput{
