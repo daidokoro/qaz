@@ -1,7 +1,6 @@
 package stacks
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -16,10 +15,10 @@ func (s *Stack) Outputs() error {
 		StackName: aws.String(s.Stackname),
 	}
 
-	Log.Debug(fmt.Sprintln("Calling [DescribeStacks] with parameters:", outputParams))
+	Log.Debug("Calling [DescribeStacks] with parameters:", outputParams)
 	outputs, err := svc.DescribeStacks(outputParams)
 	if err != nil {
-		return errors.New(fmt.Sprintln("Unable to reach stack", err.Error()))
+		return fmt.Errorf("Unable to reach stack: %v", err)
 	}
 
 	// set stack outputs property

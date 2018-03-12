@@ -1,6 +1,9 @@
 package logger
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 // Simple logging and printing mechanisms
 
@@ -11,24 +14,24 @@ type Logger struct {
 }
 
 // Info - Prints info level log statments
-func (l *Logger) Info(msg string) {
-	fmt.Printf("%s: %s\n", l.ColorString("info", "green"), msg)
+func (l *Logger) Info(msg string, args ...interface{}) {
+	fmt.Fprintf(os.Stdout, "%s: %s\n", l.ColorString("info", "green"), fmt.Sprintf(msg, args...))
 }
 
 // Warn - Prints warn level log statments
-func (l *Logger) Warn(msg string) {
-	fmt.Printf("%s: %s\n", l.ColorString("warn", "yellow"), msg)
+func (l *Logger) Warn(msg string, args ...interface{}) {
+	fmt.Fprintf(os.Stdout, "%s: %s\n", l.ColorString("warn", "yellow"), fmt.Sprintf(msg, args...))
 }
 
 // Error - Prints error level log statements
-func (l *Logger) Error(msg string) {
-	fmt.Printf("%s: %s\n", l.ColorString("error", "red"), msg)
+func (l *Logger) Error(msg string, args ...interface{}) {
+	fmt.Fprintf(os.Stderr, "%s: %s\n", l.ColorString("error", "red"), fmt.Sprintf(msg, args...))
 }
 
 // Debug - Prints debug level log statements
-func (l *Logger) Debug(msg string) {
+func (l *Logger) Debug(msg string, args ...interface{}) {
 	if *l.DebugMode {
-		fmt.Printf("%s: %s\n", l.ColorString("debug", "magenta"), msg)
+		fmt.Fprintf(os.Stdout, "%s: %s\n", l.ColorString("debug", "magenta"), fmt.Sprintf(msg, args...))
 	}
 }
 

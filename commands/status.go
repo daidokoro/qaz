@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/daidokoro/qaz/utils"
 
@@ -20,20 +21,21 @@ var (
 		Short:  "Prints status of deployed/un-deployed stacks",
 		PreRun: initialise,
 		Run: func(cmd *cobra.Command, args []string) {
-
+			var wg sync.WaitGroup
 			err := Configure(run.cfgSource, run.cfgRaw)
 			utils.HandleError(err)
 
-			for _, v := range stacks {
+			stacks.Range(func(_ string, s *stks.Stack) bool {
 				wg.Add(1)
-				go func(s *stks.Stack) {
+				go func() {
 					if err := s.Status(); err != nil {
-						log.Error(fmt.Sprintf("failed to fetch status for [%s]: %s", s.Stackname, err.Error()))
+						log.Error("failed to fetch status for [%s]: %v", s.Stackname, err)
 					}
 					wg.Done()
-				}(v)
+				}()
+				return true
+			})
 
-			}
 			wg.Wait()
 		},
 	}
@@ -57,33 +59,28 @@ var (
 			err := Configure(run.cfgSource, "")
 			utils.HandleError(err)
 
-			if run.tplSource != "" {
+			switch {
+			case run.tplSource != "":
 				s, source, err = utils.GetSource(run.tplSource)
 				utils.HandleError(err)
-			}
-
-			if len(args) > 0 {
+			case len(args) > 0:
 				s = args[0]
 			}
 
 			// check if stack exists in config
-			if _, ok := stacks[s]; !ok {
+			if _, ok := stacks.Get(s); !ok {
 				utils.HandleError(fmt.Errorf("stack [%s] not found in config", s))
 			}
 
-			if stacks[s].Source == "" {
-				stacks[s].Source = source
+			if source != "" {
+				stacks.MustGet(s).Source = source
 			}
 
 			name := fmt.Sprintf("%s-%s", config.Project, s)
-			log.Debug(fmt.Sprintln("validating template for", name))
+			log.Info("validating template: %s", name)
 
-			err = stacks[s].GenTimeParser()
-			utils.HandleError(err)
-
-			err = stacks[s].Check()
-			utils.HandleError(err)
-
+			utils.HandleError(stacks.MustGet(s).GenTimeParser())
+			utils.HandleError(stacks.MustGet(s).Check())
 		},
 	}
 )

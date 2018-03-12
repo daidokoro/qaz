@@ -28,13 +28,13 @@ func (s *Stack) StackPolicy() error {
 		params.StackPolicyBody = &s.Policy
 	}
 
-	Log.Debug(fmt.Sprintln("Calling SetStackPolicy with params: ", params))
+	Log.Debug("Calling SetStackPolicy with params: %s", params)
 	resp, err := svc.SetStackPolicy(params)
 	if err != nil {
 		return err
 	}
 
-	Log.Info(fmt.Sprintf("Stack Policy applied: [%s] - %s", s.Stackname, resp.GoString()))
+	Log.Info("Stack Policy applied: [%s] - %s", s.Stackname, resp.GoString())
 
 	return nil
 }

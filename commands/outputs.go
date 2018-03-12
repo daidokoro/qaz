@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"sync"
 
 	"github.com/daidokoro/qaz/utils"
 
@@ -22,7 +23,7 @@ var (
 		Example: "qaz outputs vpc subnets --config path/to/config",
 		PreRun:  initialise,
 		Run: func(cmd *cobra.Command, args []string) {
-
+			var wg sync.WaitGroup
 			if len(args) < 1 {
 				fmt.Println("Please specify stack(s) to check, For details try --> qaz outputs --help")
 				return
@@ -33,30 +34,28 @@ var (
 
 			for _, s := range args {
 				// check if stack exists
-				if _, ok := stacks[s]; !ok {
+				if _, ok := stacks.Get(s); !ok {
 					utils.HandleError(fmt.Errorf("%s: does not Exist in Config", s))
 				}
 
 				wg.Add(1)
 				go func(s string) {
 					defer wg.Done()
-					if err := stacks[s].Outputs(); err != nil {
+					if err := stacks.MustGet(s).Outputs(); err != nil {
 						log.Error(err.Error())
 						return
 					}
 
-					for _, i := range stacks[s].Output.Stacks {
+					for _, i := range stacks.MustGet(s).Output.Stacks {
 						m, err := json.MarshalIndent(i.Outputs, "", "  ")
 						if err != nil {
 							log.Error(err.Error())
 						}
 
-						reg, err := regexp.Compile(OutputRegex)
-						utils.HandleError(err)
-
-						resp := reg.ReplaceAllStringFunc(string(m), func(s string) string {
-							return log.ColorString(s, "cyan")
-						})
+						resp := regexp.MustCompile(OutputRegex).
+							ReplaceAllStringFunc(string(m), func(s string) string {
+								return log.ColorString(s, "cyan")
+							})
 
 						fmt.Println(resp)
 					}
@@ -75,13 +74,9 @@ var (
 		Example: "qaz exports",
 		PreRun:  initialise,
 		Run: func(cmd *cobra.Command, args []string) {
-
 			sess, err := manager.GetSess(run.profile)
 			utils.HandleError(err)
-
-			err = stks.Exports(sess)
-			utils.HandleError(err)
-
+			utils.HandleError(stks.Exports(sess))
 		},
 	}
 )

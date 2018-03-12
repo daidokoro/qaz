@@ -35,7 +35,7 @@ func (a *awsLambda) Invoke(sess *session.Session) error {
 		params.InvocationType = aws.String("Event")
 	}
 
-	log.Debug(fmt.Sprintln("Calling [Invoke] with parameters:", params))
+	log.Debug("Calling [Invoke] with parameters: %s", params)
 	resp, err := svc.Invoke(params)
 	if err != nil {
 		return err
@@ -49,13 +49,11 @@ func (a *awsLambda) Invoke(sess *session.Session) error {
 
 	if run.lambdAsync {
 		code := strconv.FormatInt(*resp.StatusCode, 10)
-		log.Info(
-			fmt.Sprintln("lambda async response code:", log.ColorString(code, "green")),
-		)
+		log.Info("lambda async response code: %s", log.ColorString(code, "green"))
 		return nil
 	}
 
-	log.Debug(fmt.Sprintln("lambda response:", a.response))
+	log.Debug("lambda response: %s", a.response)
 	return nil
 }
 
@@ -80,7 +78,7 @@ var invokeCmd = &cobra.Command{
 		if run.funcEvent != "" {
 			if strings.HasPrefix(run.funcEvent, "@") {
 				input := strings.Replace(run.funcEvent, "@", "", -1)
-				log.Debug(fmt.Sprintf("file input detected [%s], opening file", input))
+				log.Debug("file input detected [%s], opening file", input)
 				event, err := ioutil.ReadFile(input)
 				utils.HandleError(err)
 				f.payload = event
@@ -91,7 +89,7 @@ var invokeCmd = &cobra.Command{
 
 		if err := f.Invoke(sess); err != nil {
 			if strings.Contains(err.Error(), "Unhandled") {
-				log.Error(fmt.Sprintf("Unhandled Exception: Potential Issue with Lambda Function Logic: %s\n", f.name))
+				log.Error("Unhandled Exception: Potential Issue with Lambda Function Logic: %s\n", f.name)
 			}
 			utils.HandleError(err)
 		}

@@ -11,7 +11,7 @@ import (
 func (s *Stack) terminate() error {
 
 	if !s.StackExists() {
-		Log.Info(fmt.Sprintf("%s: does not exist...", s.Name))
+		Log.Info("%s: does not exist...", s.Name)
 		return nil
 	}
 
@@ -31,7 +31,7 @@ func (s *Stack) terminate() error {
 
 	go tailWait(done, &tailinput)
 
-	Log.Debug(fmt.Sprintln("Calling [DeleteStack] with parameters:", params))
+	Log.Debug("calling [DeleteStack] with parameters: %s", params)
 	if _, err := svc.DeleteStack(params); err != nil {
 		done <- true
 		return errors.New(fmt.Sprintln("Deleting failed: ", err))
@@ -44,7 +44,7 @@ func (s *Stack) terminate() error {
 	}
 
 	done <- true
-	Log.Info(fmt.Sprintf("Deletion successful: [%s]", s.Stackname))
+	Log.Info("deletion successful: [%s]", s.Stackname)
 
 	return nil
 }

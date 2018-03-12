@@ -25,48 +25,35 @@ var generateCmd = &cobra.Command{
 		var source string
 
 		err := Configure(run.cfgSource, run.cfgRaw)
-		if err != nil {
-			utils.HandleError(err)
-			return
-		}
+		utils.HandleError(err)
 
-		if run.tplSource != "" {
+		switch {
+		case run.tplSource != "":
 			s, source, err = utils.GetSource(run.tplSource)
-			if err != nil {
-				utils.HandleError(err)
-				return
-			}
-		}
-
-		if len(args) > 0 {
+			utils.HandleError(err)
+		case len(args) > 0:
 			s = args[0]
 		}
 
 		// check if stack exists in config
-		if _, ok := stacks[s]; !ok {
+		if _, ok := stacks.Get(s); !ok {
 			utils.HandleError(fmt.Errorf("Stack [%s] not found in config", s))
 			return
 		}
 
-		if stacks[s].Source == "" {
-			stacks[s].Source = source
+		// if source is defined via cli arg
+		if source != "" {
+			stacks.MustGet(s).Source = source
 		}
 
 		name := fmt.Sprintf("%s-%s", project, s)
-		log.Debug(fmt.Sprintln("Generating a template for ", name))
+		log.Debug("generating a template for %s", name)
+		utils.HandleError(stacks.MustGet(s).GenTimeParser())
 
-		err = stacks[s].GenTimeParser()
-		if err != nil {
-			utils.HandleError(err)
-			return
-		}
-
-		reg, err := regexp.Compile(OutputRegex)
-		utils.HandleError(err)
-
-		resp := reg.ReplaceAllStringFunc(string(stacks[s].Template), func(s string) string {
-			return log.ColorString(s, "cyan")
-		})
+		resp := regexp.MustCompile(OutputRegex).
+			ReplaceAllStringFunc(string(stacks.MustGet(s).Template), func(s string) string {
+				return log.ColorString(s, "cyan")
+			})
 
 		fmt.Println(resp)
 	},

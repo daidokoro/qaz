@@ -58,7 +58,7 @@ var (
 	}
 
 	httpGet = func(url string) interface{} {
-		log.Debug(fmt.Sprintln("Calling Template Function [GET] with arguments:", url))
+		log.Debug("Calling Template Function [GET] with arguments: %s", url)
 		resp, err := utils.Get(url)
 		utils.HandleError(err)
 
@@ -66,11 +66,11 @@ var (
 	}
 
 	s3Read = func(url string, profile ...string) string {
-		log.Debug(fmt.Sprintln("Calling Template Function [S3Read] with arguments:", url))
+		log.Debug("Calling Template Function [S3Read] with arguments: %s", url)
 
 		var p = run.profile
 		if len(profile) < 1 {
-			log.Warn(fmt.Sprintf("No Profile specified for S3read, using: %s", p))
+			log.Warn("No Profile specified for S3read, using: %s", p)
 		} else {
 			p = profile[0]
 		}
@@ -99,7 +99,7 @@ var (
 		err = f.Invoke(sess)
 		utils.HandleError(err)
 
-		log.Debug(fmt.Sprintln("Lambda response:", f.response))
+		log.Debug("Lambda response: %s", f.response)
 
 		// parse json if possible
 		if err := json.Unmarshal([]byte(f.response), &m); err != nil {
@@ -134,19 +134,19 @@ var (
 	GenTimeFunctions = template.FuncMap{
 		// simple additon function useful for counters in loops
 		"add": func(a int, b int) int {
-			log.Debug(fmt.Sprintln("Calling Template Function [add] with arguments:", a, b))
+			log.Debug("Calling Template Function [add] with arguments: %s + %s", a, b)
 			return a + b
 		},
 
 		// strip function for removing characters from text
 		"strip": func(s string, rmv string) string {
-			log.Debug(fmt.Sprintln("Calling Template Function [strip] with arguments:", s, rmv))
+			log.Debug("Calling Template Function [strip] with arguments: (%s, %s) ", s, rmv)
 			return strings.Replace(s, rmv, "", -1)
 		},
 
 		// cat function for reading text from a given file under the files folder
 		"cat": func(path string) string {
-			log.Debug(fmt.Sprintln("Calling Template Function [cat] with arguments:", path))
+			log.Debug("Calling Template Function [cat] with arguments: %s", path)
 			b, err := ioutil.ReadFile(path)
 			utils.HandleError(err)
 			return string(b)
@@ -187,13 +187,11 @@ var (
 	DeployTimeFunctions = template.FuncMap{
 		// Fetching stackoutputs
 		"stack_output": func(target string) string {
-			log.Debug(fmt.Sprintf("Deploy-Time function resolving: %s", target))
+			log.Debug("Deploy-Time function resolving: %s", target)
 			req := strings.Split(target, "::")
 
-			s := stacks[req[0]]
-
-			err := s.Outputs()
-			utils.HandleError(err)
+			s := stacks.MustGet(req[0])
+			utils.HandleError(s.Outputs())
 
 			for _, i := range s.Output.Stacks {
 				for _, o := range i.Outputs {
@@ -202,13 +200,12 @@ var (
 					}
 				}
 			}
-
 			utils.HandleError(fmt.Errorf("Stack Output Not found - Stack:%s | Output:%s", req[0], req[1]))
 			return ""
 		},
 
 		"stack_output_ext": func(target string) string {
-			log.Debug(fmt.Sprintf("Deploy-Time function resolving: %s", target))
+			log.Debug("Deploy-Time function resolving: %s", target)
 			req := strings.Split(target, "::")
 
 			sess, err := manager.GetSess(run.profile)

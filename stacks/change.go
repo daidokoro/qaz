@@ -53,7 +53,7 @@ func (s *Stack) Change(req, changename string) error {
 			params.Tags = s.Tags
 		}
 
-		Log.Debug(fmt.Sprintf("Updated Template:\n%s", s.Template))
+		Log.Debug("updated template:\n%s", s.Template)
 
 		// If bucket - upload to s3
 		var url string
@@ -85,7 +85,7 @@ func (s *Stack) Change(req, changename string) error {
 			}
 		}
 
-		Log.Debug(fmt.Sprintln("calling [CreateChangeSet] with parameters:", params))
+		Log.Debug("calling [CreateChangeSet] with parameters: %s", params)
 		if _, err = svc.CreateChangeSet(params); err != nil {
 			return err
 		}
@@ -95,7 +95,7 @@ func (s *Stack) Change(req, changename string) error {
 			ChangeSetName: aws.String(changename),
 		}
 
-		Log.Info(fmt.Sprintf("creating change-set: [%s] - %s", changename, s.Stackname))
+		Log.Info("creating change-set: [%s] - %s", changename, s.Stackname)
 		if err = Wait(s.ChangeSetStatus, changename); err != nil {
 			return err
 		}
@@ -104,7 +104,7 @@ func (s *Stack) Change(req, changename string) error {
 		if err != nil {
 			return err
 		}
-		Log.Info(fmt.Sprintf("created change-set: [%s] - %s - %s", changename, Log.ColorMap(*resp.Status), s.Stackname))
+		Log.Info("created change-set: [%s] - %s - %s", changename, Log.ColorMap(*resp.Status), s.Stackname)
 		return nil
 
 	case rm:
@@ -117,7 +117,7 @@ func (s *Stack) Change(req, changename string) error {
 			return err
 		}
 
-		Log.Info(fmt.Sprintf("Change-Set: [%s] deleted", changename))
+		Log.Info("change-Set: [%s] deleted", changename)
 
 	case list:
 		params := &cloudformation.ListChangeSetsInput{
@@ -130,7 +130,7 @@ func (s *Stack) Change(req, changename string) error {
 		}
 
 		for _, i := range resp.Summaries {
-			Log.Info(fmt.Sprintf("%s%s - Change-Set: [%s] - Status: [%s]", Log.ColorString("@", "magenta"), i.CreationTime.Format(time.RFC850), *i.ChangeSetName, *i.ExecutionStatus))
+			Log.Info("%s%s - Change-Set: [%s] - Status: [%s]", Log.ColorString("@", "magenta"), i.CreationTime.Format(time.RFC850), *i.ChangeSetName, *i.ExecutionStatus)
 		}
 
 	case execute, serverless:
@@ -151,7 +151,7 @@ func (s *Stack) Change(req, changename string) error {
 		if req != serverless {
 			go s.tail("UPDATE", done)
 
-			Log.Debug(fmt.Sprintln("Calling [WaitUntilStackUpdateComplete] with parameters:", describeStacksInput))
+			Log.Debug("calling [WaitUntilStackUpdateComplete] with parameters:", describeStacksInput)
 			if err := svc.WaitUntilStackUpdateComplete(describeStacksInput); err != nil {
 				return err
 			}

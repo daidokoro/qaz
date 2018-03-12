@@ -11,26 +11,37 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 )
 
-// State - struct for handling stack deploy/terminate statuses
-var state = struct {
+// stat type for handling all stack states
+type status struct {
+	sync.Mutex
+	cache    map[string]string
 	pending  string
 	failed   string
 	complete string
-}{
+}
+
+func (s *status) update(name, ste string) {
+	s.Lock()
+	defer s.Unlock()
+	Log.Debug("Updating Stack Status Map: %s - %s", name, ste)
+	s.cache[name] = ste
+	return
+}
+
+func (s *status) get(name string) string {
+	s.Lock()
+	defer s.Unlock()
+	if v, ok := s.cache[name]; ok {
+		return v
+	}
+	return ""
+}
+
+var state = status{
+	cache:    make(map[string]string),
 	complete: "complete",
 	pending:  "pending",
 	failed:   "failed",
-}
-
-// mutex - used to sync access to cross thread variables
-var mutex = &sync.Mutex{}
-
-// updateState - Locks cross channel object and updates value
-func updateState(statusMap map[string]string, name string, status string) {
-	Log.Debug(fmt.Sprintf("Updating Stack Status Map: %s - %s", name, status))
-	mutex.Lock()
-	statusMap[name] = status
-	mutex.Unlock()
 }
 
 // Exports - prints all cloudformation exports
@@ -40,7 +51,7 @@ func Exports(session *session.Session) error {
 
 	exportParams := &cloudformation.ListExportsInput{}
 
-	Log.Debug(fmt.Sprintln("Calling [ListExports] with parameters:", exportParams))
+	Log.Debug("calling [ListExports] with parameters: %s", exportParams)
 	exports, err := svc.ListExports(exportParams)
 
 	if err != nil {
@@ -56,68 +67,67 @@ func Exports(session *session.Session) error {
 }
 
 // DeployHandler - Handles deploying stacks in the corrcet order
-func DeployHandler(runstacks map[string]string, stacks map[string]*Stack) {
-	// status -  pending, failed, completed
-	var status = make(map[string]string)
-
+// TODO - this is still a fairly convoluted function... need to splify
+func DeployHandler(m *Map) {
+	var wg sync.WaitGroup
 	// kick off tail mechanism
 	tail = make(chan *TailServiceInput)
 	go TailService(tail)
 
-	for _, stk := range stacks {
-
-		if _, ok := runstacks[stk.Name]; !ok && len(runstacks) > 0 {
-			continue
+	m.Range(func(k string, s *Stack) bool {
+		if !s.Actioned {
+			return true
 		}
 
 		// Set deploy status & Check if stack exists
-		if stk.StackExists() {
-			if err := stk.cleanup(); err != nil {
-				Log.Error(fmt.Sprintf("Failed to remove stack: [%s] - %s", stk.Name, err.Error()))
-				updateState(status, stk.Name, state.failed)
+		if s.StackExists() {
+			if err := s.cleanup(); err != nil {
+				Log.Error("failed to remove stack: [%s] - %v", s.Name, err)
+				// updateState(status, stk.Name, state.failed)
+				state.update(s.Name, state.failed)
 			}
 
-			if stk.StackExists() {
-				Log.Info(fmt.Sprintf("stack [%s] already exists...\n", stk.Name))
-				continue
+			if s.StackExists() {
+				Log.Info("stack [%s] already exists...\n", s.Name)
+				return true
 			}
 
 		}
-		updateState(status, stk.Name, state.pending)
+		state.update(s.Name, state.pending)
 
-		if len(stk.DependsOn) == 0 {
+		if len(s.DependsOn) == 0 {
 			wg.Add(1)
-			go func(s *Stack) {
+			go func() {
 				defer wg.Done()
 
 				// Deploy 0 Depency Stacks first - each on their on go routine
-				Log.Info(fmt.Sprintf("deploying a template for [%s]", s.Name))
+				Log.Info("deploying a template for [%s]", s.Name)
 
 				if err := s.Deploy(); err != nil {
 					Log.Error(err.Error())
 				}
 
-				updateState(status, s.Name, state.complete)
+				state.update(s.Name, state.complete)
 
 				// TODO: add deploy Logic here
 				return
-			}(stk)
-			continue
+			}()
+			return true
 		}
 
 		wg.Add(1)
-		go func(s *Stack) {
-			Log.Info(fmt.Sprintf("[%s] depends on: %s", s.Name, s.DependsOn))
+		go func() {
+			Log.Info("[%s] depends on: %s", s.Name, s.DependsOn)
 			defer wg.Done()
 
-			Log.Debug(fmt.Sprintf("Beginning Wait State for Depencies of [%s]"+"\n", s.Name))
+			Log.Debug("Beginning Wait State for Depencies of [%s]"+"\n", s.Name)
 			for {
 				depts := []string{}
 				for _, dept := range s.DependsOn {
 					// Dependency wait
-					dp, ok := stacks[dept]
+					dp, ok := m.Get(dept)
 					if !ok {
-						Log.Error(fmt.Sprintf("Bad dependency: [%s]", dept))
+						Log.Error("Bad dependency: [%s]", dept)
 						return
 					}
 
@@ -125,21 +135,20 @@ func DeployHandler(runstacks map[string]string, stacks map[string]*Stack) {
 
 					switch chk {
 					case state.failed:
-						updateState(status, dp.Name, state.failed)
+						state.update(dp.Name, state.failed)
 					case state.complete:
-						updateState(status, dp.Name, state.complete)
+						state.update(dp.Name, state.complete)
 					default:
-						updateState(status, dp.Name, state.pending)
+						state.update(dp.Name, state.pending)
 					}
 
-					mutex.Lock()
-					depts = append(depts, status[dept])
-					mutex.Unlock()
+					depts = append(depts, state.get(dept))
+
 				}
 
 				if utils.All(depts, state.complete) {
 					// Deploy stack once dependencies clear
-					Log.Info(fmt.Sprintf("Deploying a template for [%s]", s.Name))
+					Log.Info("deploying a template for [%s]", s.Name)
 
 					if err := s.Deploy(); err != nil {
 						Log.Error(err.Error())
@@ -149,36 +158,38 @@ func DeployHandler(runstacks map[string]string, stacks map[string]*Stack) {
 
 				for _, v := range depts {
 					if v == state.failed {
-						Log.Warn(fmt.Sprintf("Deploy Cancelled for stack [%s] due to dependency failure!", s.Name))
+						Log.Warn("deploy Cancelled for stack [%s] due to dependency failure!", s.Name)
 						return
 					}
 				}
 
 				time.Sleep(time.Second * 1)
 			}
-		}(stk)
+		}()
+		return true
 
-	}
+	})
 
 	// Wait for go routines to complete
 	wg.Wait()
 }
 
 // TerminateHandler - Handles terminating stacks in the correct order
-func TerminateHandler(runstacks map[string]string, stacks map[string]*Stack) {
+func TerminateHandler(m *Map) {
 	// kick off tail mechanism
 	tail = make(chan *TailServiceInput)
+	var wg sync.WaitGroup
 	go TailService(tail)
 
-	for _, stk := range stacks {
-		if _, ok := runstacks[stk.Name]; !ok && len(runstacks) > 0 {
-			Log.Debug(fmt.Sprintf("%s: not in run.stacks, skipping", stk.Name))
-			continue // only process items in the run.stacks unless empty
+	m.Range(func(k string, s *Stack) bool {
+		if !s.Actioned {
+			Log.Debug("%s: not actioned, skipping", s.Name)
+			return true
 		}
 
 		// if len(stk.DependsOn) == 0 {
 		wg.Add(1)
-		go func(s *Stack) {
+		go func() {
 			defer wg.Done()
 
 			// create ticker
@@ -188,23 +199,25 @@ func TerminateHandler(runstacks map[string]string, stacks map[string]*Stack) {
 			// Reverse depency look-up so termination waits for all stacks
 			// which depend on it, to finish terminating first.
 			for {
-				for _, stk := range stacks {
+				m.Range(func(k string, stk *Stack) bool {
 					if utils.StringIn(s.Name, stk.DependsOn) {
-						Log.Info(fmt.Sprintf("[%s]: Depends on [%s].. Waiting for dependency to terminate", stk.Name, s.Name))
+						Log.Info("[%s]: Depends on [%s].. Waiting for dependency to terminate", stk.Name, s.Name)
 						for _ = range tick.C {
 							if !stk.StackExists() {
 								break
 							}
 						}
 					}
-				}
+					return true
+				})
 
 				s.terminate()
 				return
 			}
 
-		}(stk)
-	}
+		}()
+		return true
+	})
 
 	// Wait for go routines to complete
 	wg.Wait()

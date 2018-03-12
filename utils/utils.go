@@ -6,6 +6,7 @@ package utils
 
 import (
 	"bufio"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -15,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/daidokoro/hcl"
 	"github.com/daidokoro/qaz/logger"
 )
 
@@ -51,7 +53,7 @@ func All(a []string, s string) bool {
 
 // StringIn - returns true if string in array
 func StringIn(s string, a []string) bool {
-	Log.Debug(fmt.Sprintf("Checking If [%s] is in: %s", s, a))
+	Log.Debug("checking If [%s] is in: %s", s, a)
 	for _, str := range a {
 		if str == s {
 			return true
@@ -118,4 +120,16 @@ func HandleError(err error) {
 		Log.Error(err.Error())
 		os.Exit(1)
 	}
+}
+
+// IsJSON - returns true if s is a string in valid json format
+func IsJSON(s string) bool {
+	var js map[string]interface{}
+	return json.Unmarshal([]byte(s), &js) == nil
+}
+
+// IsHCL - returns true if s is a string in valid hcl format
+func IsHCL(s string) bool {
+	var h map[string]interface{}
+	return hcl.Unmarshal([]byte(s), &h) == nil
 }

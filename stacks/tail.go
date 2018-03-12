@@ -1,7 +1,6 @@
 package stacks
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -28,14 +27,14 @@ func (s *Stack) tail(c string, done <-chan bool) {
 			return
 		default:
 			// If channel is not populated, run verbose cf print
-			Log.Debug(fmt.Sprintf("Calling [DescribeStackEvents] with parameters: %s", params))
+			Log.Debug("calling [DescribeStackEvents] with parameters: %s", params)
 			stackevents, err := svc.DescribeStackEvents(params)
 			if err != nil {
-				Log.Debug(fmt.Sprintln("Error when tailing events: ", err.Error()))
+				Log.Debug("error when tailing events: %v", err)
 				continue
 			}
 
-			Log.Debug(fmt.Sprintln("Response:", stackevents))
+			Log.Debug("response: %s", stackevents)
 
 			event := stackevents.StackEvents[0]
 

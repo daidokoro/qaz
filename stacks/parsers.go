@@ -2,7 +2,6 @@ package stacks
 
 import (
 	"bytes"
-	"fmt"
 	"text/template"
 )
 
@@ -13,6 +12,7 @@ func (s *Stack) DeployTimeParser() error {
 	left, right := s.delims("deploy")
 
 	// Create template
+	// t, err := template.New("deploy-template").Delims(left, right).Funcs(*s.DeployTimeFunc).Funcs(sprig.FuncMap()).Parse(s.Template)
 	t, err := template.New("deploy-template").Delims(left, right).Funcs(*s.DeployTimeFunc).Parse(s.Template)
 	if err != nil {
 		return err
@@ -28,7 +28,7 @@ func (s *Stack) DeployTimeParser() error {
 
 	t.Execute(&doc, s.TemplateValues)
 	s.Template = doc.String()
-	Log.Debug(fmt.Sprintf("Deploy Time Template Generate:\n%s", s.Template))
+	Log.Debug("Deploy Time Template Generate:\n%s", s.Template)
 
 	return nil
 }
@@ -36,7 +36,7 @@ func (s *Stack) DeployTimeParser() error {
 // GenTimeParser - Parses templates before deploying them...
 func (s *Stack) GenTimeParser() error {
 
-	if err := s.FetchContent(); err != nil {
+	if err := FetchSource(s.Source, s); err != nil {
 		return err
 	}
 
@@ -45,6 +45,8 @@ func (s *Stack) GenTimeParser() error {
 
 	// create template
 	t, err := template.New("gen-template").Delims(left, right).Funcs(*s.GenTimeFunc).Parse(s.Template)
+	// t, err := template.New("gen-template").Delims(left, right).Funcs(*s.GenTimeFunc).Funcs(sprig.FuncMap()).Parse(s.Template)
+
 	if err != nil {
 		return err
 	}

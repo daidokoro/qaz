@@ -23,7 +23,7 @@ func (l *Logger) ColorMap(s string) string {
 		"DELETE_COMPLETE",
 		"UPDATE_COMPLETE",
 		"UPDATE_ROLLBACK_COMPLETE":
-		result = color.New(color.FgGreen).Add(color.Bold).SprintFunc()(s)
+		result = color.New(color.FgGreen).SprintFunc()(s)
 	case
 		"CREATE_IN_PROGRESS",
 		"DELETE_IN_PROGRESS",
@@ -31,10 +31,10 @@ func (l *Logger) ColorMap(s string) string {
 		"UPDATE_ROLLBACK_IN_PROGRESS",
 		"UPDATE_COMPLETE_CLEANUP_IN_PROGRESS",
 		"UPDATE_IN_PROGRESS":
-		result = color.New(color.FgYellow).Add(color.Bold).SprintFunc()(s)
+		result = color.New(color.FgYellow).SprintFunc()(s)
 	default:
 		// NOTE: all other status are red
-		result = color.New(color.FgRed).Add(color.Bold).SprintFunc()(s)
+		result = color.New(color.FgRed).SprintFunc()(s)
 	}
 	return strings.ToLower(result)
 }

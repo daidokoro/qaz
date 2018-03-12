@@ -1,8 +1,6 @@
 package commands
 
 import (
-	"sync"
-
 	stks "github.com/daidokoro/qaz/stacks"
 
 	"github.com/daidokoro/qaz/logger"
@@ -10,11 +8,10 @@ import (
 )
 
 var (
-	config  Config
-	stacks  map[string]*stks.Stack
+	config  stks.Config
+	stacks  stks.Map
 	region  string
 	project string
-	wg      sync.WaitGroup
 	gitrepo repo.Repo
 	log     = logger.Logger{
 		DebugMode: &run.debug,
