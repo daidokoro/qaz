@@ -40,15 +40,17 @@ Qaz emphasizes minimal abstraction from the underlying AWS Cloudformation Platfo
 
 - Simultaneous Cross-Account or Cross-Region Stack Deployments.
 
-- Support for fetching templates and configuration via Lambda Execution allows for dynamically generating Cloudformation using any of the Languages supported in AWS Lambda, (_nodejs, python, java_)
+- Support for fetching templates and configuration via Lambda Execution allows for dynamically generating Cloudformation using any of the Languages supported in AWS Lambda, (_Go_, _nodejs, python, java_, _etc_)
 
-- __Troposphere__ support via Lambda.
+- __Troposphere__ & [GoFormation](https://github.com/awslabs/goformation) support via Lambda.
 
-- Deploy Cloudformation directly from your Git Repo (__New!__)
+- Deploy Cloudformation directly from your Git Repo
 
 - Support for [AWS Serverless Architecture Model (SAM) Templates](https://github.com/awslabs/serverless-application-model)
 
 - Interactive Shell Mode
+
+- Dynamic Config File generation using Template Functions (__New!__) - Allows configuration values to be retrieved using API calls, from S3, decrypted via _KMS_ and much more.
 
 
 ## Installation
