@@ -11,29 +11,33 @@ import (
 )
 
 // Configure parses the config file abd setos stacjs abd ebv
-func Configure(confSource string, conf string) error {
+func Configure(confSource string, conf string) (err error) {
+
+	// set config session
+	config.Session, err = manager.GetSess(run.profile)
+	if err != nil {
+		return
+	}
 
 	if conf == "" {
-		cfg, err := fetchContent(confSource)
-		if err != nil {
+		// utilise FetchSource to get sources
+		if err = stks.FetchSource(confSource, &config); err != nil {
 			return err
 		}
-
-		config.String = cfg
 	} else {
 		config.String = conf
 	}
 
-	// execute Functions
-	if err := config.CallFunctions(GenTimeFunctions); err != nil {
+	// execute config Functions
+	if err = config.CallFunctions(GenTimeFunctions); err != nil {
 		return fmt.Errorf("failed to run template functions in config: %s", err)
 	}
 
 	log.Debug("checking Config for HCL format...")
-	if err := hcl.Unmarshal([]byte(config.String), &config); err != nil {
+	if err = hcl.Unmarshal([]byte(config.String), &config); err != nil {
 		// fmt.Println(err)
 		log.Debug("failed to parse hcl... moving to JSON/YAML... error: %v", err)
-		if err := yaml.Unmarshal([]byte(config.String), &config); err != nil {
+		if err = yaml.Unmarshal([]byte(config.String), &config); err != nil {
 			return err
 		}
 	}
@@ -64,17 +68,17 @@ func Configure(confSource string, conf string) error {
 		stacks.MustGet(s).SetStackName()
 
 		// set session
-		sess, err := manager.GetSess(stacks.MustGet(s).Profile)
+		stacks.MustGet(s).Session, err = manager.GetSess(stacks.MustGet(s).Profile)
 		if err != nil {
-			return err
+			return
 		}
 
-		stacks.MustGet(s).Session = sess
+		// stacks.MustGet(s).Session = sess
 
 		// set parameters and tags, if any
 		config.Parameters(stacks.MustGet(s)).Tags(stacks.MustGet(s))
 
 	}
 
-	return nil
+	return
 }

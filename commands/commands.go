@@ -20,6 +20,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var t sync.Map
+
 // initialise - adds, logging and repo vars to dependecny functions
 var initialise = func(cmd *cobra.Command, args []string) {
 	log.Debug("initialising command [%s]", cmd.Name())

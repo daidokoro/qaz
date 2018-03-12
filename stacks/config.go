@@ -5,11 +5,13 @@ import (
 	"text/template"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 )
 
 // Config type for handling yaml config files
 type Config struct {
+	Session           *session.Session       `yaml:"-" json:"" hcl:""`
 	String            string                 `yaml:"-" json:"-" hcl:"-"`
 	Region            string                 `yaml:"region,omitempty" json:"region,omitempty" hcl:"region,omitempty"`
 	Project           string                 `yaml:"project" json:"project" hcl:"project"`

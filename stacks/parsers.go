@@ -36,7 +36,7 @@ func (s *Stack) DeployTimeParser() error {
 // GenTimeParser - Parses templates before deploying them...
 func (s *Stack) GenTimeParser() error {
 
-	if err := s.FetchContent(); err != nil {
+	if err := FetchSource(s.Source, s); err != nil {
 		return err
 	}
 
