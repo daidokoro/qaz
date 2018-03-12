@@ -17,7 +17,7 @@ func (s *Stack) Deploy() error {
 
 	// if serverless deploy
 	if strings.Contains(s.Template, "AWS::Serverless") {
-		return s.DeployServerless()
+		return s.DeploySAM()
 	}
 
 	err := s.DeployTimeParser()

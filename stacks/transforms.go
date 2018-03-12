@@ -9,8 +9,8 @@ import (
 
 // support for SAM - Serverless Arch Model Cloudformation templates
 
-// DeployServerless deploys SAMs Cloudformation templates
-func (s *Stack) DeployServerless() error {
+// DeploySAM deploys SAMs Cloudformation templates
+func (s *Stack) DeploySAM() error {
 	changename := fmt.Sprintf("%s-change-set", s.Stackname)
 	Log.Info(
 		"%s [SAM] deploy detected via [%s]: deploying serverless template via change-set",
