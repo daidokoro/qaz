@@ -21,8 +21,7 @@ var (
 
 // config environment variable
 const (
-	configENV     = "QAZ_CONFIG"
-	defaultconfig = "config.yml"
+	configENV = "QAZ_CONFIG"
 
 	// OutputRegex for printing yaml/json output
 	OutputRegex = `(?m)^[ ]*([^\r\n:]+?)\s*:`
