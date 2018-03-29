@@ -35,7 +35,7 @@ The `vpc.yml` stack template file only has a single line which calls the `kms_de
 
 --
 
-Running `qaz generate -t template/vpc.yml` will return.
+Running `qaz generate vpc` will return.
 
 ```yaml
 Resources:
@@ -53,20 +53,25 @@ Outputs:
 
 ```
 
-Note that this will only work for me, the Cipher Text Blob being used is linked to my AWS Account. You can encrypt your own values via KMS and switch the `.vpc.cipher` key in config to run tests.
+__NOTE:__ This will only work for me, the Cipher Text Blob being used is linked to my AWS Account. You can encrypt your own values via KMS and switch the `.vpc.cipher` key in config to run tests. 
+
+If you do not adjust `.vpc.cipher` you'll see:
+```
+ERROR AccessDeniedException: The ciphertext refers to a customer master key that does not exist, does not exist in this region, or you are not allowed to access.
+status code: 400, request id: 03654822-09d6-11e7-8beb-91d09effe97e request=generate
+```
+
 
 
 In the above a Deploy-Time `<< .vpc.cidr >>` resolver is used to populate the values from config to the template after the Gen-Time function decrypts it. With this, what we have is a fully encrypted template being decrypted and dynamically populated upon deployment to AWS.
 
 
-This can be stored here in Github without worry as any attempts to deploy this outside of the AWS Acount the Cipher belongs to result in the followinh:
+This can be stored here in Github without worry as any attempts to deploy this outside of the AWS Acount the Cipher belongs to result in the following:
 
 ```
-[Mar 15 23:20:44] ERROR AccessDeniedException: The ciphertext refers to a customer master key that does not exist, does not exist in this region, or you are not allowed to access.
-	status code: 400, request id: 03654822-09d6-11e7-8beb-91d09effe97e request=generate
-
+ERROR AccessDeniedException: The ciphertext refers to a customer master key that does not exist, does not exist in this region, or you are not allowed to access.
+status code: 400, request id: 03654822-09d6-11e7-8beb-91d09effe97e request=generate
 ```
-
 
 --
 

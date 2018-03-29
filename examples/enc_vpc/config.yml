@@ -5,6 +5,7 @@ project: encrypted
 
 stacks:
   vpc:
+    source: templates/vpc.yml
     cf:
       cidr: 10.10.10.0/24
       cipher: |
