@@ -45,6 +45,7 @@ type Stack struct {
 	Tags           []*cloudformation.Tag
 	Session        *session.Session
 	Profile        string
+	Region         string
 	Source         string
 	Bucket         string
 	Role           string
