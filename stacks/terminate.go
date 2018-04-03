@@ -9,7 +9,7 @@ import (
 )
 
 func (s *Stack) terminate() error {
-
+	Log.Debug("terminate called for: [%s]", s.Name)
 	if !s.StackExists() {
 		Log.Info("%s: does not exist...", s.Name)
 		return nil
