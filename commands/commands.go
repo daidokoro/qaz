@@ -73,7 +73,7 @@ var (
 			// Get Project & AWS Region
 			arrow := log.ColorString("->", "magenta")
 			project = utils.GetInput(fmt.Sprintf("%s Enter your Project name", arrow), "qaz-project")
-			region = utils.GetInput(fmt.Sprintf("%s Enter AWS Region", arrow), "eu-west-1")
+			region := utils.GetInput(fmt.Sprintf("%s Enter AWS Region", arrow), "eu-west-1")
 
 			// set target paths
 			c := filepath.Join(target, "config.yml")

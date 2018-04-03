@@ -29,17 +29,14 @@ func init() {
 	// Define Output Flags
 	outputsCmd.Flags().StringVarP(&run.profile, "profile", "p", "default", "configured aws profile")
 
-	// Define Exports Flags
-	exportsCmd.Flags().StringVarP(&region, "region", "r", "eu-west-1", "AWS Region")
-
 	// Define Root Flags
 	RootCmd.Flags().BoolVarP(&run.version, "version", "", false, "print current/running version")
 	RootCmd.PersistentFlags().BoolVarP(&run.colors, "no-colors", "", false, "disable colors in outputs")
 	RootCmd.PersistentFlags().StringVarP(&run.profile, "profile", "p", "default", "configured aws profile")
+	RootCmd.PersistentFlags().StringVarP(&run.region, "region", "r", "", "configured aws region: if blank, the region is acquired via the profile")
 	RootCmd.PersistentFlags().BoolVarP(&run.debug, "debug", "", false, "Run in debug mode...")
 
 	// Define Lambda Invoke Flags
-	invokeCmd.Flags().StringVarP(&region, "region", "r", "eu-west-1", "AWS Region")
 	invokeCmd.Flags().StringVarP(&run.funcEvent, "event", "e", "", "JSON Event data for AWS Lambda invoke")
 	invokeCmd.Flags().BoolVarP(&run.lambdAsync, "async", "x", false, "invoke lambda function asynchronously ")
 

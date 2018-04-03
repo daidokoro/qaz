@@ -10,7 +10,6 @@ import (
 var (
 	config  stks.Config
 	stacks  stks.Map
-	region  string
 	project string
 	gitrepo repo.Repo
 	log     = logger.Logger{
@@ -32,6 +31,7 @@ var run = struct {
 	cfgSource  string
 	tplSource  string
 	profile    string
+	region     string
 	tplSources []string
 	stacks     map[string]string
 	all        bool

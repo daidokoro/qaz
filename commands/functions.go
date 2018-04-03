@@ -14,6 +14,7 @@ import (
 	"encoding/json"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kms"
 )
 
@@ -21,7 +22,7 @@ import (
 var (
 	kmsEncrypt = func(kid string, text string) string {
 		log.Debug("running template function: [kms_encrypt]")
-		sess, err := manager.GetSess(run.profile)
+		sess, err := GetSession()
 		utils.HandleError(err)
 
 		svc := kms.New(sess)
@@ -39,7 +40,7 @@ var (
 
 	kmsDecrypt = func(cipher string) string {
 		log.Debug("running template function: [kms_decrypt]")
-		sess, err := manager.GetSess(run.profile)
+		sess, err := GetSession()
 		utils.HandleError(err)
 
 		svc := kms.New(sess)
@@ -68,14 +69,15 @@ var (
 	s3Read = func(url string, profile ...string) string {
 		log.Debug("Calling Template Function [S3Read] with arguments: %s", url)
 
-		var p = run.profile
-		if len(profile) < 1 {
-			log.Warn("No Profile specified for S3read, using: %s", p)
-		} else {
-			p = profile[0]
-		}
+		sess, err := GetSession(func(opts *session.Options) {
+			if len(profile) < 1 {
+				log.Warn("No Profile specified for S3read, using: %s", run.profile)
+				return
+			}
+			opts.Profile = profile[0]
+			return
+		})
 
-		sess, err := manager.GetSess(p)
 		utils.HandleError(err)
 
 		resp, err := bucket.S3Read(url, sess)
@@ -93,7 +95,7 @@ var (
 			f.payload = []byte(payload)
 		}
 
-		sess, err := manager.GetSess(run.profile)
+		sess, err := GetSession()
 		utils.HandleError(err)
 
 		err = f.Invoke(sess)
@@ -190,7 +192,11 @@ var (
 			log.Debug("Deploy-Time function resolving: %s", target)
 			req := strings.Split(target, "::")
 
-			s := stacks.MustGet(req[0])
+			s, ok := stacks.Get(req[0])
+			if !ok {
+				utils.HandleError(fmt.Errorf("stack_output errror: stack [%s] not found", req[0]))
+			}
+
 			utils.HandleError(s.Outputs())
 
 			for _, i := range s.Output.Stacks {
@@ -208,7 +214,7 @@ var (
 			log.Debug("Deploy-Time function resolving: %s", target)
 			req := strings.Split(target, "::")
 
-			sess, err := manager.GetSess(run.profile)
+			sess, err := GetSession()
 			utils.HandleError(err)
 
 			s := stks.Stack{

@@ -5,6 +5,8 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	stks "github.com/daidokoro/qaz/stacks"
 
 	"github.com/daidokoro/hcl"
@@ -14,7 +16,7 @@ import (
 func Configure(confSource string, conf string) (err error) {
 
 	// set config session
-	config.Session, err = manager.GetSess(run.profile)
+	config.Session, err = GetSession()
 	if err != nil {
 		return
 	}
@@ -51,6 +53,7 @@ func Configure(confSource string, conf string) (err error) {
 		stacks.Add(s, &stks.Stack{
 			Name:           s,
 			Profile:        v.Profile,
+			Region:         v.Region,
 			DependsOn:      v.DependsOn,
 			Policy:         v.Policy,
 			Source:         v.Source,
@@ -68,7 +71,24 @@ func Configure(confSource string, conf string) (err error) {
 		stacks.MustGet(s).SetStackName()
 
 		// set session
-		stacks.MustGet(s).Session, err = manager.GetSess(stacks.MustGet(s).Profile)
+		stacks.MustGet(s).Session, err = GetSession(func(opts *session.Options) {
+			if stacks.MustGet(s).Profile != "" {
+				opts.Profile = stacks.MustGet(s).Profile
+			}
+
+			// use config region
+			if config.Region != "" {
+				opts.Config.Region = aws.String(config.Region)
+			}
+
+			// stack region trumps all other regions if-set
+			if stacks.MustGet(s).Region != "" {
+				opts.Config.Region = aws.String(stacks.MustGet(s).Region)
+			}
+
+			return
+		})
+
 		if err != nil {
 			return
 		}
