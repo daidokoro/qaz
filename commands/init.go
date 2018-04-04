@@ -43,6 +43,10 @@ func init() {
 	// Define Changes Command
 	changeCmd.AddCommand(create, rm, list, execute, desc)
 
+	// Define Protect Command
+	protectCmd.Flags().BoolVarP(&run.protectOff, "off", "", false, "set termination protection to off")
+	protectCmd.Flags().BoolVarP(&run.all, "all", "A", false, "protect all stacks")
+
 	// Add Config --config common flag
 	for _, cmd := range []interface{}{
 		checkCmd,
@@ -56,6 +60,7 @@ func init() {
 		policyCmd,
 		valuesCmd,
 		shellCmd,
+		protectCmd,
 	} {
 		cmd.(*cobra.Command).Flags().StringVarP(&run.cfgSource, "config", "c", defaultConfig(), "path to config file")
 	}
@@ -100,6 +105,7 @@ func init() {
 		gitDeployCmd,
 		valuesCmd,
 		shellCmd,
+		protectCmd,
 	)
 
 }

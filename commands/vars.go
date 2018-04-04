@@ -48,4 +48,5 @@ var run = struct {
 	gituser    string
 	gitpass    string
 	gitrsa     string
+	protectOff bool
 }{}
