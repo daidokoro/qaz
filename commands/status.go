@@ -41,7 +41,7 @@ var (
 		},
 	}
 
-	// git-deploy command
+	// git-status command
 	gitStatusCmd = &cobra.Command{
 		Use:     "git-status [git-repo]",
 		Short:   "Check status of deployment via files stored in Git repository",
