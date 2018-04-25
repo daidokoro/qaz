@@ -5,6 +5,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/daidokoro/qaz/repo"
 	"github.com/daidokoro/qaz/utils"
 
 	stks "github.com/daidokoro/qaz/stacks"
@@ -37,6 +38,59 @@ var (
 			})
 
 			wg.Wait()
+		},
+	}
+
+	// git-deploy command
+	gitStatusCmd = &cobra.Command{
+		Use:     "git-status [git-repo]",
+		Short:   "Check status of deployment via files stored in Git repository",
+		Example: "qaz git-status https://github.com/cfn-deployable/simplevpc --user me",
+		PreRun:  initialise,
+		Run: func(cmd *cobra.Command, args []string) {
+
+			// check args
+			if len(args) < 1 {
+				fmt.Println("Please specify git repo...")
+				return
+			}
+
+			var wg sync.WaitGroup
+
+			repo, err := repo.NewRepo(args[0], run.gituser, run.gitrsa)
+			utils.HandleError(err)
+
+			// Passing repo to the global var
+			gitrepo = *repo
+
+			// add repo
+			stks.Git = &gitrepo
+
+			if out, ok := repo.Files[run.cfgSource]; ok {
+				repo.Config = out
+			}
+
+			log.Debug("Repo Files:")
+			for k := range repo.Files {
+				log.Debug(k)
+			}
+
+			err = Configure(run.cfgSource, repo.Config)
+			utils.HandleError(err)
+
+			stacks.Range(func(_ string, s *stks.Stack) bool {
+				wg.Add(1)
+				go func() {
+					if err := s.Status(); err != nil {
+						log.Error("failed to fetch status for [%s]: %v", s.Stackname, err)
+					}
+					wg.Done()
+				}()
+				return true
+			})
+
+			wg.Wait()
+
 		},
 	}
 

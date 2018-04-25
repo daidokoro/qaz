@@ -23,6 +23,11 @@ func init() {
 	gitDeployCmd.Flags().StringVarP(&run.gitpass, "password", "", "", "git password")
 	gitDeployCmd.Flags().StringVarP(&run.gitrsa, "ssh-rsa", "", filepath.Join(os.Getenv("HOME"), ".ssh/id_rsa"), "path to git SSH id_rsa")
 
+	// Define Git Status Command
+	gitStatusCmd.Flags().StringVarP(&run.gitrsa, "ssh-rsa", "", filepath.Join(os.Getenv("HOME"), ".ssh/id_rsa"), "path to git SSH id_rsa")
+	gitStatusCmd.Flags().StringVarP(&run.gitpass, "password", "", "", "git password")
+	gitStatusCmd.Flags().StringVarP(&run.gituser, "user", "u", "", "git username")
+
 	// Define Terminate Flags
 	terminateCmd.Flags().BoolVarP(&run.all, "all", "A", false, "terminate all stacks")
 
@@ -57,6 +62,7 @@ func init() {
 		generateCmd,
 		deployCmd,
 		gitDeployCmd,
+		gitStatusCmd,
 		policyCmd,
 		valuesCmd,
 		shellCmd,
@@ -103,6 +109,7 @@ func init() {
 		changeCmd,
 		policyCmd,
 		gitDeployCmd,
+		gitStatusCmd,
 		valuesCmd,
 		shellCmd,
 		protectCmd,
