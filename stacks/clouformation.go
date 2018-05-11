@@ -211,7 +211,9 @@ func TerminateHandler(m *Map) {
 					return true
 				})
 
-				s.terminate()
+				if err := s.terminate(); err != nil {
+					Log.Error("error deleting stack: [%s] - %v", s.Name, err)
+				}
 				return
 			}
 

@@ -23,6 +23,7 @@ type Config struct {
 		Parameters []map[string]string    `yaml:"parameters,omitempty" json:"parameters,omitempty" hcl:"parameters,omitempty"`
 		Policy     string                 `yaml:"policy,omitempty" json:"policy,omitempty" hcl:"policy,omitempty"`
 		Profile    string                 `yaml:"profile,omitempty" json:"profile,omitempty" hcl:"profile,omitempty"`
+		Region     string                 `yaml:"region,omitempty" json:"region,omitempty" hcl:"region,omitempty"`
 		Source     string                 `yaml:"source,omitempty" json:"source,omitempty" hcl:"source,omitempty"`
 		Bucket     string                 `yaml:"bucket,omitempty" json:"bucket,omitempty" hcl:"bucket,omitempty"`
 		Role       string                 `yaml:"role,omitempty" json:"role,omitempty" hcl:"role,omitempty"`

@@ -1,4 +1,4 @@
 package commands
 
 // Version
-const version = "v0.80-beta"
+const version = "v0.81-beta"

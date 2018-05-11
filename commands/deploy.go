@@ -184,7 +184,7 @@ var (
 		PreRun: initialise,
 		Run: func(cmd *cobra.Command, args []string) {
 
-			if len(args) < 1 {
+			if len(args) < 1 && !run.all {
 				log.Warn("No stack specified for termination")
 				return
 			}
@@ -192,13 +192,20 @@ var (
 			err := Configure(run.cfgSource, "")
 			utils.HandleError(err)
 
-			if !run.all {
-				for _, s := range args {
-					if _, ok := stacks.Get(s); !ok {
-						utils.HandleError(fmt.Errorf("stacks [%s] not found in config", s))
-					}
-					stacks.MustGet(s).Actioned = true
+			// select actioned stacks
+			for _, s := range args {
+				if _, ok := stacks.Get(s); !ok {
+					utils.HandleError(fmt.Errorf("stacks [%s] not found in config", s))
 				}
+				stacks.MustGet(s).Actioned = true
+			}
+
+			// action stacks if all
+			if run.all {
+				stacks.Range(func(_ string, s *stks.Stack) bool {
+					s.Actioned = true
+					return true
+				})
 			}
 
 			// Terminate Stacks

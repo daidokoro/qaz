@@ -70,7 +70,7 @@ var invokeCmd = &cobra.Command{
 			return
 		}
 
-		sess, err := manager.GetSess(run.profile)
+		sess, err := GetSession()
 		utils.HandleError(err)
 
 		f := awsLambda{name: args[0]}

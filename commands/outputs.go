@@ -74,7 +74,7 @@ var (
 		Example: "qaz exports",
 		PreRun:  initialise,
 		Run: func(cmd *cobra.Command, args []string) {
-			sess, err := manager.GetSess(run.profile)
+			sess, err := GetSession()
 			utils.HandleError(err)
 			utils.HandleError(stks.Exports(sess))
 		},

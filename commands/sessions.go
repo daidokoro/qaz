@@ -6,47 +6,33 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 )
 
-// SessionManager - handles AWS Sessions
-type sessionManager struct {
-	region   string
-	sessions map[string]*session.Session
-}
-
-// GetSess - Returns aws session based on given profile
-func (s *sessionManager) GetSess(p string) (*session.Session, error) {
+// GetSession - Returns aws session based on default run.profile and run.Region
+// options can be overwritten by passing a function: func(*session.Options)
+func GetSession(options ...func(*session.Options)) (*session.Session, error) {
 
 	var sess *session.Session
 
-	// Set P to default or command input if stack input is empty
-	if p == "" {
-		p = run.profile
-	}
-
-	if v, ok := s.sessions[p]; ok {
-		log.Debug("Session Detected: [%s]", p)
-		return v, nil
-	}
-
-	options := session.Options{
-		Profile:                 p,
+	// set default config values
+	opts := &session.Options{
+		Profile:                 run.profile,
 		SharedConfigState:       session.SharedConfigEnable,
 		AssumeRoleTokenProvider: stscreds.StdinTokenProvider,
 	}
 
-	if s.region != "" {
-		options.Config = aws.Config{Region: &s.region}
+	if run.region != "" {
+		opts.Config = aws.Config{Region: &run.region}
 	}
 
-	log.Debug("Creating AWS Session with options: Regioin: %s, Profile: %s ", region, run.profile)
-	sess, err := session.NewSessionWithOptions(options)
+	// apply external Options
+	for _, f := range options {
+		f(opts)
+	}
+
+	log.Debug("Creating AWS Session with options: %s", opts)
+	sess, err := session.NewSessionWithOptions(*opts)
 	if err != nil {
 		return sess, err
 	}
 
-	s.sessions[p] = sess
 	return sess, nil
-}
-
-var manager = sessionManager{
-	sessions: make(map[string]*session.Session),
 }

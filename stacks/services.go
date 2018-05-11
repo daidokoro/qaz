@@ -77,7 +77,7 @@ func tailWait(done <-chan bool, tailinput *TailServiceInput) {
 	for ch := time.Tick(time.Millisecond * 1300); ; <-ch {
 		select {
 		case <-done:
-			close(tail)
+			// close(tail)
 			return
 		default:
 			tail <- tailinput

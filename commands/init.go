@@ -23,28 +23,34 @@ func init() {
 	gitDeployCmd.Flags().StringVarP(&run.gitpass, "password", "", "", "git password")
 	gitDeployCmd.Flags().StringVarP(&run.gitrsa, "ssh-rsa", "", filepath.Join(os.Getenv("HOME"), ".ssh/id_rsa"), "path to git SSH id_rsa")
 
+	// Define Git Status Command
+	gitStatusCmd.Flags().StringVarP(&run.gitrsa, "ssh-rsa", "", filepath.Join(os.Getenv("HOME"), ".ssh/id_rsa"), "path to git SSH id_rsa")
+	gitStatusCmd.Flags().StringVarP(&run.gitpass, "password", "", "", "git password")
+	gitStatusCmd.Flags().StringVarP(&run.gituser, "user", "u", "", "git username")
+
 	// Define Terminate Flags
 	terminateCmd.Flags().BoolVarP(&run.all, "all", "A", false, "terminate all stacks")
 
 	// Define Output Flags
 	outputsCmd.Flags().StringVarP(&run.profile, "profile", "p", "default", "configured aws profile")
 
-	// Define Exports Flags
-	exportsCmd.Flags().StringVarP(&region, "region", "r", "eu-west-1", "AWS Region")
-
 	// Define Root Flags
 	RootCmd.Flags().BoolVarP(&run.version, "version", "", false, "print current/running version")
 	RootCmd.PersistentFlags().BoolVarP(&run.colors, "no-colors", "", false, "disable colors in outputs")
 	RootCmd.PersistentFlags().StringVarP(&run.profile, "profile", "p", "default", "configured aws profile")
+	RootCmd.PersistentFlags().StringVarP(&run.region, "region", "r", "", "configured aws region: if blank, the region is acquired via the profile")
 	RootCmd.PersistentFlags().BoolVarP(&run.debug, "debug", "", false, "Run in debug mode...")
 
 	// Define Lambda Invoke Flags
-	invokeCmd.Flags().StringVarP(&region, "region", "r", "eu-west-1", "AWS Region")
 	invokeCmd.Flags().StringVarP(&run.funcEvent, "event", "e", "", "JSON Event data for AWS Lambda invoke")
 	invokeCmd.Flags().BoolVarP(&run.lambdAsync, "async", "x", false, "invoke lambda function asynchronously ")
 
 	// Define Changes Command
 	changeCmd.AddCommand(create, rm, list, execute, desc)
+
+	// Define Protect Command
+	protectCmd.Flags().BoolVarP(&run.protectOff, "off", "", false, "set termination protection to off")
+	protectCmd.Flags().BoolVarP(&run.all, "all", "A", false, "protect all stacks")
 
 	// Add Config --config common flag
 	for _, cmd := range []interface{}{
@@ -56,9 +62,11 @@ func init() {
 		generateCmd,
 		deployCmd,
 		gitDeployCmd,
+		gitStatusCmd,
 		policyCmd,
 		valuesCmd,
 		shellCmd,
+		protectCmd,
 	} {
 		cmd.(*cobra.Command).Flags().StringVarP(&run.cfgSource, "config", "c", defaultConfig(), "path to config file")
 	}
@@ -101,8 +109,10 @@ func init() {
 		changeCmd,
 		policyCmd,
 		gitDeployCmd,
+		gitStatusCmd,
 		valuesCmd,
 		shellCmd,
+		protectCmd,
 	)
 
 }
