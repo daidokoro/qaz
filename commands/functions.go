@@ -183,6 +183,12 @@ var (
 
 		// kms-decrypt - Descrypts CipherText
 		"kms_decrypt": kmsDecrypt,
+
+		// mod - returns remainder after division (modulus)
+		"mod": func(a int, b int) int {
+			log.Debug("Calling Template Function [mod] with arguments: %s % %s", a, b)
+			return a % b
+		},
 	}
 
 	// deploytime function maps
