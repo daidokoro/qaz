@@ -189,6 +189,17 @@ var (
 			log.Debug("Calling Template Function [mod] with arguments: %s % %s", a, b)
 			return a % b
 		},
+
+		// seq - returns a sequence of numbers
+		"seq": func(from, to int) []int {
+			log.Debug("Calling Template Function [seq] with arguments: %s % %s", from, to)
+			seq := make([]int, to-from+1)
+			for i := range seq {
+				seq[i] = from + i
+			}
+			return seq
+		},
+
 	}
 
 	// deploytime function maps
