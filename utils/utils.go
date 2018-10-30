@@ -20,8 +20,12 @@ import (
 	"github.com/daidokoro/qaz/logger"
 )
 
-// Log defines logger
-var Log *logger.Logger
+var log *logger.Logger
+
+// Logger - set logger for package
+func Logger(l *logger.Logger) {
+	log = l
+}
 
 // ConfigTemplate - Returns template byte string for init() function
 func ConfigTemplate(project string, region string) []byte {
@@ -53,7 +57,7 @@ func All(a []string, s string) bool {
 
 // StringIn - returns true if string in array
 func StringIn(s string, a []string) bool {
-	Log.Debug("checking If [%s] is in: %s", s, a)
+	log.Debug("checking If [%s] is in: %s", s, a)
 	for _, str := range a {
 		if str == s {
 			return true
@@ -117,7 +121,7 @@ func GetSource(src string) (string, string, error) {
 // HandleError - exits on error
 func HandleError(err error) {
 	if err != nil {
-		Log.Error(err.Error())
+		log.Error(err.Error())
 		os.Exit(1)
 	}
 }
