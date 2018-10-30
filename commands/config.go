@@ -2,6 +2,10 @@ package commands
 
 import (
 	"fmt"
+	"os"
+	"sync"
+
+	"github.com/daidokoro/qaz/troposphere"
 
 	yaml "gopkg.in/yaml.v2"
 
@@ -11,6 +15,8 @@ import (
 
 	"github.com/daidokoro/hcl"
 )
+
+var once sync.Once
 
 // Configure parses the config file abd setos stacjs abd ebv
 func Configure(confSource string, conf string) (err error) {
@@ -66,7 +72,18 @@ func Configure(confSource string, conf string) (err error) {
 			DeployTimeFunc: &DeployTimeFunctions,
 			Project:        &config.Project,
 			Timeout:        v.Timeout,
+			Troposphere:    v.Troposphere,
 		})
+
+		if v.Troposphere {
+			once.Do(func() {
+				log.Info("troposphere stack(s) detected")
+				if err := troposphere.BuildImage(); err != nil {
+					log.Error("error building troposphere container: %v", err)
+					os.Exit(1)
+				}
+			})
+		}
 
 		stacks.MustGet(s).SetStackName()
 
