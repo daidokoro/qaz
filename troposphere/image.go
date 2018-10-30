@@ -18,7 +18,8 @@ import (
 // dockerfile string used to create image
 const dockerfile = `
 FROM python:2.7
-RUN pip install troposphere`
+RUN pip install troposphere
+RUN pip install troposphere[policy]`
 
 // buildlog - used to unmarshal build
 // message from Dockerfile build job
