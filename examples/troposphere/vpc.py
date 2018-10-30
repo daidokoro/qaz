@@ -15,7 +15,8 @@ class VPC():
 
         self.vpc = t.add_resource(ec2.VPC(
             'VPC',
-            # note the qaz template bracets here
+            # note the qaz template braces here
+            # this value will be swapped out for the one in config
             CidrBlock='{{ .stack.cidr }}',
             Tags=Tags(
                 Name='qaz-tropos-test'
