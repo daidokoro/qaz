@@ -18,13 +18,13 @@ func (s *Stack) Check() error {
 		TemplateBody: aws.String(s.Template),
 	}
 
-	Log.Debug("Calling [ValidateTemplate] with parameters:\n%s"+"\n--\n", params)
+	log.Debug("Calling [ValidateTemplate] with parameters:\n%s"+"\n--\n", params)
 	resp, err := svc.ValidateTemplate(params)
 	if err != nil {
 		return err
 	}
 
-	Log.Info("valid!\n--\n")
+	log.Info("valid!\n--\n")
 
 	resp.GoString()
 
@@ -39,7 +39,7 @@ func (s *Stack) Check() error {
 	}
 
 	output := reg.ReplaceAllStringFunc(string(out), func(s string) string {
-		return Log.ColorString(s, "cyan")
+		return log.ColorString(s, "cyan")
 	})
 
 	fmt.Println(output)

@@ -18,7 +18,7 @@ import (
 
 var (
 	// Log defines Logger
-	Log *logger.Logger
+	log *logger.Logger
 
 	// define waitGroup
 	wg sync.WaitGroup
@@ -29,6 +29,11 @@ var (
 	// OutputRegex for printing yaml/json output
 	OutputRegex = `(?m)^[ ]*([^\r\n:]+?)\s*:`
 )
+
+// SetLogger - set logger for package
+func SetLogger(l *logger.Logger) {
+	log = l
+}
 
 // Stack - holds all meaningful information about a particular stack.
 type Stack struct {

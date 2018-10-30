@@ -17,7 +17,7 @@ func (s *Stack) Status() error {
 		StackName: aws.String(s.Stackname),
 	}
 
-	Log.Debug("calling [DescribeStacks] with parameters: %s", describeStacksInput)
+	log.Debug("calling [DescribeStacks] with parameters: %s", describeStacksInput)
 	status, err := svc.DescribeStacks(describeStacksInput)
 
 	if err != nil {
@@ -41,9 +41,9 @@ func (s *Stack) Status() error {
 	// Print Status
 	fmt.Printf(
 		"%s%s - %s --> %s - [%s]"+"\n",
-		Log.ColorString(`@`, "magenta"),
+		log.ColorString(`@`, "magenta"),
 		timeflag.Format(time.RFC850),
-		strings.ToLower(Log.ColorMap(*status.Stacks[0].StackStatus)),
+		strings.ToLower(log.ColorMap(*status.Stacks[0].StackStatus)),
 		s.Name,
 		s.Stackname,
 	)

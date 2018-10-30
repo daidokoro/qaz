@@ -15,7 +15,7 @@ func (s *Stack) Outputs() error {
 		StackName: aws.String(s.Stackname),
 	}
 
-	Log.Debug("Calling [DescribeStacks] with parameters:", outputParams)
+	log.Debug("Calling [DescribeStacks] with parameters: %v", outputParams)
 	outputs, err := svc.DescribeStacks(outputParams)
 	if err != nil {
 		return fmt.Errorf("Unable to reach stack: %v", err)

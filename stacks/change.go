@@ -1,6 +1,9 @@
+// Package stacks contains methods for managing the AWS Cloudformation LifeCycle
+// using Qaz
 package stacks
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -53,7 +56,7 @@ func (s *Stack) Change(req, changename string) error {
 			params.Tags = s.Tags
 		}
 
-		Log.Debug("updated template:\n%s", s.Template)
+		log.Debug("updated template:\n%s", s.Template)
 
 		// If bucket - upload to s3
 		var url string
@@ -85,7 +88,7 @@ func (s *Stack) Change(req, changename string) error {
 			}
 		}
 
-		Log.Debug("calling [CreateChangeSet] with parameters: %s", params)
+		log.Debug("calling [CreateChangeSet] with parameters: %s", params)
 		if _, err = svc.CreateChangeSet(params); err != nil {
 			return err
 		}
@@ -95,7 +98,7 @@ func (s *Stack) Change(req, changename string) error {
 			ChangeSetName: aws.String(changename),
 		}
 
-		Log.Info("creating change-set: [%s] - %s", changename, s.Stackname)
+		log.Info("creating change-set: [%s] - %s", changename, s.Stackname)
 		if err = Wait(s.ChangeSetStatus, changename); err != nil {
 			return err
 		}
@@ -104,7 +107,7 @@ func (s *Stack) Change(req, changename string) error {
 		if err != nil {
 			return err
 		}
-		Log.Info("created change-set: [%s] - %s - %s", changename, Log.ColorMap(*resp.Status), s.Stackname)
+		log.Info("created change-set: [%s] - %s - %s", changename, log.ColorMap(*resp.Status), s.Stackname)
 		return nil
 
 	case rm:
@@ -117,7 +120,7 @@ func (s *Stack) Change(req, changename string) error {
 			return err
 		}
 
-		Log.Info("change-Set: [%s] deleted", changename)
+		log.Info("change-Set: [%s] deleted", changename)
 
 	case list:
 		params := &cloudformation.ListChangeSetsInput{
@@ -130,7 +133,7 @@ func (s *Stack) Change(req, changename string) error {
 		}
 
 		for _, i := range resp.Summaries {
-			Log.Info("%s%s - Change-Set: [%s] - Status: [%s]", Log.ColorString("@", "magenta"), i.CreationTime.Format(time.RFC850), *i.ChangeSetName, *i.ExecutionStatus)
+			log.Info("%s%s - Change-Set: [%s] - Status: [%s]", log.ColorString("@", "magenta"), i.CreationTime.Format(time.RFC850), *i.ChangeSetName, *i.ExecutionStatus)
 		}
 
 	case execute, serverless:
@@ -149,16 +152,18 @@ func (s *Stack) Change(req, changename string) error {
 		}
 
 		if req != serverless {
-			go s.tail("UPDATE", done)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			go s.tail(ctx, "UPDATE")
 
-			Log.Debug("calling [WaitUntilStackUpdateComplete] with parameters:", describeStacksInput)
+			log.Debug("calling [WaitUntilStackUpdateComplete] with parameters: %s", describeStacksInput)
 			if err := svc.WaitUntilStackUpdateComplete(describeStacksInput); err != nil {
 				return err
 			}
 			done <- true
 		}
 
-		Log.Info("change-set executed successfully")
+		log.Info("change-set executed successfully")
 
 	case desc:
 		params := &cloudformation.DescribeChangeSetInput{
@@ -180,7 +185,7 @@ func (s *Stack) Change(req, changename string) error {
 		utils.HandleError(err)
 
 		out := reg.ReplaceAllStringFunc(string(o), func(s string) string {
-			return Log.ColorString(s, "cyan")
+			return log.ColorString(s, "cyan")
 		})
 
 		fmt.Printf(out)

@@ -1,6 +1,7 @@
 package stacks
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -19,7 +20,7 @@ type TailServiceInput struct {
 
 // TailService - handles all tailing events
 func TailService(tail <-chan *TailServiceInput) {
-	Log.Debug("Tail.Service started")
+	log.Debug("Tail.Service started")
 
 	for input := range tail {
 		svc := cloudformation.New(
@@ -32,27 +33,27 @@ func TailService(tail <-chan *TailServiceInput) {
 		}
 
 		// If channel is not populated, run verbose cf print
-		Log.Debug("calling [DescribeStackEvents] with parameters: %s", params)
+		log.Debug("calling [DescribeStackEvents] with parameters: %s", params)
 		stackevents, err := svc.DescribeStackEvents(params)
 		if err != nil {
-			Log.Debug("error when tailing events: %v", err)
+			log.Debug("error when tailing events: %v", err)
 			continue
 		}
 
-		Log.Debug("response: %s", stackevents)
+		log.Debug("response: %s", stackevents)
 
 		event := stackevents.StackEvents[0]
 
 		statusReason := ""
-		var lg = Log.Info
+		var lg = log.Info
 		if strings.Contains(*event.ResourceStatus, "FAILED") {
 			statusReason = *event.ResourceStatusReason
-			lg = Log.Error
+			lg = log.Error
 		}
 
 		line := strings.Join([]string{
 			*event.StackName,
-			Log.ColorMap(*event.ResourceStatus),
+			log.ColorMap(*event.ResourceStatus),
 			*event.ResourceType,
 			*event.LogicalResourceId,
 			statusReason,
@@ -68,15 +69,15 @@ func TailService(tail <-chan *TailServiceInput) {
 		}
 	}
 
-	Log.Debug("Tail.Service closed")
+	log.Debug("Tail.Service closed")
 	return
 }
 
 // populates tail channel and returns when done
-func tailWait(done <-chan bool, tailinput *TailServiceInput) {
+func tailWait(ctx context.Context, tailinput *TailServiceInput) {
 	for ch := time.Tick(time.Millisecond * 1300); ; <-ch {
 		select {
-		case <-done:
+		case <-ctx.Done():
 			// close(tail)
 			return
 		default:

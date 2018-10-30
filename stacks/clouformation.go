@@ -23,7 +23,7 @@ type status struct {
 func (s *status) update(name, ste string) {
 	s.Lock()
 	defer s.Unlock()
-	Log.Debug("Updating Stack Status Map: %s - %s", name, ste)
+	log.Debug("Updating Stack Status Map: %s - %s", name, ste)
 	s.cache[name] = ste
 	return
 }
@@ -51,7 +51,7 @@ func Exports(session *session.Session) error {
 
 	exportParams := &cloudformation.ListExportsInput{}
 
-	Log.Debug("calling [ListExports] with parameters: %s", exportParams)
+	log.Debug("calling [ListExports] with parameters: %s", exportParams)
 	exports, err := svc.ListExports(exportParams)
 
 	if err != nil {
@@ -60,7 +60,7 @@ func Exports(session *session.Session) error {
 
 	for _, i := range exports.Exports {
 
-		fmt.Printf("Export Name: %s\nExport Value: %s\n--\n", Log.ColorString(*i.Name, "magenta"), *i.Value)
+		fmt.Printf("Export Name: %s\nExport Value: %s\n--\n", log.ColorString(*i.Name, "magenta"), *i.Value)
 	}
 
 	return nil
@@ -82,13 +82,13 @@ func DeployHandler(m *Map) {
 		// Set deploy status & Check if stack exists
 		if s.StackExists() {
 			if err := s.cleanup(); err != nil {
-				Log.Error("failed to remove stack: [%s] - %v", s.Name, err)
+				log.Error("failed to remove stack: [%s] - %v", s.Name, err)
 				// updateState(status, stk.Name, state.failed)
 				state.update(s.Name, state.failed)
 			}
 
 			if s.StackExists() {
-				Log.Info("stack [%s] already exists...\n", s.Name)
+				log.Info("stack [%s] already exists...\n", s.Name)
 				return true
 			}
 
@@ -101,10 +101,10 @@ func DeployHandler(m *Map) {
 				defer wg.Done()
 
 				// Deploy 0 Depency Stacks first - each on their on go routine
-				Log.Info("deploying a template for [%s]", s.Name)
+				log.Info("deploying a template for [%s]", s.Name)
 
 				if err := s.Deploy(); err != nil {
-					Log.Error(err.Error())
+					log.Error(err.Error())
 				}
 
 				state.update(s.Name, state.complete)
@@ -117,17 +117,17 @@ func DeployHandler(m *Map) {
 
 		wg.Add(1)
 		go func() {
-			Log.Info("[%s] depends on: %s", s.Name, s.DependsOn)
+			log.Info("[%s] depends on: %s", s.Name, s.DependsOn)
 			defer wg.Done()
 
-			Log.Debug("Beginning Wait State for Depencies of [%s]"+"\n", s.Name)
+			log.Debug("Beginning Wait State for Depencies of [%s]"+"\n", s.Name)
 			for {
 				depts := []string{}
 				for _, dept := range s.DependsOn {
 					// Dependency wait
 					dp, ok := m.Get(dept)
 					if !ok {
-						Log.Error("Bad dependency: [%s]", dept)
+						log.Error("Bad dependency: [%s]", dept)
 						return
 					}
 
@@ -148,17 +148,17 @@ func DeployHandler(m *Map) {
 
 				if utils.All(depts, state.complete) {
 					// Deploy stack once dependencies clear
-					Log.Info("deploying a template for [%s]", s.Name)
+					log.Info("deploying a template for [%s]", s.Name)
 
 					if err := s.Deploy(); err != nil {
-						Log.Error(err.Error())
+						log.Error(err.Error())
 					}
 					return
 				}
 
 				for _, v := range depts {
 					if v == state.failed {
-						Log.Warn("deploy Cancelled for stack [%s] due to dependency failure!", s.Name)
+						log.Warn("deploy Cancelled for stack [%s] due to dependency failure!", s.Name)
 						return
 					}
 				}
@@ -183,7 +183,7 @@ func TerminateHandler(m *Map) {
 
 	m.Range(func(k string, s *Stack) bool {
 		if !s.Actioned {
-			Log.Debug("%s: not actioned, skipping", s.Name)
+			log.Debug("%s: not actioned, skipping", s.Name)
 			return true
 		}
 
@@ -201,8 +201,8 @@ func TerminateHandler(m *Map) {
 			for {
 				m.Range(func(k string, stk *Stack) bool {
 					if utils.StringIn(s.Name, stk.DependsOn) {
-						Log.Info("[%s]: Depends on [%s].. Waiting for dependency to terminate", stk.Name, s.Name)
-						for _ = range tick.C {
+						log.Info("[%s]: Depends on [%s].. Waiting for dependency to terminate", stk.Name, s.Name)
+						for range tick.C {
 							if !stk.StackExists() {
 								break
 							}
@@ -212,7 +212,7 @@ func TerminateHandler(m *Map) {
 				})
 
 				if err := s.terminate(); err != nil {
-					Log.Error("error deleting stack: [%s] - %v", s.Name, err)
+					log.Error("error deleting stack: [%s] - %v", s.Name, err)
 				}
 				return
 			}

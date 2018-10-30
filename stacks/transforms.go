@@ -1,6 +1,7 @@
 package stacks
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,9 +13,9 @@ import (
 // DeploySAM deploys SAMs Cloudformation templates
 func (s *Stack) DeploySAM() error {
 	changename := fmt.Sprintf("%s-change-set", s.Stackname)
-	Log.Info(
+	log.Info(
 		"%s [SAM] deploy detected via [%s]: deploying serverless template via change-set",
-		Log.ColorString("serverless", "cyan"),
+		log.ColorString("serverless", "cyan"),
 		s.Stackname,
 	)
 
@@ -26,22 +27,22 @@ func (s *Stack) DeploySAM() error {
 		return err
 	}
 
-	done := make(chan bool)
 	svc := cloudformation.New(s.Session, &aws.Config{Credentials: s.creds()})
-	go s.tail("CREATE", done)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go s.tail(ctx, "CREATE")
 	describeStacksInput := &cloudformation.DescribeStacksInput{
 		StackName: aws.String(s.Stackname),
 	}
 
-	Log.Debug("Calling [WaitUntilStackCreateComplete] with parameters: %s", describeStacksInput)
+	log.Debug("Calling [WaitUntilStackCreateComplete] with parameters: %s", describeStacksInput)
 	if err := svc.WaitUntilStackCreateComplete(describeStacksInput); err != nil {
 		return err
 	}
 
-	done <- true
-	Log.Info(
+	log.Info(
 		"%s [SAM] - deploy completed - %s",
-		Log.ColorString("serverless", "cyan"),
+		log.ColorString("serverless", "cyan"),
 		s.Stackname,
 	)
 	return nil

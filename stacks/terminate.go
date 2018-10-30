@@ -1,6 +1,7 @@
 package stacks
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -9,13 +10,12 @@ import (
 )
 
 func (s *Stack) terminate() error {
-	Log.Debug("terminate called for: [%s]", s.Name)
+	log.Debug("terminate called for: [%s]", s.Name)
 	if !s.StackExists() {
-		Log.Info("%s: does not exist...", s.Name)
+		log.Info("%s: does not exist...", s.Name)
 		return nil
 	}
 
-	done := make(chan bool)
 	svc := cloudformation.New(s.Session, &aws.Config{Credentials: s.creds()})
 
 	params := &cloudformation.DeleteStackInput{
@@ -29,11 +29,12 @@ func (s *Stack) terminate() error {
 		command: "DELETE",
 	}
 
-	go tailWait(done, &tailinput)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go tailWait(ctx, &tailinput)
 
-	Log.Debug("calling [DeleteStack] with parameters: %s", params)
+	log.Debug("calling [DeleteStack] with parameters: %s", params)
 	if _, err := svc.DeleteStack(params); err != nil {
-		done <- true
 		return errors.New(fmt.Sprintln("Deleting failed: ", err))
 	}
 
@@ -43,8 +44,7 @@ func (s *Stack) terminate() error {
 		return err
 	}
 
-	done <- true
-	Log.Info("deletion successful: [%s]", s.Stackname)
+	log.Info("deletion successful: [%s]", s.Stackname)
 
 	return nil
 }

@@ -9,7 +9,7 @@ import (
 
 // cleanup functions in create_failed or delete_failed states
 func (s *Stack) cleanup() error {
-	Log.Debug("running stack cleanup on [%s]", s.Name)
+	log.Debug("running stack cleanup on [%s]", s.Name)
 	resp, err := s.State()
 	if err != nil {
 		return err
@@ -27,11 +27,11 @@ func (s *Stack) cleanup() error {
 func resolveBucket(s *Stack) (string, error) {
 	exists, err := bucket.Exists(s.Bucket, s.Session)
 	if err != nil {
-		Log.Warn("Received Error when checking if [%s] exists: %v", s.Bucket, err)
+		log.Warn("Received Error when checking if [%s] exists: %v", s.Bucket, err)
 	}
 	fmt.Println("This is test")
 	if !exists {
-		Log.Info(("Creating Bucket [%s]"), s.Bucket)
+		log.Info(("Creating Bucket [%s]"), s.Bucket)
 		if err = bucket.Create(s.Bucket, s.Session); err != nil {
 			return "", err
 		}
@@ -53,7 +53,7 @@ func Wait(getStatus func(s ...string) (string, error), args ...string) error {
 	var stat string
 	var err error
 
-	for _ = range tick.C {
+	for range tick.C {
 		if len(args) > 0 {
 			stat, err = getStatus(args[0])
 		} else {

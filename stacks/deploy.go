@@ -1,6 +1,7 @@
 package stacks
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -25,8 +26,7 @@ func (s *Stack) Deploy() error {
 		return err
 	}
 
-	Log.Debug("Updated Template:\n%s", s.Template)
-	done := make(chan bool)
+	log.Debug("Updated Template:\n%s", s.Template)
 	svc := cloudformation.New(s.Session, &aws.Config{Credentials: s.creds()})
 
 	createParams := &cloudformation.CreateStackInput{
@@ -76,7 +76,7 @@ func (s *Stack) Deploy() error {
 		createParams.TemplateBody = &s.Template
 	}
 
-	Log.Debug("Calling [CreateStack] with parameters: %s", createParams)
+	log.Debug("Calling [CreateStack] with parameters: %s", createParams)
 	if _, err = svc.CreateStack(createParams); err != nil {
 		return errors.New(fmt.Sprintln("Deploying failed: ", err.Error()))
 
@@ -89,7 +89,9 @@ func (s *Stack) Deploy() error {
 		command: "CREATE",
 	}
 
-	go tailWait(done, &tailinput)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go tailWait(ctx, &tailinput)
 
 	err = svc.WaitUntilStackCreateComplete(&cloudformation.DescribeStacksInput{
 		StackName: aws.String(s.Stackname),
@@ -99,8 +101,7 @@ func (s *Stack) Deploy() error {
 		return err
 	}
 
-	done <- true
-	Log.Info(
+	log.Info(
 		"deployment completed: %s",
 		color.New(color.FgWhite).Add(color.Bold).SprintFunc()(fmt.Sprintf("[%s]", s.Stackname)),
 	)

@@ -28,7 +28,7 @@ func (s *Stack) DeployTimeParser() error {
 
 	t.Execute(&doc, s.TemplateValues)
 	s.Template = doc.String()
-	Log.Debug("Deploy Time Template Generate:\n%s", s.Template)
+	log.Debug("Deploy Time Template Generate:\n%s", s.Template)
 
 	return nil
 }
