@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/daidokoro/qaz/bucket"
+	"github.com/daidokoro/qaz/troposphere"
 	"github.com/daidokoro/qaz/utils"
 )
 
@@ -31,10 +32,20 @@ type SourceReceiver interface {
 
 // GetSource - takes a Source interface and retrieves source data
 func (s *Stack) GetSource(src Source) (err error) {
-	s.Template, err = src.Handle()
+	raw, err := src.Handle()
 	if err != nil {
 		return
 	}
+
+	if s.Troposphere {
+		s.Template, err = troposphere.Execute(raw)
+		if err != nil {
+			return
+		}
+		return
+	}
+
+	s.Template = raw
 	return
 }
 

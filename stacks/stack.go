@@ -30,8 +30,8 @@ var (
 	OutputRegex = `(?m)^[ ]*([^\r\n:]+?)\s*:`
 )
 
-// SetLogger - set logger for package
-func SetLogger(l *logger.Logger) {
+// Logger - set logger for package
+func Logger(l *logger.Logger) {
 	log = l
 }
 
@@ -62,6 +62,11 @@ type Stack struct {
 	TemplateValues map[string]interface{}
 	Debug          bool
 	Timeout        int64
+
+	// Troposphere indicates whether the given
+	// stack is a troposhpere template and requires
+	// docker execution.
+	Troposphere bool
 
 	// Actioned in this context means the stack name
 	// has been passed explicitly as an arguement and
