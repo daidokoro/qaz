@@ -52,7 +52,7 @@ Qaz emphasizes minimal abstraction from the underlying AWS Cloudformation Platfo
 
 - Dynamic Config File generation using Template Functions - Allows configuration values to be retrieved using API calls, from S3, decrypted via _KMS_ and much more.
 
-- (__New!__) _More_ __Troposphere__ Support! Utilising Docker as an execution engine, Qaz is now able to support Troposphere templates. See [Examples](https://github.com/daidokoro/qaz/tree/v0.82/examples/troposphere)
+- (__New!__) _More_ __Troposphere__ Support! Utilising _Docker_ as an execution engine, Qaz is now able to support Troposphere templates locally. See [Examples](https://github.com/daidokoro/qaz/tree/v0.82/examples/troposphere)
 
 
 ## Installation
