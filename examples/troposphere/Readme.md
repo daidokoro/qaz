@@ -6,7 +6,7 @@ _required:_
 - Docker being installed and running
 - The necessary permissions to run/access Docker
 
-_Note:_ This implementation is expiramental, please create an Issue if any bugs are found. Thanks
+_Note:_ This implementation is expiramental, please create an Issue if any bugs are found. Thanks ^_^
 
 
 __Run:__
