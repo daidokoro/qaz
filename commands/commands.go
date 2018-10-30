@@ -11,6 +11,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	stks "github.com/daidokoro/qaz/stacks"
+	"github.com/daidokoro/qaz/troposphere"
 
 	"github.com/daidokoro/qaz/bucket"
 	"github.com/daidokoro/qaz/repo"
@@ -26,10 +27,11 @@ var t sync.Map
 var initialise = func(cmd *cobra.Command, args []string) {
 	log.Debug("initialising command [%s]", cmd.Name())
 	// add logging
-	stks.Log = &log
-	bucket.Log = &log
-	repo.Log = &log
-	utils.Log = &log
+	stks.Logger(&log)
+	bucket.Logger(&log)
+	repo.Logger(&log)
+	utils.Logger(&log)
+	troposphere.Logger(&log)
 
 	// add repo
 	stks.Git = &gitrepo
