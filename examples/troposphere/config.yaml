@@ -1,0 +1,10 @@
+project: qaz-troposphere-example
+
+stacks:
+  vpc:
+    # troposphere flag must be set to true for
+    # templates to be evaluated via Docker
+    troposphere: true
+    source: vpc.py
+    cf:
+      cidr: 10.10.0.0/24
