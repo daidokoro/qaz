@@ -1,7 +1,7 @@
 from troposphere import ec2, Output
 from troposphere import Template, Ref, Tags
 
-class VPC():
+class VPC(object):
     def __init__(self):
         self.template = Template()
 
