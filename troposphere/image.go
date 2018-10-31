@@ -17,9 +17,11 @@ import (
 
 // dockerfile string used to create image
 const dockerfile = `
-FROM python:2.7
+FROM python:2.7-alpine
 RUN pip install troposphere
 RUN pip install troposphere[policy]`
+
+const containerTag = `troposphere:qaz`
 
 // buildlog - used to unmarshal build
 // message from Dockerfile build job
@@ -38,11 +40,10 @@ func (b *buildlog) Line(l []byte) string {
 
 // BuildImage - build troposphere docker image
 // for executing troposphere code
-func BuildImage() (err error) {
-
+func BuildImage() error {
 	cli, err := client.NewClientWithOpts(client.WithVersion("1.38"))
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("error creating docker client: %v", err)
 	}
 
 	ctx := context.Background()
@@ -67,29 +68,25 @@ func BuildImage() (err error) {
 	dftr := bytes.NewReader(buf.Bytes())
 
 	log.Debug("troposphere stack detected, creating docker image")
-
 	resp, err := cli.ImageBuild(ctx, dftr, types.ImageBuildOptions{
 		Context: dftr,
 		// Dockerfile: "/Users/daidokoro/Go/src/github.com/daidokoro/qaz/docker/Dockerfile",
-		Tags: []string{"troposphere:qaz"},
+		Tags: []string{containerTag},
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create image: %v", err)
 	}
 
 	defer resp.Body.Close()
-	// io.Copy(os.Stdout, resp.Body)
 
 	scanner := bufio.NewScanner(resp.Body)
 	var bl buildlog
 	for scanner.Scan() {
 		line := bl.Line(scanner.Bytes())
-
 		if regexp.MustCompile(`(?i)from|run|success|cache`).MatchString(line) {
-			log.Debug(line)
+			log.Debug(log.ColorString(line, "green"))
 		}
-
 	}
 
-	return
+	return nil
 }
