@@ -77,7 +77,7 @@ func Configure(confSource string, conf string) (err error) {
 
 		if v.Troposphere {
 			once.Do(func() {
-				log.Info("troposphere stack(s) detected")
+				log.Debug("troposphere stack(s) detected")
 				if err := troposphere.BuildImage(); err != nil {
 					log.Error("error building troposphere container: %v", err)
 					os.Exit(1)
