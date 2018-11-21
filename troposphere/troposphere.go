@@ -15,9 +15,25 @@ import (
 )
 
 // python container
-const (
+var (
 	troposphereImage = "troposphere:qaz"
 )
+
+// default python container
+const (
+	defaultimage = "troposphere:qaz"
+)
+
+// Image - sets troposphere image to be
+// used for execution
+func Image(img string) {
+	defer func() { log.Debug("troposphere container set to: [%s]", troposphereImage) }()
+	if img == "" {
+		troposphereImage = defaultimage
+		return
+	}
+	troposphereImage = img
+}
 
 var log *logger.Logger
 
@@ -38,8 +54,7 @@ func Execute(code string) (t string, err error) {
 		&container.Config{
 			Image: troposphereImage,
 			Cmd:   []string{"python", "-c", code},
-
-			Tty: true,
+			Tty:   true,
 		}, nil, nil, "")
 
 	if err != nil {
