@@ -27,11 +27,11 @@ func (s *Stack) cleanup() error {
 func resolveBucket(s *Stack) (string, error) {
 	exists, err := bucket.Exists(s.Bucket, s.Session)
 	if err != nil {
-		log.Warn("Received Error when checking if [%s] exists: %v", s.Bucket, err)
+		log.Warn("received Error when checking if [%s] exists: %v", s.Bucket, err)
 	}
-	fmt.Println("This is test")
+
 	if !exists {
-		log.Info(("Creating Bucket [%s]"), s.Bucket)
+		log.Info(("creating bucket [%s]"), s.Bucket)
 		if err = bucket.Create(s.Bucket, s.Session); err != nil {
 			return "", err
 		}
