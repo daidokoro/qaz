@@ -8,3 +8,19 @@ stacks:
     source: vpc.py
     cf:
       cidr: 10.10.0.0/24
+
+  vpcs:
+    # [vpcs] multiple cidrs can also be specified
+    # as the VPC.py script expects a comma separated
+    # list of cidrs. A VPC is generated in the template
+    # for each CIDR
+    troposphere: true
+
+    # custom images can also be created to support dependencies
+    # not found in the default troposphere container
+    # NOTE: the given image must already exist locally, 
+    # QAZ does not pull images
+    troposphere_image: 'troposphere:qaz' # for now, specifying the default qaz container
+    source: vpc.py
+    cf:
+      cidr: 10.30.0.0/24, 10.20.0.0/24, 10.10.0.0/24
