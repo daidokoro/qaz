@@ -68,6 +68,10 @@ type Stack struct {
 	// docker execution.
 	Troposphere bool
 
+	// Define docker image to be used to execute troposphere
+	// scripes
+	TroposphereImage string
+
 	// Actioned in this context means the stack name
 	// has been passed explicitly as an arguement and
 	// should be processed

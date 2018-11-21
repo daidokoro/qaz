@@ -65,6 +65,8 @@ func (s *Stack) GenTimeParser() error {
 
 	// convert troposphere if detected
 	if s.Troposphere {
+		// set troposphere image
+		troposphere.Image(s.TroposphereImage)
 		s.Template, err = troposphere.Execute(s.Template)
 		if err != nil {
 			return err
