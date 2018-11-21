@@ -57,25 +57,27 @@ func Configure(confSource string, conf string) (err error) {
 	// Get Stack Values
 	for s, v := range config.Stacks {
 		stacks.Add(s, &stks.Stack{
-			Name:           s,
-			Profile:        v.Profile,
-			Region:         v.Region,
-			DependsOn:      v.DependsOn,
-			Policy:         v.Policy,
-			Source:         v.Source,
-			Bucket:         v.Bucket,
-			Role:           v.Role,
-			DeployDelims:   &config.DeployDelimiter,
-			GenDelims:      &config.GenerateDelimiter,
-			TemplateValues: config.Vars(),
-			GenTimeFunc:    &GenTimeFunctions,
-			DeployTimeFunc: &DeployTimeFunctions,
-			Project:        &config.Project,
-			Timeout:        v.Timeout,
-			Troposphere:    v.Troposphere,
+			Name:             s,
+			Profile:          v.Profile,
+			Region:           v.Region,
+			DependsOn:        v.DependsOn,
+			Policy:           v.Policy,
+			Source:           v.Source,
+			Bucket:           v.Bucket,
+			Role:             v.Role,
+			DeployDelims:     &config.DeployDelimiter,
+			GenDelims:        &config.GenerateDelimiter,
+			TemplateValues:   config.Vars(),
+			GenTimeFunc:      &GenTimeFunctions,
+			DeployTimeFunc:   &DeployTimeFunctions,
+			Project:          &config.Project,
+			Timeout:          v.Timeout,
+			Troposphere:      v.Troposphere,
+			TroposphereImage: v.TroposphereImage,
 		})
 
-		if v.Troposphere {
+		// build image if image is not defined
+		if v.Troposphere && v.TroposphereImage == "" {
 			once.Do(func() {
 				log.Debug("troposphere stack(s) detected")
 				if err := troposphere.BuildImage(); err != nil {
