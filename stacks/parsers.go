@@ -3,6 +3,8 @@ package stacks
 import (
 	"bytes"
 	"text/template"
+
+	"github.com/daidokoro/qaz/troposphere"
 )
 
 // DeployTimeParser - Parses templates during deployment to resolve specfic Dependency functions like stackout...
@@ -46,7 +48,6 @@ func (s *Stack) GenTimeParser() error {
 	// create template
 	t, err := template.New("gen-template").Delims(left, right).Funcs(*s.GenTimeFunc).Parse(s.Template)
 	// t, err := template.New("gen-template").Delims(left, right).Funcs(*s.GenTimeFunc).Funcs(sprig.FuncMap()).Parse(s.Template)
-
 	if err != nil {
 		return err
 	}
@@ -61,5 +62,14 @@ func (s *Stack) GenTimeParser() error {
 
 	t.Execute(&doc, s.TemplateValues)
 	s.Template = doc.String()
+
+	// convert troposphere if detected
+	if s.Troposphere {
+		s.Template, err = troposphere.Execute(s.Template)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
