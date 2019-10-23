@@ -57,6 +57,7 @@ func Configure(confSource string, conf string) (err error) {
 			DependsOn:      v.DependsOn,
 			Policy:         v.Policy,
 			Source:         v.Source,
+			Stackname:      v.Stackname,
 			Bucket:         v.Bucket,
 			Role:           v.Role,
 			DeployDelims:   &config.DeployDelimiter,
