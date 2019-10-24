@@ -25,6 +25,7 @@ type Config struct {
 		Profile    string                 `yaml:"profile,omitempty" json:"profile,omitempty" hcl:"profile,omitempty"`
 		Region     string                 `yaml:"region,omitempty" json:"region,omitempty" hcl:"region,omitempty"`
 		Source     string                 `yaml:"source,omitempty" json:"source,omitempty" hcl:"source,omitempty"`
+		Name       string                 `yaml:"name,omitempty" json:"name,omitempty" hcl:"name,omitempty"`
 		Bucket     string                 `yaml:"bucket,omitempty" json:"bucket,omitempty" hcl:"bucket,omitempty"`
 		Role       string                 `yaml:"role,omitempty" json:"role,omitempty" hcl:"role,omitempty"`
 		Tags       []map[string]string    `yaml:"tags,omitempty" json:"tags,omitempty" hcl:"tags,omitempty"`

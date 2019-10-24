@@ -66,7 +66,9 @@ type Stack struct {
 
 // SetStackName - sets the stackname with struct
 func (s *Stack) SetStackName() {
-	s.Stackname = fmt.Sprintf("%s-%s", *s.Project, s.Name)
+	if s.Stackname == "" {
+		s.Stackname = fmt.Sprintf("%s-%s", *s.Project, s.Name)
+	}
 }
 
 // creds - Returns credentials if role set
