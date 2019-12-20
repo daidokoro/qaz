@@ -113,6 +113,7 @@ func init() {
 		valuesCmd,
 		shellCmd,
 		protectCmd,
+		completionCmd,
 	)
 
 }
