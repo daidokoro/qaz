@@ -87,8 +87,8 @@ func init() {
 		execute,
 		desc,
 	} {
-		cmd.(*cobra.Command).Flags().StringVarP(&run.cfgSource, "config", "c", defaultConfig(), "path to config file [Required]")
-		cmd.(*cobra.Command).Flags().StringVarP(&run.stackName, "stack", "s", "", "Qaz local project Stack Name [Required]")
+		cmd.(*cobra.Command).Flags().StringVarP(&run.cfgSource, "config", "c", defaultConfig(), "path to config file (Required)")
+		cmd.(*cobra.Command).Flags().StringVarP(&run.stackName, "stack", "s", "", "Qaz local project Stack Name (Required)")
 	}
 
 	create.Flags().StringVarP(&run.tplSource, "template", "t", "", "path to template file Or stack::url")
