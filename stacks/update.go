@@ -36,6 +36,10 @@ func (s *Stack) Update() error {
 		updateParams.Tags = s.Tags
 	}
 
+	if len(s.NotificationARNs) > 0 {
+		updateParams.NotificationARNs = aws.StringSlice(s.NotificationARNs)
+	}
+
 	// If bucket - upload to s3
 	if s.Bucket != "" {
 		exists, err := bucket.Exists(s.Bucket, s.Session)
