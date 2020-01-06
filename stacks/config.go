@@ -19,18 +19,19 @@ type Config struct {
 	DeployDelimiter   string                 `yaml:"deploy_time,omitempty" json:"deploy_time,omitempty" hcl:"deploy_time,omitempty"`
 	Global            map[string]interface{} `yaml:"global,omitempty" json:"global,omitempty" hcl:"global,omitempty"`
 	Stacks            map[string]struct {
-		DependsOn  []string               `yaml:"depends_on,omitempty" json:"depends_on,omitempty" hcl:"depends_on,omitempty"`
-		Parameters []map[string]string    `yaml:"parameters,omitempty" json:"parameters,omitempty" hcl:"parameters,omitempty"`
-		Policy     string                 `yaml:"policy,omitempty" json:"policy,omitempty" hcl:"policy,omitempty"`
-		Profile    string                 `yaml:"profile,omitempty" json:"profile,omitempty" hcl:"profile,omitempty"`
-		Region     string                 `yaml:"region,omitempty" json:"region,omitempty" hcl:"region,omitempty"`
-		Source     string                 `yaml:"source,omitempty" json:"source,omitempty" hcl:"source,omitempty"`
-		Name       string                 `yaml:"name,omitempty" json:"name,omitempty" hcl:"name,omitempty"`
-		Bucket     string                 `yaml:"bucket,omitempty" json:"bucket,omitempty" hcl:"bucket,omitempty"`
-		Role       string                 `yaml:"role,omitempty" json:"role,omitempty" hcl:"role,omitempty"`
-		Tags       []map[string]string    `yaml:"tags,omitempty" json:"tags,omitempty" hcl:"tags,omitempty"`
-		Timeout    int64                  `yaml:"timeout,omitempty" json:"timeout,omitempty" hcl:"timeout,omitempty"`
-		CF         map[string]interface{} `yaml:"cf,omitempty" json:"cf,omitempty" hcl:"cf,omitempty"`
+		DependsOn        []string               `yaml:"depends_on,omitempty" json:"depends_on,omitempty" hcl:"depends_on,omitempty"`
+		Parameters       []map[string]string    `yaml:"parameters,omitempty" json:"parameters,omitempty" hcl:"parameters,omitempty"`
+		Policy           string                 `yaml:"policy,omitempty" json:"policy,omitempty" hcl:"policy,omitempty"`
+		Profile          string                 `yaml:"profile,omitempty" json:"profile,omitempty" hcl:"profile,omitempty"`
+		Region           string                 `yaml:"region,omitempty" json:"region,omitempty" hcl:"region,omitempty"`
+		Source           string                 `yaml:"source,omitempty" json:"source,omitempty" hcl:"source,omitempty"`
+		Name             string                 `yaml:"name,omitempty" json:"name,omitempty" hcl:"name,omitempty"`
+		Bucket           string                 `yaml:"bucket,omitempty" json:"bucket,omitempty" hcl:"bucket,omitempty"`
+		Role             string                 `yaml:"role,omitempty" json:"role,omitempty" hcl:"role,omitempty"`
+		Tags             []map[string]string    `yaml:"tags,omitempty" json:"tags,omitempty" hcl:"tags,omitempty"`
+		Timeout          int64                  `yaml:"timeout,omitempty" json:"timeout,omitempty" hcl:"timeout,omitempty"`
+		NotificationARNs []string               `yaml:"notification-arns" json:"notification-arns" hcl:"notification-arns"`
+		CF               map[string]interface{} `yaml:"cf,omitempty" json:"cf,omitempty" hcl:"cf,omitempty"`
 	} `yaml:"stacks" json:"stacks" hcl:"stacks"`
 }
 
