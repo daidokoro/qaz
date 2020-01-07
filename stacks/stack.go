@@ -62,6 +62,9 @@ type Stack struct {
 	// has been passed explicitly as an arguement and
 	// should be processed
 	Actioned bool
+
+	// list of SNS notification ARNs
+	NotificationARNs []string
 }
 
 // SetStackName - sets the stackname with struct

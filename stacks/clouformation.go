@@ -202,7 +202,7 @@ func TerminateHandler(m *Map) {
 				m.Range(func(k string, stk *Stack) bool {
 					if utils.StringIn(s.Name, stk.DependsOn) {
 						Log.Info("[%s]: Depends on [%s].. Waiting for dependency to terminate", stk.Name, s.Name)
-						for _ = range tick.C {
+						for range tick.C {
 							if !stk.StackExists() {
 								break
 							}

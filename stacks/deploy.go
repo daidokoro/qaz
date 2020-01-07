@@ -56,6 +56,11 @@ func (s *Stack) Deploy() error {
 		createParams.TimeoutInMinutes = aws.Int64(s.Timeout)
 	}
 
+	// add notification arns
+	if len(s.NotificationARNs) > 0 {
+		createParams.NotificationARNs = aws.StringSlice(s.NotificationARNs)
+	}
+
 	// If IAM is being touched, add Capabilities
 	if strings.Contains(s.Template, "AWS::IAM") {
 		createParams.Capabilities = []*string{

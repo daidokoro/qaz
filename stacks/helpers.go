@@ -53,7 +53,7 @@ func Wait(getStatus func(s ...string) (string, error), args ...string) error {
 	var stat string
 	var err error
 
-	for _ = range tick.C {
+	for range tick.C {
 		if len(args) > 0 {
 			stat, err = getStatus(args[0])
 		} else {
