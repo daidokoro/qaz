@@ -10,31 +10,31 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/daidokoro/qaz/logger"
+	"github.com/daidokoro/qaz/log"
 
 	"golang.org/x/crypto/ssh/terminal"
 
-	git "github.com/daidokoro/go-git"
+	// git "github.com/daidokoro/go-git"
 	"github.com/daidokoro/go-git/plumbing/transport/http"
 	"github.com/daidokoro/go-git/plumbing/transport/ssh"
-	"github.com/daidokoro/go-git/storage/memory"
-	billy "gopkg.in/src-d/go-billy.v2"
-	"gopkg.in/src-d/go-billy.v2/memfs"
+
+	// "github.com/daidokoro/go-git/storage/memory"
+	billy "gopkg.in/src-d/go-billy.v4"
+	"gopkg.in/src-d/go-billy.v4/memfs"
+	git "gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/storage/memory"
 )
 
 // Repo used to manage git repo based deployments
 type Repo struct {
 	URL    string
-	fs     *memfs.Memory
+	fs     billy.Filesystem
 	Files  map[string]string
 	Config string
 	RSA    string
 	User   string
 	Secret string
 }
-
-// Log create Logger
-var Log *logger.Logger
 
 // NewRepo - returns pointer to a new repo struct
 func NewRepo(url, user, rsa string) (*Repo, error) {
@@ -68,6 +68,7 @@ func NewRepo(url, user, rsa string) (*Repo, error) {
 func (r *Repo) clone() error {
 	// memory store for git objects
 	store := memory.NewStorage()
+	// store := storage.
 
 	// clone options
 	opts := &git.CloneOptions{
@@ -80,10 +81,10 @@ func (r *Repo) clone() error {
 		return err
 	}
 
-	Log.Debug("calling [git clone] with params: %s", opts)
+	log.Debug("calling [git clone] with params: %s", opts)
 
 	// Clones the repository into the worktree (fs) and storer all the .git
-	Log.Info("fetching git repo: [%s]\n--", filepath.Base(r.URL))
+	log.Info("fetching git repo: [%s]\n--", filepath.Base(r.URL))
 	if _, err := git.Clone(store, r.fs, opts); err != nil {
 		return err
 	}
@@ -93,8 +94,8 @@ func (r *Repo) clone() error {
 	return nil
 }
 
-func (r *Repo) readFiles(root []billy.FileInfo, dirname string) error {
-	Log.Debug("writing repo files to memory filesystem [%s]", dirname)
+func (r *Repo) readFiles(root []os.FileInfo, dirname string) error {
+	log.Debug("writing repo files to memory filesystem [%s]", dirname)
 	for _, i := range root {
 		path := filepath.Join(dirname, i.Name())
 		if i.IsDir() {
@@ -120,7 +121,7 @@ func (r *Repo) readFiles(root []billy.FileInfo, dirname string) error {
 
 func (r *Repo) getAuth(opts *git.CloneOptions) error {
 	if strings.HasPrefix(r.URL, "git@") {
-		Log.Debug("SSH Source URL detected, attempting to use SSH Keys: %s", r.RSA)
+		log.Debug("SSH Source URL detected, attempting to use SSH Keys: %s", r.RSA)
 
 		sshAuth, err := ssh.NewPublicKeysFromFile("git", r.RSA, "")
 		if err != nil {
