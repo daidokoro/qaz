@@ -5,7 +5,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/daidokoro/qaz/logger"
 	"github.com/daidokoro/qaz/repo"
 
 	"text/template"
@@ -17,9 +16,6 @@ import (
 )
 
 var (
-	// Log defines Logger
-	Log *logger.Logger
-
 	// define waitGroup
 	wg sync.WaitGroup
 

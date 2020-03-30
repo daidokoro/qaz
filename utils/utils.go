@@ -17,11 +17,8 @@ import (
 	"time"
 
 	"github.com/daidokoro/hcl"
-	"github.com/daidokoro/qaz/logger"
+	"github.com/daidokoro/qaz/log"
 )
-
-// Log defines logger
-var Log *logger.Logger
 
 // ConfigTemplate - Returns template byte string for init() function
 func ConfigTemplate(project string, region string) []byte {
@@ -53,7 +50,7 @@ func All(a []string, s string) bool {
 
 // StringIn - returns true if string in array
 func StringIn(s string, a []string) bool {
-	Log.Debug("checking If [%s] is in: %s", s, a)
+	log.Debug("checking If [%s] is in: %s", s, a)
 	for _, str := range a {
 		if str == s {
 			return true
@@ -117,7 +114,7 @@ func GetSource(src string) (string, string, error) {
 // HandleError - exits on error
 func HandleError(err error) {
 	if err != nil {
-		Log.Error(err.Error())
+		log.Error(err.Error())
 		os.Exit(1)
 	}
 }

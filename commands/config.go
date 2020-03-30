@@ -3,11 +3,11 @@ package commands
 import (
 	"fmt"
 
-	yaml "gopkg.in/yaml.v2"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/daidokoro/qaz/log"
 	stks "github.com/daidokoro/qaz/stacks"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/daidokoro/hcl"
 )

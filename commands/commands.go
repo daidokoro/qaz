@@ -12,11 +12,10 @@ import (
 
 	stks "github.com/daidokoro/qaz/stacks"
 
-	"github.com/daidokoro/qaz/bucket"
-	"github.com/daidokoro/qaz/repo"
 	"github.com/daidokoro/qaz/utils"
 
 	"github.com/CrowdSurge/banner"
+	"github.com/daidokoro/qaz/log"
 	"github.com/spf13/cobra"
 )
 
@@ -24,12 +23,9 @@ var t sync.Map
 
 // initialise - adds, logging and repo vars to dependecny functions
 var initialise = func(cmd *cobra.Command, args []string) {
-	log.Debug("initialising command [%s]", cmd.Name())
 	// add logging
-	stks.Log = &log
-	bucket.Log = &log
-	repo.Log = &log
-	utils.Log = &log
+	log.SetDefault(log.NewDefaultLogger(run.debug, run.colors))
+	log.Debug("initialising command [%s]", cmd.Name())
 
 	// add repo
 	stks.Git = &gitrepo

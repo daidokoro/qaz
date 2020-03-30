@@ -6,9 +6,9 @@ import (
 	"regexp"
 	"sync"
 
-	"github.com/daidokoro/qaz/utils"
-
+	"github.com/daidokoro/qaz/log"
 	stks "github.com/daidokoro/qaz/stacks"
+	"github.com/daidokoro/qaz/utils"
 
 	"github.com/spf13/cobra"
 )

@@ -6,17 +6,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/daidokoro/qaz/logger"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/daidokoro/qaz/log"
 )
 
 // -- Contains all things S3
-
-// Log define logger
-var Log *logger.Logger
 
 // S3Read - Reads the content of a given s3 url endpoint and returns the content string.
 func S3Read(URL string, sess *session.Session) (string, error) {
@@ -36,7 +32,7 @@ func S3Read(URL string, sess *session.Session) (string, error) {
 		Key:    aws.String(key),
 	}
 
-	Log.Debug("calling S3 [GetObject] with parameters: %s", params)
+	log.Debug("calling S3 [GetObject] with parameters: %s", params)
 	resp, err := svc.GetObject(params)
 	if err != nil {
 		return "", err
@@ -44,7 +40,7 @@ func S3Read(URL string, sess *session.Session) (string, error) {
 
 	buf := new(bytes.Buffer)
 
-	Log.Debug("Reading from S3 Response Body")
+	log.Debug("Reading from S3 Response Body")
 	buf.ReadFrom(resp.Body)
 	return buf.String(), nil
 }
@@ -61,7 +57,7 @@ func S3write(bucket string, key string, body string, sess *session.Session) (str
 		},
 	}
 
-	Log.Debug("calling S3 [PutObject] with parameters: %s", params)
+	log.Debug("calling S3 [PutObject] with parameters: %s", params)
 	_, err := svc.PutObject(params)
 	if err != nil {
 		return "", err
@@ -88,7 +84,7 @@ func Create(bucket string, sess *session.Session) error {
 		Bucket: &bucket,
 	}
 
-	Log.Debug("calling S3 [CreateBucket] with parameters: %s", params)
+	log.Debug("calling S3 [CreateBucket] with parameters: %s", params)
 	_, err := svc.CreateBucket(params)
 	if err != nil {
 		return err
@@ -108,12 +104,11 @@ func Exists(bucket string, sess *session.Session) (bool, error) {
 		Bucket: &bucket,
 	}
 
-	Log.Debug("calling S3 [HeadBucket] with parameters: %s", params)
+	log.Debug("calling S3 [HeadBucket] with parameters: %s", params)
 	_, err := svc.HeadBucket(params)
 	if err != nil {
 		return false, err
 	}
 
 	return true, nil
-
 }

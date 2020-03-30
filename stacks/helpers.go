@@ -5,11 +5,12 @@ import (
 	"time"
 
 	"github.com/daidokoro/qaz/bucket"
+	"github.com/daidokoro/qaz/log"
 )
 
 // cleanup functions in create_failed or delete_failed states
 func (s *Stack) cleanup() error {
-	Log.Debug("running stack cleanup on [%s]", s.Name)
+	log.Debug("running stack cleanup on [%s]", s.Name)
 	resp, err := s.State()
 	if err != nil {
 		return err
@@ -27,11 +28,11 @@ func (s *Stack) cleanup() error {
 func resolveBucket(s *Stack) (string, error) {
 	exists, err := bucket.Exists(s.Bucket, s.Session)
 	if err != nil {
-		Log.Warn("Received Error when checking if [%s] exists: %v", s.Bucket, err)
+		log.Warn("Received Error when checking if [%s] exists: %v", s.Bucket, err)
 	}
 	fmt.Println("This is test")
 	if !exists {
-		Log.Info(("Creating Bucket [%s]"), s.Bucket)
+		log.Info(("Creating Bucket [%s]"), s.Bucket)
 		if err = bucket.Create(s.Bucket, s.Session); err != nil {
 			return "", err
 		}

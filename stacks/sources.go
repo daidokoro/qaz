@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/daidokoro/qaz/bucket"
+	"github.com/daidokoro/qaz/log"
 	"github.com/daidokoro/qaz/utils"
 )
 
@@ -90,7 +91,7 @@ type HTTPSource struct {
 
 // Handle - Source Handle
 func (h HTTPSource) Handle() (string, error) {
-	Log.Debug("Source Type: [http] Detected, Fetching Source: %s ", h.Src)
+	log.Debug("Source Type: [http] Detected, Fetching Source: %s ", h.Src)
 	return utils.Get(h.Src)
 }
 
@@ -102,7 +103,7 @@ type S3Source struct {
 
 // Handle - Source Handle
 func (s3 S3Source) Handle() (string, error) {
-	Log.Debug("Source Type: [s3] Detected, Fetching Source: %s", s3.Src)
+	log.Debug("Source Type: [s3] Detected, Fetching Source: %s", s3.Src)
 	return bucket.S3Read(s3.Src, s3.Session)
 }
 
@@ -114,7 +115,7 @@ type LambdaSource struct {
 
 // Handle - Source Handle
 func (l LambdaSource) Handle() (string, error) {
-	Log.Debug("Source Type: [lambda] Detected, Fetching Source: %s", l.Src)
+	log.Debug("Source Type: [lambda] Detected, Fetching Source: %s", l.Src)
 	src, err := url.Parse(l.Src)
 	if err != nil {
 		return "", err
@@ -160,17 +161,17 @@ type FileSource struct {
 // Handle - Source Handle
 func (f FileSource) Handle() (resp string, err error) {
 	if Git.URL != "" {
-		Log.Debug("Source Type: [git-repo file] Detected, Fetching Source: %s", f.Src)
+		log.Debug("Source Type: [git-repo file] Detected, Fetching Source: %s", f.Src)
 		out, ok := Git.Files[f.Src]
 		if ok {
 			resp = out
 			return
 		} else if !ok {
-			Log.Warn("config [%s] not found in git repo - checking local file system", f.Src)
+			log.Warn("config [%s] not found in git repo - checking local file system", f.Src)
 		}
 	}
 
-	Log.Debug("Source Type: [file] Detected, Fetching Source: %s", f.Src)
+	log.Debug("Source Type: [file] Detected, Fetching Source: %s", f.Src)
 	b, err := ioutil.ReadFile(f.Src)
 	if err != nil {
 		return

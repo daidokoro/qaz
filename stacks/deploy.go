@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/daidokoro/qaz/log"
 	"github.com/fatih/color"
 )
 
@@ -25,7 +26,7 @@ func (s *Stack) Deploy() error {
 		return err
 	}
 
-	Log.Debug("Updated Template:\n%s", s.Template)
+	log.Debug("Updated Template:\n%s", s.Template)
 	done := make(chan bool)
 	svc := cloudformation.New(s.Session, &aws.Config{Credentials: s.creds()})
 
@@ -81,7 +82,7 @@ func (s *Stack) Deploy() error {
 		createParams.TemplateBody = &s.Template
 	}
 
-	Log.Debug("Calling [CreateStack] with parameters: %s", createParams)
+	log.Debug("Calling [CreateStack] with parameters: %s", createParams)
 	if _, err = svc.CreateStack(createParams); err != nil {
 		return errors.New(fmt.Sprintln("Deploying failed: ", err.Error()))
 
@@ -105,7 +106,7 @@ func (s *Stack) Deploy() error {
 	}
 
 	done <- true
-	Log.Info(
+	log.Info(
 		"deployment completed: %s",
 		color.New(color.FgWhite).Add(color.Bold).SprintFunc()(fmt.Sprintf("[%s]", s.Stackname)),
 	)

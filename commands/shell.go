@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/daidokoro/qaz/log"
 	"github.com/daidokoro/qaz/utils"
 
 	yaml "gopkg.in/yaml.v2"

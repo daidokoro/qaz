@@ -5,6 +5,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/daidokoro/qaz/log"
 	"github.com/daidokoro/qaz/repo"
 	"github.com/daidokoro/qaz/utils"
 

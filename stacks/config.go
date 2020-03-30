@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/daidokoro/qaz/log"
 )
 
 // Config type for handling yaml config files
@@ -91,7 +92,7 @@ func (c *Config) Tags(s *Stack) *Config {
 // CallFunctions - execute gentime/deploytime functions in config
 func (c *Config) CallFunctions(fmap template.FuncMap) error {
 
-	Log.Debug("calling functions in config file")
+	log.Debug("calling functions in config file")
 
 	// create template
 	t, err := template.New("config-template").Delims(`{{`, `}}`).Funcs(fmap).Parse(c.String)
@@ -104,6 +105,6 @@ func (c *Config) CallFunctions(fmap template.FuncMap) error {
 
 	t.Execute(&doc, nil)
 	c.String = doc.String()
-	Log.Debug("config: %s", c.String)
+	log.Debug("config: %s", c.String)
 	return nil
 }

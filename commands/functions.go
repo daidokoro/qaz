@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/daidokoro/qaz/log"
 )
 
 // Common Functions - Both Deploy/Gen
@@ -199,7 +200,6 @@ var (
 			}
 			return seq
 		},
-
 	}
 
 	// deploytime function maps
