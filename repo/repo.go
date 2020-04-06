@@ -36,8 +36,8 @@ type Repo struct {
 	Secret string
 }
 
-// NewRepo - returns pointer to a new repo struct
-func NewRepo(url, user, rsa string) (*Repo, error) {
+// New - returns pointer to a new repo struct
+func New(url, user, rsa string) (*Repo, error) {
 	r := &Repo{
 		fs:    memfs.New(),
 		Files: make(map[string]string),
