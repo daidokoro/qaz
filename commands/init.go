@@ -67,6 +67,7 @@ func init() {
 		valuesCmd,
 		shellCmd,
 		protectCmd,
+		lintCmd,
 	} {
 		cmd.(*cobra.Command).Flags().StringVarP(&run.cfgSource, "config", "c", defaultConfig(), "path to config file")
 	}
@@ -76,6 +77,7 @@ func init() {
 		generateCmd,
 		updateCmd,
 		checkCmd,
+		lintCmd,
 	} {
 		cmd.(*cobra.Command).Flags().StringVarP(&run.tplSource, "template", "t", "", "path to template source Or stack::source")
 	}
@@ -114,6 +116,7 @@ func init() {
 		shellCmd,
 		protectCmd,
 		completionCmd,
+		lintCmd,
 	)
 
 }
