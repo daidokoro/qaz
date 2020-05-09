@@ -7,7 +7,6 @@ import (
 	"text/template"
 
 	"github.com/daidokoro/qaz/bucket"
-	stks "github.com/daidokoro/qaz/stacks"
 	"github.com/daidokoro/qaz/utils"
 
 	"encoding/base64"
@@ -204,55 +203,6 @@ var (
 
 	// deploytime function maps
 	DeployTimeFunctions = template.FuncMap{
-		// Fetching stackoutputs
-		"stack_output": func(target string) string {
-			log.Debug("Deploy-Time function resolving: %s", target)
-			req := strings.Split(target, "::")
-
-			s, ok := stacks.Get(req[0])
-			if !ok {
-				utils.HandleError(fmt.Errorf("stack_output errror: stack [%s] not found", req[0]))
-			}
-
-			utils.HandleError(s.Outputs())
-
-			for _, i := range s.Output.Stacks {
-				for _, o := range i.Outputs {
-					if *o.OutputKey == req[1] {
-						return *o.OutputValue
-					}
-				}
-			}
-			utils.HandleError(fmt.Errorf("Stack Output Not found - Stack:%s | Output:%s", req[0], req[1]))
-			return ""
-		},
-
-		"stack_output_ext": func(target string) string {
-			log.Debug("Deploy-Time function resolving: %s", target)
-			req := strings.Split(target, "::")
-
-			sess, err := GetSession()
-			utils.HandleError(err)
-
-			s := stks.Stack{
-				Stackname: req[0],
-				Session:   sess,
-			}
-
-			err = s.Outputs()
-			utils.HandleError(err)
-
-			for _, i := range s.Output.Stacks {
-				for _, o := range i.Outputs {
-					if *o.OutputKey == req[1] {
-						return *o.OutputValue
-					}
-				}
-			}
-
-			utils.HandleError(fmt.Errorf("Stack Output Not found - Stack:%s | Output:%s", req[0], req[1]))
-			return ""
-		},
 
 		// suffix - returns true if string starts with given suffix
 		"suffix": suffix,
