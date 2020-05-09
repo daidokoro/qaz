@@ -57,10 +57,7 @@ var lintCmd = &cobra.Command{
 		content := []byte(stacks.MustGet(s).Template)
 		filename := fmt.Sprintf(".%s.qaz", s)
 		writeErr := ioutil.WriteFile(filename, content, 0644)
-		if writeErr != nil {
-			utils.HandleError(writeErr)
-			return
-		}
+		utils.HandleError(writeErr)
 
 		// run cfn-lint against temporary file
 		binary, lookErr := exec.LookPath("cfn-lint")
@@ -71,9 +68,7 @@ var lintCmd = &cobra.Command{
 		cmdArgs := []string{"cfn-lint", filename}
 		env := os.Environ()
 		execErr := syscall.Exec(binary, cmdArgs, env)
-		if execErr != nil {
-			utils.HandleError(execErr)
-		}
+		utils.HandleError(execErr)
 
 	},
 }

@@ -3,15 +3,15 @@ package commands
 import (
 	"encoding/json"
 	"fmt"
-  "io/ioutil"
+	"io/ioutil"
 	"math/rand"
-  "os"
-  "os/exec"
+	"os"
+	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
 	"sync"
-  "syscall"
+	"syscall"
 
 	"github.com/daidokoro/qaz/utils"
 
@@ -530,10 +530,7 @@ func initShell(p string, s *ishell.Shell) {
 				content := []byte(stacks.MustGet(s).Template)
 				filename := fmt.Sprintf(".%s.qaz", s)
 				writeErr := ioutil.WriteFile(filename, content, 0644)
-				if writeErr != nil {
-					utils.HandleError(writeErr)
-					return
-				}
+				utils.HandleError(writeErr)
 
 				// run cfn-lint against temporary file
 				binary, lookErr := exec.LookPath("cfn-lint")
@@ -544,10 +541,7 @@ func initShell(p string, s *ishell.Shell) {
 				cmdArgs := []string{"cfn-lint", filename}
 				env := os.Environ()
 				execErr := syscall.Exec(binary, cmdArgs, env)
-				if execErr != nil {
-					utils.HandleError(execErr)
-					return
-				}
+				utils.HandleError(execErr)
 
 			},
 		},
