@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"syscall"
 
 	"github.com/daidokoro/qaz/utils"
 
@@ -60,14 +59,15 @@ var lintCmd = &cobra.Command{
 		utils.HandleError(writeErr)
 
 		// run cfn-lint against temporary file
-		binary, lookErr := exec.LookPath("cfn-lint")
+		_, lookErr := exec.LookPath("cfn-lint")
 		if lookErr != nil {
 			utils.HandleError(fmt.Errorf("cfn-lint executable not found! Please consider https://pypi.org/project/cfn-lint/ for help."))
-			return
 		}
-		cmdArgs := []string{"cfn-lint", filename}
-		env := os.Environ()
-		execErr := syscall.Exec(binary, cmdArgs, env)
+		execCmd := exec.Command("cfn-lint", filename)
+		execCmd.Env = append(os.Environ())
+		execCmd.Stdout = os.Stdout
+		execCmd.Stderr = os.Stderr
+		execErr := execCmd.Run()
 		utils.HandleError(execErr)
 
 	},
