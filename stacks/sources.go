@@ -160,9 +160,9 @@ type FileSource struct {
 
 // Handle - Source Handle
 func (f FileSource) Handle() (resp string, err error) {
-	if Git.URL != "" {
+	if gitrepo.URL != "" {
 		log.Debug("Source Type: [git-repo file] Detected, Fetching Source: %s", f.Src)
-		out, ok := Git.Files[f.Src]
+		out, ok := gitrepo.Files[f.Src]
 		if ok {
 			resp = out
 			return

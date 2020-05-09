@@ -46,7 +46,10 @@ func (s *Stack) GenTimeParser() error {
 	left, right := s.delims("gen")
 
 	// create template
-	t, err := template.New("gen-template").Delims(left, right).Funcs(*s.GenTimeFunc).Parse(s.Template)
+	t, err := template.New("gen-template").
+		Delims(left, right).
+		Funcs(*s.GenTimeFunc).
+		Parse(s.Template)
 	// t, err := template.New("gen-template").Delims(left, right).Funcs(*s.GenTimeFunc).Funcs(sprig.FuncMap()).Parse(s.Template)
 
 	if err != nil {
