@@ -52,6 +52,9 @@ func init() {
 	protectCmd.Flags().BoolVarP(&run.protectOff, "off", "", false, "set termination protection to off")
 	protectCmd.Flags().BoolVarP(&run.all, "all", "A", false, "protect all stacks")
 
+	// Define Update Command
+	updateCmd.Flags().BoolVarP(&run.interactive, "interactive", "i", false, "preview change-set and ask before executing it")
+
 	// Add Config --config common flag
 	for _, cmd := range []interface{}{
 		checkCmd,

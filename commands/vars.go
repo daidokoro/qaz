@@ -28,25 +28,26 @@ const (
 
 // run.var used as a central point for command data from flags
 var run = struct {
-	cfgSource  string
-	tplSource  string
-	profile    string
-	region     string
-	tplSources []string
-	stacks     map[string]string
-	all        bool
-	version    bool
-	request    string
-	debug      bool
-	funcEvent  string
-	lambdAsync bool
-	changeName string
-	stackName  string
-	rollback   bool
-	colors     bool
-	cfgRaw     string
-	gituser    string
-	gitpass    string
-	gitrsa     string
-	protectOff bool
+	cfgSource   string
+	tplSource   string
+	profile     string
+	region      string
+	tplSources  []string
+	stacks      map[string]string
+	all         bool
+	version     bool
+	request     string
+	debug       bool
+	funcEvent   string
+	lambdAsync  bool
+	changeName  string
+	stackName   string
+	rollback    bool
+	colors      bool
+	cfgRaw      string
+	gituser     string
+	gitpass     string
+	gitrsa      string
+	protectOff  bool
+	interactive bool
 }{}
