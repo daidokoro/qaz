@@ -20,7 +20,7 @@ var (
 	wg sync.WaitGroup
 
 	// Git repo for stack deployment
-	Git *repo.Repo
+	gitrepo *repo.Repo
 
 	// OutputRegex for printing yaml/json output
 	OutputRegex = `(?m)^[ ]*([^\r\n:]+?)\s*:`
@@ -28,10 +28,19 @@ var (
 
 // Stack - holds all meaningful information about a particular stack.
 type Stack struct {
-	Project        *string
-	Name           string
-	Stackname      string
-	Template       string
+	// Project name for stack
+	Project *string
+
+	// local logical stack name
+	Name string
+
+	// AWS stack name on build
+	Stackname string
+
+	// Stack template for generating CF
+	Template string
+
+	// list of Dependencies
 	DependsOn      []string
 	Dependents     []interface{}
 	Stackoutputs   *cloudformation.DescribeStacksOutput
@@ -51,8 +60,10 @@ type Stack struct {
 	DeployDelims   *string
 	GenDelims      *string
 	TemplateValues map[string]interface{}
-	Debug          bool
-	Timeout        int64
+
+	// Debug value
+	// Debug   bool
+	Timeout int64
 
 	// Actioned in this context means the stack name
 	// has been passed explicitly as an arguement and
@@ -63,7 +74,7 @@ type Stack struct {
 	NotificationARNs []string
 }
 
-// SetStackName - sets the stackname with struct
+// SetStackName - sets the.Stackname with struct
 func (s *Stack) SetStackName() {
 	if s.Stackname == "" {
 		s.Stackname = fmt.Sprintf("%s-%s", *s.Project, s.Name)
@@ -98,4 +109,9 @@ func (s *Stack) delims(lvl string) (string, string) {
 
 	// default
 	return "{{", "}}"
+}
+
+// Git - set git repo for stack deployments
+func Git(r *repo.Repo) {
+	gitrepo = r
 }
