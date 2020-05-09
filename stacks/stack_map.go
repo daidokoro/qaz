@@ -1,6 +1,15 @@
 package stacks
 
-import "sync"
+import (
+	"fmt"
+	"strings"
+	"sync"
+
+	"text/template"
+
+	"github.com/daidokoro/qaz/log"
+	"github.com/daidokoro/qaz/utils"
+)
 
 // Map type
 type Map struct {
@@ -51,4 +60,72 @@ func (m *Map) Range(f func(string, *Stack) bool) {
 // Count - returns number of stacks
 func (m *Map) Count() int {
 	return len(m.store)
+}
+
+// --- Template Functions for StackMap --- //
+
+func (m *Map) StackOutput(target string) string {
+	log.Debug("Deploy-Time function resolving: %s", target)
+	req := strings.Split(target, "::")
+
+	s, ok := m.Get(req[0])
+	if !ok {
+		utils.HandleError(fmt.Errorf("stack_output errror: stack [%s] not found", req[0]))
+	}
+
+	utils.HandleError(s.Outputs())
+
+	for _, i := range s.Output.Stacks {
+		for _, o := range i.Outputs {
+			if *o.OutputKey == req[1] {
+				return *o.OutputValue
+			}
+		}
+	}
+	utils.HandleError(fmt.Errorf("Stack Output Not found - Stack:%s | Output:%s", req[0], req[1]))
+	return ""
+}
+
+// AddMapFuncs - add stack map functions to function map
+func (m *Map) AddMapFuncs(t template.FuncMap) {
+	// Fetching stackoutputs
+	t["stack_output"] = func(target string) string {
+		log.Debug("Deploy-Time function resolving: %s", target)
+		req := strings.Split(target, "::")
+
+		s, ok := m.Get(req[0])
+		if !ok {
+			utils.HandleError(fmt.Errorf("stack_output errror: stack [%s] not found", req[0]))
+		}
+
+		utils.HandleError(s.Outputs())
+
+		for _, i := range s.Output.Stacks {
+			for _, o := range i.Outputs {
+				if *o.OutputKey == req[1] {
+					return *o.OutputValue
+				}
+			}
+		}
+		utils.HandleError(fmt.Errorf("Stack Output Not found - Stack:%s | Output:%s", req[0], req[1]))
+		return ""
+	}
+
+	t["stack_output_ext"] = func(target string) string {
+		log.Debug("Deploy-Time function resolving: %s", target)
+		req := strings.Split(target, "::")
+		s := m.MustGet(req[0])
+		utils.HandleError(s.Outputs())
+
+		for _, i := range s.Output.Stacks {
+			for _, o := range i.Outputs {
+				if *o.OutputKey == req[1] {
+					return *o.OutputValue
+				}
+			}
+		}
+
+		utils.HandleError(fmt.Errorf("Stack Output Not found - Stack:%s | Output:%s", req[0], req[1]))
+		return ""
+	}
 }
