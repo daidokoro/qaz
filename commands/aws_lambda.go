@@ -61,10 +61,11 @@ func (a *awsLambda) Invoke(sess *session.Session) error {
 // invoke command
 var invokeCmd = &cobra.Command{
 	Use:     "invoke",
-	Short:   "Invoke AWS Lambda Functions",
+	Short:   "Invoke AWS Lambda Functions [To be DEPRACATED in a future release]",
 	Example: "qaz invoke some_function --event @path/to/event.json",
 	PreRun:  initialise,
 	Run: func(cmd *cobra.Command, args []string) {
+		log.Warn("this feature will be DEPRACATED in the next release...")
 
 		if len(args) < 1 {
 			log.Warn("no lambda function specified")
