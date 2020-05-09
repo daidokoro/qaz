@@ -11,7 +11,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"syscall"
 
 	"github.com/daidokoro/qaz/utils"
 
@@ -530,18 +529,26 @@ func initShell(p string, s *ishell.Shell) {
 				content := []byte(stacks.MustGet(s).Template)
 				filename := fmt.Sprintf(".%s.qaz", s)
 				writeErr := ioutil.WriteFile(filename, content, 0644)
-				utils.HandleError(writeErr)
-
-				// run cfn-lint against temporary file
-				binary, lookErr := exec.LookPath("cfn-lint")
-				if lookErr != nil {
-					utils.HandleError(fmt.Errorf("cfn-lint executable not found! Please consider https://pypi.org/project/cfn-lint/ for help."))
+			  if writeErr != nil {
+					log.Error(writeErr.Error())
 					return
 				}
-				cmdArgs := []string{"cfn-lint", filename}
-				env := os.Environ()
-				execErr := syscall.Exec(binary, cmdArgs, env)
-				utils.HandleError(execErr)
+
+				// run cfn-lint against temporary file
+				_, lookErr := exec.LookPath("cfn-lint")
+				if lookErr != nil {
+					log.Error("cfn-lint executable not found! Please consider https://pypi.org/project/cfn-lint/ for help.")
+					return
+				}
+				execCmd := exec.Command("cfn-lint", filename)
+				execCmd.Env = append(os.Environ())
+				execCmd.Stdout = os.Stdout
+				execCmd.Stderr = os.Stderr
+				execErr := execCmd.Run()
+				if execErr != nil {
+					log.Error(execErr.Error())
+					return
+				}
 
 			},
 		},
