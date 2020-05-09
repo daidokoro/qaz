@@ -14,7 +14,6 @@ var changeCmd = &cobra.Command{
 	Short: "Change-Set management for AWS Stacks",
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
-
 	},
 }
 
@@ -39,7 +38,7 @@ var create = &cobra.Command{
 
 		run.changeName = args[0]
 
-		err := Configure(run.cfgSource, run.cfgRaw)
+		stks, err := Configure(run.cfgSource, run.cfgRaw)
 		utils.HandleError(err)
 
 		if run.tplSource != "" {
@@ -52,22 +51,21 @@ var create = &cobra.Command{
 		}
 
 		// check if stack exists in config
-		if _, ok := stacks.Get(s); !ok {
+		if _, ok := stks.Get(s); !ok {
 			utils.HandleError(fmt.Errorf("Stack [%s] not found in config", s))
 		}
 
-		if stacks.MustGet(s).Source == "" {
-			stacks.MustGet(s).Source = source
+		if stks.MustGet(s).Source == "" {
+			stks.MustGet(s).Source = source
 		}
 
-		err = stacks.MustGet(s).GenTimeParser()
+		err = stks.MustGet(s).GenTimeParser()
 		utils.HandleError(err)
 
-		err = stacks.MustGet(s).Change("create", run.changeName)
+		err = stks.MustGet(s).Change("create", run.changeName)
 		utils.HandleError(err)
 
 		log.Info("change-set [%s] creation successful", run.changeName)
-
 	},
 }
 
@@ -89,14 +87,14 @@ var rm = &cobra.Command{
 
 		run.changeName = args[0]
 
-		err := Configure(run.cfgSource, run.cfgRaw)
+		stks, err := Configure(run.cfgSource, run.cfgRaw)
 		utils.HandleError(err)
 
-		if _, ok := stacks.Get(run.stackName); !ok {
+		if _, ok := stks.Get(run.stackName); !ok {
 			utils.HandleError(fmt.Errorf("Stack not found: [%s]", run.stackName))
 		}
 
-		err = stacks.MustGet(run.stackName).Change("rm", run.changeName)
+		err = stks.MustGet(run.stackName).Change("rm", run.changeName)
 		utils.HandleError(err)
 
 	},
@@ -113,14 +111,14 @@ var list = &cobra.Command{
 			return
 		}
 
-		err := Configure(run.cfgSource, run.cfgRaw)
+		stks, err := Configure(run.cfgSource, run.cfgRaw)
 		utils.HandleError(err)
 
-		if _, ok := stacks.Get(run.stackName); !ok {
+		if _, ok := stks.Get(run.stackName); !ok {
 			utils.HandleError(fmt.Errorf("Stack not found: [%s]", run.stackName))
 		}
 
-		err = stacks.MustGet(run.stackName).Change("list", run.changeName)
+		err = stks.MustGet(run.stackName).Change("list", run.changeName)
 		utils.HandleError(err)
 	},
 }
@@ -143,17 +141,17 @@ var execute = &cobra.Command{
 
 		run.changeName = args[0]
 
-		err := Configure(run.cfgSource, run.cfgRaw)
+		stks, err := Configure(run.cfgSource, run.cfgRaw)
 		if err != nil {
 			utils.HandleError(err)
 			return
 		}
 
-		if _, ok := stacks.Get(run.stackName); !ok {
+		if _, ok := stks.Get(run.stackName); !ok {
 			utils.HandleError(fmt.Errorf("Stack not found: [%s]", run.stackName))
 		}
 
-		err = stacks.MustGet(run.stackName).Change("execute", run.changeName)
+		err = stks.MustGet(run.stackName).Change("execute", run.changeName)
 		utils.HandleError(err)
 
 		log.Info("change-set [%s] execution successful", run.changeName)
@@ -178,17 +176,17 @@ var desc = &cobra.Command{
 
 		run.changeName = args[0]
 
-		err := Configure(run.cfgSource, run.cfgRaw)
+		stks, err := Configure(run.cfgSource, run.cfgRaw)
 		if err != nil {
 			utils.HandleError(err)
 			return
 		}
 
-		if _, ok := stacks.Get(run.stackName); !ok {
+		if _, ok := stks.Get(run.stackName); !ok {
 			utils.HandleError(fmt.Errorf("Stack not found: [%s]", run.stackName))
 		}
 
-		err = stacks.MustGet(run.stackName).Change("desc", run.changeName)
+		err = stks.MustGet(run.stackName).Change("desc", run.changeName)
 		utils.HandleError(err)
 	},
 }

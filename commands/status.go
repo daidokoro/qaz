@@ -9,7 +9,7 @@ import (
 	"github.com/daidokoro/qaz/repo"
 	"github.com/daidokoro/qaz/utils"
 
-	stks "github.com/daidokoro/qaz/stacks"
+	"github.com/daidokoro/qaz/stacks"
 
 	"github.com/spf13/cobra"
 )
@@ -24,10 +24,10 @@ var (
 		PreRun: initialise,
 		Run: func(cmd *cobra.Command, args []string) {
 			var wg sync.WaitGroup
-			err := Configure(run.cfgSource, run.cfgRaw)
+			stks, err := Configure(run.cfgSource, run.cfgRaw)
 			utils.HandleError(err)
 
-			stacks.Range(func(_ string, s *stks.Stack) bool {
+			stks.Range(func(_ string, s *stacks.Stack) bool {
 				wg.Add(1)
 				go func() {
 					if err := s.Status(); err != nil {
@@ -65,7 +65,7 @@ var (
 			gitrepo = *repo
 
 			// add repo
-			stks.Git = &gitrepo
+			stacks.Git(&gitrepo)
 
 			if out, ok := repo.Files[run.cfgSource]; ok {
 				repo.Config = out
@@ -76,10 +76,10 @@ var (
 				log.Debug(k)
 			}
 
-			err = Configure(run.cfgSource, repo.Config)
+			stks, err := Configure(run.cfgSource, repo.Config)
 			utils.HandleError(err)
 
-			stacks.Range(func(_ string, s *stks.Stack) bool {
+			stks.Range(func(_ string, s *stacks.Stack) bool {
 				wg.Add(1)
 				go func() {
 					if err := s.Status(); err != nil {
@@ -111,7 +111,7 @@ var (
 			var s string
 			var source string
 
-			err := Configure(run.cfgSource, "")
+			stks, err := Configure(run.cfgSource, "")
 			utils.HandleError(err)
 
 			switch {
@@ -123,19 +123,19 @@ var (
 			}
 
 			// check if stack exists in config
-			if _, ok := stacks.Get(s); !ok {
+			if _, ok := stks.Get(s); !ok {
 				utils.HandleError(fmt.Errorf("stack [%s] not found in config", s))
 			}
 
 			if source != "" {
-				stacks.MustGet(s).Source = source
+				stks.MustGet(s).Source = source
 			}
 
 			name := fmt.Sprintf("%s-%s", config.Project, s)
 			log.Info("validating template: %s", name)
 
-			utils.HandleError(stacks.MustGet(s).GenTimeParser())
-			utils.HandleError(stacks.MustGet(s).Check())
+			utils.HandleError(stks.MustGet(s).GenTimeParser())
+			utils.HandleError(stks.MustGet(s).Check())
 		},
 	}
 
@@ -161,14 +161,14 @@ var (
 				return
 			}
 
-			err := Configure(run.cfgSource, "")
+			stks, err := Configure(run.cfgSource, "")
 			utils.HandleError(err)
 
 			var w sync.WaitGroup
 
 			// if run all
 			if run.all {
-				stacks.Range(func(_ string, s *stks.Stack) bool {
+				stks.Range(func(_ string, s *stacks.Stack) bool {
 					w.Add(1)
 					go func() {
 						defer w.Done()
@@ -186,13 +186,13 @@ var (
 
 			// if individual
 			for _, s := range args {
-				if _, ok := stacks.Get(s); !ok {
+				if _, ok := stks.Get(s); !ok {
 					utils.HandleError(fmt.Errorf("stacks [%s] not found in config", s))
 				}
 				w.Add(1)
 				go func(s string) {
 					defer w.Done()
-					if err := stacks.MustGet(s).Protect(&run.protectOff); err != nil {
+					if err := stks.MustGet(s).Protect(&run.protectOff); err != nil {
 						log.Error("error enable termination-protection on: [%s] - %v", s, err)
 						return
 					}

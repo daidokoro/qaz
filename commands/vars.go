@@ -7,8 +7,8 @@ import (
 )
 
 var (
-	config  stks.Config
-	stacks  stks.Map
+	config stks.Config
+	// stacks  stks.Map
 	project string
 	gitrepo repo.Repo
 )

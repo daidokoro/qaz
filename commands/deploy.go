@@ -6,9 +6,8 @@ import (
 
 	"github.com/daidokoro/qaz/log"
 	"github.com/daidokoro/qaz/repo"
+	"github.com/daidokoro/qaz/stacks"
 	"github.com/daidokoro/qaz/utils"
-
-	stks "github.com/daidokoro/qaz/stacks"
 
 	"github.com/spf13/cobra"
 )
@@ -30,7 +29,7 @@ var (
 		PreRun: initialise,
 		Run: func(cmd *cobra.Command, args []string) {
 
-			err := Configure(run.cfgSource, run.cfgRaw)
+			stks, err := Configure(run.cfgSource, run.cfgRaw)
 			utils.HandleError(err)
 
 			run.stacks = make(map[string]string)
@@ -39,16 +38,16 @@ var (
 			for _, src := range run.tplSources {
 				s, source, err := utils.GetSource(src)
 				utils.HandleError(err)
-				if _, ok := stacks.Get(s); !ok {
+				if _, ok := stks.Get(s); !ok {
 					utils.HandleError(fmt.Errorf("stacks [%s] not found in config", s))
 				}
-				stacks.MustGet(s).Source = source
-				stacks.MustGet(s).Actioned = true
+				stks.MustGet(s).Source = source
+				stks.MustGet(s).Actioned = true
 			}
 
 			// Add all stacks with defined sources if actioned
 			if run.all {
-				stacks.Range(func(_ string, s *stks.Stack) bool {
+				stks.Range(func(_ string, s *stacks.Stack) bool {
 					s.Actioned = true
 					return true
 				})
@@ -57,15 +56,15 @@ var (
 			// Add run.stacks based on Args
 			if len(args) > 0 && !run.all {
 				for _, s := range args {
-					if _, ok := stacks.Get(s); !ok {
+					if _, ok := stks.Get(s); !ok {
 						utils.HandleError(fmt.Errorf("stacks [%s] not found in config", s))
 					}
-					stacks.MustGet(s).Actioned = true
+					stks.MustGet(s).Actioned = true
 				}
 			}
 
 			// run gentimeParser
-			stacks.Range(func(_ string, s *stks.Stack) bool {
+			stks.Range(func(_ string, s *stacks.Stack) bool {
 				if !s.Actioned {
 					return true
 				}
@@ -76,7 +75,7 @@ var (
 			})
 
 			// Deploy Stacks
-			stks.DeployHandler(&stacks)
+			stacks.DeployHandler(&stks)
 
 		},
 	}
@@ -102,7 +101,7 @@ var (
 			gitrepo = *repo
 
 			// add repo
-			stks.Git = &gitrepo
+			stacks.Git(&gitrepo)
 
 			if out, ok := repo.Files[run.cfgSource]; ok {
 				repo.Config = out
@@ -113,19 +112,18 @@ var (
 				log.Debug(k)
 			}
 
-			err = Configure(run.cfgSource, repo.Config)
+			stks, err := Configure(run.cfgSource, repo.Config)
 			utils.HandleError(err)
 
 			//create set actioned stacks
-			stacks.Range(func(_ string, s *stks.Stack) bool {
+			stks.Range(func(_ string, s *stacks.Stack) bool {
 				s.Actioned = true
 				utils.HandleError(s.GenTimeParser())
 				return true
 			})
 
 			// Deploy Stacks
-			stks.DeployHandler(&stacks)
-
+			stacks.DeployHandler(&stks)
 		},
 	}
 
@@ -145,7 +143,7 @@ var (
 			var s string
 			var source string
 
-			err := Configure(run.cfgSource, run.cfgRaw)
+			stks, err := Configure(run.cfgSource, run.cfgRaw)
 			if err != nil {
 				utils.HandleError(err)
 				return
@@ -159,22 +157,22 @@ var (
 
 			case len(args) > 0:
 				s = args[0]
-				if _, ok := stacks.Get(s); !ok {
+				if _, ok := stks.Get(s); !ok {
 					utils.HandleError(fmt.Errorf("stacks [%s] not found in config", s))
 				}
 			}
 
 			// check stack exists
-			if _, ok := stacks.Get(s); !ok {
+			if _, ok := stks.Get(s); !ok {
 				utils.HandleError(fmt.Errorf("stacks [%s] not found in config", s))
 			}
 
 			if source != "" {
-				stacks.MustGet(s).Source = source
+				stks.MustGet(s).Source = source
 			}
 
-			utils.HandleError(stacks.MustGet(s).GenTimeParser())
-			utils.HandleError(stacks.MustGet(s).Update())
+			utils.HandleError(stks.MustGet(s).GenTimeParser())
+			utils.HandleError(stks.MustGet(s).Update())
 		},
 	}
 
@@ -190,27 +188,27 @@ var (
 				return
 			}
 
-			err := Configure(run.cfgSource, "")
+			stks, err := Configure(run.cfgSource, "")
 			utils.HandleError(err)
 
 			// select actioned stacks
 			for _, s := range args {
-				if _, ok := stacks.Get(s); !ok {
+				if _, ok := stks.Get(s); !ok {
 					utils.HandleError(fmt.Errorf("stacks [%s] not found in config", s))
 				}
-				stacks.MustGet(s).Actioned = true
+				stks.MustGet(s).Actioned = true
 			}
 
 			// action stacks if all
 			if run.all {
-				stacks.Range(func(_ string, s *stks.Stack) bool {
+				stks.Range(func(_ string, s *stacks.Stack) bool {
 					s.Actioned = true
 					return true
 				})
 			}
 
 			// Terminate Stacks
-			stks.TerminateHandler(&stacks)
+			stacks.TerminateHandler(&stks)
 		},
 	}
 )

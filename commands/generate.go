@@ -24,7 +24,7 @@ var generateCmd = &cobra.Command{
 		var s string
 		var source string
 
-		err := Configure(run.cfgSource, run.cfgRaw)
+		stks, err := Configure(run.cfgSource, run.cfgRaw)
 		utils.HandleError(err)
 
 		switch {
@@ -36,22 +36,22 @@ var generateCmd = &cobra.Command{
 		}
 
 		// check if stack exists in config
-		if _, ok := stacks.Get(s); !ok {
+		if _, ok := stks.Get(s); !ok {
 			utils.HandleError(fmt.Errorf("Stack [%s] not found in config", s))
 			return
 		}
 
 		// if source is defined via cli arg
 		if source != "" {
-			stacks.MustGet(s).Source = source
+			stks.MustGet(s).Source = source
 		}
 
 		name := fmt.Sprintf("%s-%s", project, s)
 		log.Debug("generating a template for %s", name)
-		utils.HandleError(stacks.MustGet(s).GenTimeParser())
+		utils.HandleError(stks.MustGet(s).GenTimeParser())
 
 		resp := regexp.MustCompile(OutputRegex).
-			ReplaceAllStringFunc(string(stacks.MustGet(s).Template), func(s string) string {
+			ReplaceAllStringFunc(string(stks.MustGet(s).Template), func(s string) string {
 				return log.ColorString(s, "cyan")
 			})
 

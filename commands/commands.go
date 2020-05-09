@@ -10,8 +10,7 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
-	stks "github.com/daidokoro/qaz/stacks"
-
+	"github.com/daidokoro/qaz/stacks"
 	"github.com/daidokoro/qaz/utils"
 
 	"github.com/CrowdSurge/banner"
@@ -28,7 +27,7 @@ var initialise = func(cmd *cobra.Command, args []string) {
 	log.Debug("initialising command [%s]", cmd.Name())
 
 	// add repo
-	stks.Git = &gitrepo
+	stacks.Git(&gitrepo)
 }
 
 var (
@@ -111,17 +110,17 @@ var (
 				utils.HandleError(fmt.Errorf("please specify stack name"))
 			}
 
-			err := Configure(run.cfgSource, run.cfgRaw)
+			stks, err := Configure(run.cfgSource, run.cfgRaw)
 			utils.HandleError(err)
 
 			for _, s := range args {
 				wg.Add(1)
 				go func(s string) {
-					if _, ok := stacks.Get(s); !ok {
+					if _, ok := stks.Get(s); !ok {
 						utils.HandleError(fmt.Errorf("Stack [%s] not found in config", s))
 					}
 
-					err := stacks.MustGet(s).StackPolicy()
+					err := stks.MustGet(s).StackPolicy()
 					utils.HandleError(err)
 
 					wg.Done()
@@ -151,14 +150,14 @@ var (
 			// set stack value based on argument
 			s := args[0]
 
-			err := Configure(run.cfgSource, run.cfgRaw)
+			stks, err := Configure(run.cfgSource, run.cfgRaw)
 			utils.HandleError(err)
 
-			if _, ok := stacks.Get(s); !ok {
+			if _, ok := stks.Get(s); !ok {
 				utils.HandleError(fmt.Errorf("Stack [%s] not found in config", s))
 			}
 
-			values := stacks.MustGet(s).TemplateValues[s].(map[string]interface{})
+			values := stks.MustGet(s).TemplateValues[s].(map[string]interface{})
 
 			log.Debug("Converting stack outputs to JSON from: %s", values)
 			output, err := yaml.Marshal(values)

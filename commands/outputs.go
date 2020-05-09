@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"github.com/daidokoro/qaz/log"
-	stks "github.com/daidokoro/qaz/stacks"
+	"github.com/daidokoro/qaz/stacks"
 	"github.com/daidokoro/qaz/utils"
 
 	"github.com/spf13/cobra"
@@ -29,24 +29,24 @@ var (
 				return
 			}
 
-			err := Configure(run.cfgSource, run.cfgRaw)
+			stks, err := Configure(run.cfgSource, run.cfgRaw)
 			utils.HandleError(err)
 
 			for _, s := range args {
 				// check if stack exists
-				if _, ok := stacks.Get(s); !ok {
+				if _, ok := stks.Get(s); !ok {
 					utils.HandleError(fmt.Errorf("%s: does not Exist in Config", s))
 				}
 
 				wg.Add(1)
 				go func(s string) {
 					defer wg.Done()
-					if err := stacks.MustGet(s).Outputs(); err != nil {
+					if err := stks.MustGet(s).Outputs(); err != nil {
 						log.Error(err.Error())
 						return
 					}
 
-					for _, i := range stacks.MustGet(s).Output.Stacks {
+					for _, i := range stks.MustGet(s).Output.Stacks {
 						m, err := json.MarshalIndent(i.Outputs, "", "  ")
 						if err != nil {
 							log.Error(err.Error())
@@ -76,7 +76,7 @@ var (
 		Run: func(cmd *cobra.Command, args []string) {
 			sess, err := GetSession()
 			utils.HandleError(err)
-			utils.HandleError(stks.Exports(sess))
+			utils.HandleError(stacks.Exports(sess))
 		},
 	}
 )
