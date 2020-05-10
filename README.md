@@ -108,14 +108,18 @@ Usage:
 Available Commands:
   change      Change-Set management for AWS Stacks
   check       Validates Cloudformation Templates
+  completion  Output shell completion code for the specified shell (bash or zsh)
   deploy      Deploys stack(s) to AWS
   exports     Prints stack exports
   generate    Generates template from configuration values
   git-deploy  Deploy project from Git repository
+  git-status  Check status of deployment via files stored in Git repository
   help        Help about any command
   init        Creates an initial Qaz config file
   invoke      Invoke AWS Lambda Functions
+  lint        Validates stack by calling cfn-lint
   outputs     Prints stack outputs
+  protect     Enables stack termination protection
   set-policy  Set Stack Policies based on configured value
   shell       Qaz interactive shell - loads the specified config into an interactive shell
   status      Prints status of deployed/un-deployed stacks

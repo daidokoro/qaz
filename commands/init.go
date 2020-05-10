@@ -52,6 +52,9 @@ func init() {
 	protectCmd.Flags().BoolVarP(&run.protectOff, "off", "", false, "set termination protection to off")
 	protectCmd.Flags().BoolVarP(&run.all, "all", "A", false, "protect all stacks")
 
+	// Define Update Command
+	updateCmd.Flags().BoolVarP(&run.interactive, "interactive", "i", false, "preview change-set and ask before executing it")
+
 	// Add Config --config common flag
 	for _, cmd := range []interface{}{
 		checkCmd,
@@ -67,6 +70,7 @@ func init() {
 		valuesCmd,
 		shellCmd,
 		protectCmd,
+		lintCmd,
 	} {
 		cmd.(*cobra.Command).Flags().StringVarP(&run.cfgSource, "config", "c", defaultConfig(), "path to config file")
 	}
@@ -76,6 +80,7 @@ func init() {
 		generateCmd,
 		updateCmd,
 		checkCmd,
+		lintCmd,
 	} {
 		cmd.(*cobra.Command).Flags().StringVarP(&run.tplSource, "template", "t", "", "path to template source Or stack::source")
 	}
@@ -114,6 +119,7 @@ func init() {
 		shellCmd,
 		protectCmd,
 		completionCmd,
+		lintCmd,
 	)
 
 }

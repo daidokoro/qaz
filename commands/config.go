@@ -32,7 +32,8 @@ func Configure(confSource string, conf string) (stks stacks.Map, err error) {
 
 	// execute config Functions
 	if err = config.CallFunctions(GenTimeFunctions); err != nil {
-		return stks, fmt.Errorf("failed to run template functions in config: %s", err)
+		err = fmt.Errorf("failed to run template functions in config: %s", err)
+		return
 	}
 
 	log.Debug("checking Config for HCL format...")

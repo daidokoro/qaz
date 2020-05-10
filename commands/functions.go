@@ -199,6 +199,12 @@ var (
 			}
 			return seq
 		},
+
+		// capitalize first letter
+		"title": func(s string) string {
+			log.Debug("Calling Template Function [title] with arguments: %s", s)
+			return strings.Title(s)
+		},
 	}
 
 	// deploytime function maps

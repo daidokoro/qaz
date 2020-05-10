@@ -105,6 +105,12 @@ func (s *Stack) Change(req, changename string) error {
 		if err != nil {
 			return err
 		}
+
+		// print reason for FAILED status (e.g. if no changes were detected)
+		if *resp.Status == "FAILED" {
+			log.Info(*resp.StatusReason)
+		}
+
 		log.Info("created change-set: [%s] - %s - %s", changename, log.ColorMap(*resp.Status), s.Stackname)
 		return nil
 
