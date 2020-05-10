@@ -1,7 +1,11 @@
 package commands
 
 import (
+	"bufio"
 	"fmt"
+	"math/rand"
+	"os"
+	"strconv"
 	"strings"
 
 	"github.com/daidokoro/qaz/repo"
@@ -173,7 +177,61 @@ var (
 			}
 
 			utils.HandleError(stacks.MustGet(s).GenTimeParser())
-			utils.HandleError(stacks.MustGet(s).Update())
+
+			if run.interactive {
+				// random change-set name
+				run.changeName = fmt.Sprintf(
+					"%s-change-%s",
+					stacks.MustGet(s).Stackname,
+					strconv.Itoa((rand.Int())),
+				)
+
+				if err := stacks.MustGet(s).Change("create", run.changeName); err != nil {
+					log.Error(err.Error())
+					return
+				}
+
+				// describe change-set
+				if err := stacks.MustGet(s).Change("desc", run.changeName); err != nil {
+					log.Error(err.Error())
+					return
+				}
+
+				for {
+					fmt.Println(fmt.Sprintf(
+						"--\n%s [%s]: ",
+						log.ColorString("The above will be updated, do you want to proceed?", "red"),
+						log.ColorString("Y/N", "cyan"),
+					))
+
+					scanner := bufio.NewScanner(os.Stdin)
+					scanner.Scan()
+					resp := scanner.Text()
+					switch strings.ToLower(resp) {
+					case "y":
+						if err := stacks.MustGet(s).Change("execute", run.changeName); err != nil {
+							log.Error(err.Error())
+							return
+						}
+						log.Info("update completed successfully...")
+						return
+					case "n":
+						if err := stacks.MustGet(s).Change("rm", run.changeName); err != nil {
+							log.Error(err.Error())
+							return
+						}
+						return
+					default:
+						log.Warn(`invalid response, please type "Y" or "N"`)
+						continue
+					}
+				}
+
+			} else {
+				// non-interactive mode
+				utils.HandleError(stacks.MustGet(s).Update())
+			}
+
 		},
 	}
 
