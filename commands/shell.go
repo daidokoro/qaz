@@ -3,7 +3,10 @@ package commands
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
+	"os"
+	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
@@ -490,6 +493,66 @@ func initShell(p string, s *ishell.Shell) {
 				log.Info("config reloaded: [%s]", run.cfgSource)
 			},
 		},
+
+		// lint command
+		&ishell.Cmd{
+			Name:     "lint",
+			Help:     "lints template using cfn-lint",
+			LongHelp: "lint [stack]",
+			Func: func(c *ishell.Context) {
+				var s string
+
+				if len(c.Args) > 0 {
+					s = c.Args[0]
+				}
+
+				// check if stack exists in config
+				if _, ok := stacks.Get(s); !ok {
+					log.Error("stack [%s] not found in config", s)
+					return
+				}
+
+				if stacks.MustGet(s).Source == "" {
+					log.Error("source not found in config file...")
+					return
+				}
+
+				name := fmt.Sprintf("%s-%s", project, s)
+				log.Debug("generating a template for [%s]", name)
+
+				if err := stacks.MustGet(s).GenTimeParser(); err != nil {
+					log.Error(err.Error())
+					return
+				}
+
+				// write template to temporary file
+				content := []byte(stacks.MustGet(s).Template)
+				filename := fmt.Sprintf(".%s.qaz", s)
+				writeErr := ioutil.WriteFile(filename, content, 0644)
+			  if writeErr != nil {
+					log.Error(writeErr.Error())
+					return
+				}
+
+				// run cfn-lint against temporary file
+				_, lookErr := exec.LookPath("cfn-lint")
+				if lookErr != nil {
+					log.Error("cfn-lint executable not found! Please consider https://pypi.org/project/cfn-lint/ for help.")
+					return
+				}
+				execCmd := exec.Command("cfn-lint", filename)
+				execCmd.Env = append(os.Environ())
+				execCmd.Stdout = os.Stdout
+				execCmd.Stderr = os.Stderr
+				execErr := execCmd.Run()
+				if execErr != nil {
+					log.Error(execErr.Error())
+					return
+				}
+
+			},
+		},
+
 	}
 
 	// set prompt
