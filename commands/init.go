@@ -34,6 +34,9 @@ func init() {
 	// Define Output Flags
 	outputsCmd.Flags().StringVarP(&run.profile, "profile", "p", "default", "configured aws profile")
 
+	// Define Parameter Flags
+	parametersCmd.Flags().StringVarP(&run.profile, "profile", "p", "default", "configured aws profile")
+
 	// Define Root Flags
 	RootCmd.Flags().BoolVarP(&run.version, "version", "", false, "print current/running version")
 	RootCmd.PersistentFlags().BoolVarP(&run.colors, "no-colors", "", false, "disable colors in outputs")
@@ -71,6 +74,7 @@ func init() {
 		shellCmd,
 		protectCmd,
 		lintCmd,
+		parametersCmd,
 	} {
 		cmd.(*cobra.Command).Flags().StringVarP(&run.cfgSource, "config", "c", defaultConfig(), "path to config file")
 	}
@@ -120,6 +124,7 @@ func init() {
 		protectCmd,
 		completionCmd,
 		lintCmd,
+		parametersCmd,
 	)
 
 }
