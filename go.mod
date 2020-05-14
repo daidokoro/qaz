@@ -4,8 +4,12 @@ go 1.12
 
 require (
 	github.com/CrowdSurge/banner v0.0.0-20140923200336-8c0e79dc5ff7
+	github.com/abiosoft/ishell v2.0.0+incompatible // indirect
+	github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db // indirect
 	github.com/aws/aws-sdk-go v1.29.34
+	github.com/chzyer/logex v1.1.10 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
+	github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1 // indirect
 	github.com/daidokoro/hcl v0.0.0-20170509225359-392dba7d905e
 	github.com/daidokoro/ishell v0.0.0-20170626201312-73d87bbaf310
 	github.com/fatih/color v1.9.0
