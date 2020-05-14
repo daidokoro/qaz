@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"sort"
 	"sync"
 	"text/tabwriter"
 
@@ -112,11 +113,15 @@ var (
 						return
 					}
 
-					for _, i := range stacks.MustGet(s).Output.Stacks {
+					for _, stack := range stacks.MustGet(s).Output.Stacks {
 
 						w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, '.', 0)
+						// sort parameters by key
+						sort.Slice(stack.Parameters, func(i, j int) bool {
+							return *stack.Parameters[i].ParameterKey < *stack.Parameters[j].ParameterKey
+						})
 						// iterate over deployed stack parameters
-						for _, p := range i.Parameters {
+						for _, p := range stack.Parameters {
 							fmt.Fprintf(w, "%s\t %s", log.ColorString(*p.ParameterKey, "cyan"), *p.ParameterValue)
 							// find corresponding parameter in local qaz config
 							for _, pl := range stacks.MustGet(s).Parameters {
