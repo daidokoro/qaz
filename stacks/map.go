@@ -87,6 +87,8 @@ func (m *Map) StackOutput(target string) string {
 }
 
 // AddMapFuncs - add stack map functions to function map
+// Note: this map only exists for deploytime functions
+// that require access to stack data at runtime.
 func (m *Map) AddMapFuncs(t template.FuncMap) {
 	// Fetching stackoutputs
 	t["stack_output"] = func(target string) string {
