@@ -4,7 +4,6 @@ stages:
 
 sudo: required
 before_install:
-  - go get github.com/mitchellh/gox
   - eval export AWS_ACCESS_KEY_ID=\$master_aws_access_key_id
   - eval export AWS_SECRET_ACCESS_KEY=\$master_aws_secret_access_key
   - eval export AWS_REGION=\$master_aws_region
