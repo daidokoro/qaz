@@ -3,8 +3,11 @@ package commands
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"regexp"
+	"sort"
 	"sync"
+	"text/tabwriter"
 
 	"github.com/daidokoro/qaz/log"
 	"github.com/daidokoro/qaz/stacks"
@@ -13,7 +16,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// output and export commands
+// output, export and parameters commands
 
 var (
 	// output command
@@ -79,4 +82,67 @@ var (
 			utils.HandleError(stacks.Exports(sess))
 		},
 	}
+
+	// parameters command
+	parametersCmd = &cobra.Command{
+		Use:     "parameters [stack]",
+		Short:   "Prints parameters of deployed stack",
+		Example: "qaz parameters vpc subnets --config path/to/config",
+		PreRun:  initialise,
+		Run: func(cmd *cobra.Command, args []string) {
+			var wg sync.WaitGroup
+			if len(args) < 1 {
+				fmt.Println("Please specify stack(s) to check, For details try --> qaz parameters --help")
+				return
+			}
+
+			err := Configure(run.cfgSource, run.cfgRaw)
+			utils.HandleError(err)
+
+			for _, s := range args {
+				// check if stack exists
+				if _, ok := stacks.Get(s); !ok {
+					utils.HandleError(fmt.Errorf("%s: does not Exist in Config", s))
+				}
+
+				wg.Add(1)
+				go func(s string) {
+					defer wg.Done()
+					if err := stacks.MustGet(s).Outputs(); err != nil {
+						log.Error(err.Error())
+						return
+					}
+
+					for _, stack := range stacks.MustGet(s).Output.Stacks {
+
+						w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, '.', 0)
+						// sort parameters by key
+						sort.Slice(stack.Parameters, func(i, j int) bool {
+							return *stack.Parameters[i].ParameterKey < *stack.Parameters[j].ParameterKey
+						})
+						// iterate over deployed stack parameters
+						for _, p := range stack.Parameters {
+							fmt.Fprintf(w, "%s\t %s", log.ColorString(*p.ParameterKey, "cyan"), *p.ParameterValue)
+							// find corresponding parameter in local qaz config
+							for _, pl := range stacks.MustGet(s).Parameters {
+								if *pl.ParameterKey == *p.ParameterKey {
+									if *pl.ParameterValue != *p.ParameterValue {
+										// explicitly log divergent local values
+										fmt.Fprintf(w, " vs. %s", log.ColorString(*pl.ParameterValue, "red"))
+									}
+								}
+							}
+							fmt.Fprint(w, "\n")
+						}
+						w.Flush()
+
+					}
+					return
+				}(s)
+			}
+			wg.Wait()
+
+		},
+	}
+
 )
