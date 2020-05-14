@@ -96,24 +96,24 @@ var (
 				return
 			}
 
-			err := Configure(run.cfgSource, run.cfgRaw)
+			stks, err := Configure(run.cfgSource, run.cfgRaw)
 			utils.HandleError(err)
 
 			for _, s := range args {
 				// check if stack exists
-				if _, ok := stacks.Get(s); !ok {
+				if _, ok := stks.Get(s); !ok {
 					utils.HandleError(fmt.Errorf("%s: does not Exist in Config", s))
 				}
 
 				wg.Add(1)
 				go func(s string) {
 					defer wg.Done()
-					if err := stacks.MustGet(s).Outputs(); err != nil {
+					if err := stks.MustGet(s).Outputs(); err != nil {
 						log.Error(err.Error())
 						return
 					}
 
-					for _, stack := range stacks.MustGet(s).Output.Stacks {
+					for _, stack := range stks.MustGet(s).Output.Stacks {
 
 						w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, '.', 0)
 						// sort parameters by key
@@ -124,7 +124,7 @@ var (
 						for _, p := range stack.Parameters {
 							fmt.Fprintf(w, "%s\t %s", log.ColorString(*p.ParameterKey, "cyan"), *p.ParameterValue)
 							// find corresponding parameter in local qaz config
-							for _, pl := range stacks.MustGet(s).Parameters {
+							for _, pl := range stks.MustGet(s).Parameters {
 								if *pl.ParameterKey == *p.ParameterKey {
 									if *pl.ParameterValue != *p.ParameterValue {
 										// explicitly log divergent local values
@@ -144,5 +144,4 @@ var (
 
 		},
 	}
-
 )
