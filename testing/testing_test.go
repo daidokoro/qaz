@@ -20,7 +20,7 @@ var (
 // TestMain - test initialisation
 func TestMain(m *testing.M) {
 	// configure logging
-	log.SetDefault(log.NewDefaultLogger(true, true))
+	log.SetDefault(log.NewDefaultLogger(false, false))
 	ecode := m.Run()
 	os.Exit(ecode)
 }
