@@ -12,13 +12,13 @@ jobs:
   include:
     - stage: test
       language: go
-      go: "1.14.3"
+      go: "1.12"
       script:
         - go test -v -short ./testing
 
     - stage: build
       language: go
-      go: "1.14.3"
+      go: "1.12"
       if: tag =~ ^v
       script:
         - ./build.sh
