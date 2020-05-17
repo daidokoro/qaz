@@ -31,7 +31,7 @@ upload_file() {
   done
 }
 
-upload_file "bin/shipa_linux_386"
-upload_file "bin/shipa_linux_amd64"
-upload_file "bin/shipa_darwin_386"
-upload_file "bin/shipa_darwin_amd64"
+upload_file "qaz_linux_386"
+upload_file "qaz_linux_amd64"
+upload_file "qaz_darwin_386"
+upload_file "qaz_darwin_amd64"
