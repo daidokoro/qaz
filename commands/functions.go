@@ -423,13 +423,13 @@ var templateFunctionsCmd = &cobra.Command{
 
 			&TemplateFunctionDesc{
 				f("stack_output"),
-				"stack_output fetches the output value of a given stack and stores the value in your template. This function uses the stack name as defined in your project configuration", d,
+				"Fetches the output value of a given stack and stores the value in your template. This function uses the stack name as defined in your project configuration", d,
 				`<< stack_output "vpc::vpcid" >>`,
 			},
 
 			&TemplateFunctionDesc{
 				f("stack_output_ext"),
-				"stack_output_ext fetches the output value of a given stack that exists outside of your project/configuration and stores the value in your template. This function requires the full name of the stack as it appears on the AWS Console.", d,
+				"Fetches the output value of a given stack that exists outside of your project/configuration and stores the value in your template. This function requires the full name of the stack as it appears on the AWS Console.", d,
 				`<< stack_output_ext "external-vpc::vpcid" >>`,
 			},
 		}
