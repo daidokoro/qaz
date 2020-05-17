@@ -115,6 +115,7 @@ func init() {
 		checkCmd,
 		exportsCmd,
 		invokeCmd,
+		templateFunctionsCmd,
 		changeCmd,
 		policyCmd,
 		gitDeployCmd,

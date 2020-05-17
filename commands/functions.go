@@ -1,13 +1,18 @@
 package commands
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"os/exec"
+	"regexp"
 	"strings"
 	"text/template"
 
 	"github.com/daidokoro/qaz/bucket"
 	"github.com/daidokoro/qaz/utils"
+	"github.com/spf13/cobra"
 
 	"encoding/base64"
 	"encoding/json"
@@ -241,3 +246,206 @@ var (
 		"kms_decrypt": kmsDecrypt,
 	}
 )
+
+var templateFunctionDoc = `
+--------------------------------
+---- Qaz Template Functions ----
+--------------------------------
+
+Custom Template Functions expand the functionality of Go's Templating library by allowing you to execute external functions to retrieve additional information for building your template.
+
+Qaz supports all the Go Template functions as well as some custom ones.
+
+Qaz has two levels of custom template functions, these are Gen-Time functions and Deploy-Time functions.
+
+ - Gen-Time functions are functions that are executed when a template is being generated. These are handy for reading files into a template or making API calls to fetch values.
+   Gen-Time functions are delimited by {{` + "`{{ }}`" + `}}
+
+ - Deploy-Time functions are run just before the template is pushed to AWS Cloudformation. These are handy for:
+
+	* Fetching values from dependency stacks
+	* Making API calls to pull values from resources built by preceding stacks
+	* Triggering events via an API call and adjusting the template based on the response
+	* Updating Values in a decrypted template
+   
+   Deploy-Time functions are delimted by << >>
+
+--
+
+{{- range $_, $f := . }}
+
+%s:
+
+	{{ $f.Name }}
+
+%s:
+	
+	{{ $f.Desc }}
+	{{ $f.Type }}
+
+%s:
+
+	{{ $f.Usage }}
+
+--
+{{ end }}
+`
+
+// TemplateFunctionDesc -describes template functions
+type TemplateFunctionDesc struct {
+	Name  string
+	Desc  string
+	Type  string
+	Usage string
+}
+
+var templateFunctionsCmd = &cobra.Command{
+	Use:    "template-functions",
+	Short:  "prints a list of all available custom template functions",
+	PreRun: initialise,
+	Run: func(cmd *cobra.Command, args []string) {
+
+		// simplifying log.ColorString to f
+		// used to color function string
+		f := func(s string) string {
+			return log.ColorString(s, log.CYAN)
+		}
+
+		const (
+			gd = "(gen-time|deploy-time)"
+			g  = "(gen-time only)"
+			d  = "(deploy-time only)"
+		)
+
+		data := []*TemplateFunctionDesc{
+			&TemplateFunctionDesc{
+				f("add"),
+				"Simple additon function useful for counters in loops", g,
+				`{{ add 1 2 }} --> 3`,
+			},
+
+			&TemplateFunctionDesc{
+				f("strip"),
+				"Removes a given substring from text", g,
+				`{{ strip "cat" "c" }} --> at`,
+			},
+
+			&TemplateFunctionDesc{
+				f("Cat"),
+				"Reads text from a given filepath to template", g,
+				`{{ cat "/path/to/some/file.txt" }}`,
+			},
+
+			&TemplateFunctionDesc{
+				f("literal"),
+				"Prints literal unevaluated version of a given string", g,
+				`{{ literal "cat\nhouse" }}`,
+			},
+
+			&TemplateFunctionDesc{
+				f("suffix"),
+				"Returns true if the string ends with given suffix", gd,
+				`{{ if suffix "something" "thing" }} value {{ end }} --> value`,
+			},
+
+			&TemplateFunctionDesc{
+				f("prefix"),
+				"Returns true if the string starts with given suffix", gd,
+				`{{ if prefix "something" "some" }} value {{ end }} --> value`,
+			},
+
+			&TemplateFunctionDesc{
+				f("contains"),
+				"Returns true if the string contains the given sub-string", gd,
+				`{{ if contains "something" "some" }} value {{ end }} --> value`,
+			},
+
+			&TemplateFunctionDesc{
+				f("loop"),
+				"Takes an int n and iterates n times", gd,
+				`{{ range $i, $_ := loop 5 }} value {{ end }} --> value  value  value  value  value`,
+			},
+
+			&TemplateFunctionDesc{
+				f("seq"),
+				"Returns an iteratable sequence from x to y", g,
+				`{{ $range $_, $v := seq 1 5 }} {{ $v }} {{ end }}  --> `,
+			},
+
+			&TemplateFunctionDesc{
+				f("GET"),
+				"HTTP GET reqest to a given url. Response is then written to the template", gd,
+				`{{ GET "https://some.endpoint.app" }} --> {"some":"response"} or "some string response"`,
+			},
+
+			&TemplateFunctionDesc{
+				f("s3read"),
+				"Read s3 object and writes the contents to the template", gd,
+				`{{ s3read "s3://bucket/containing/things" }} --> "things"`,
+			},
+
+			&TemplateFunctionDesc{
+				f("invoke"),
+				"Invokes a Lambda function and writes the returned value to the template.", gd,
+				"{{ invoke \"function_name\" `{\"some_json\":\"some_value\"}` }}",
+			},
+
+			&TemplateFunctionDesc{
+				f("kms_encrypt"),
+				"Generates an encrypted Cipher Text blob using AWS KMS", gd,
+				`{{ kms_encrypt kms.keyid "Text to Encrypt!" }} --> "CipherText"`,
+			},
+
+			&TemplateFunctionDesc{
+				f("kms_decrypt"),
+				"Decrypts a given Cipher Text blob using AWS KMS", gd,
+				`{{ kms_decrypt "CipherTextBlob" }} --> "Decrypted CipherText"`,
+			},
+
+			&TemplateFunctionDesc{
+				f("mod"),
+				"Modulus Division within templates. I.e Returns the remainder of an uneven division", g,
+				`{{ mod 7 3 }} --> 1`,
+			},
+
+			&TemplateFunctionDesc{
+				f("title"),
+				"Returns a copy of the string s with all Unicode letters that begin words mapped to their title case", g,
+				`{{ title "tengen toppa gurren lagan" }} --> Tengen Toppa Gurren Lagan`,
+			},
+
+			&TemplateFunctionDesc{
+				f("stack_output"),
+				"stack_output fetches the output value of a given stack and stores the value in your template. This function uses the stack name as defined in your project configuration", d,
+				`<< stack_output "vpc::vpcid" >>`,
+			},
+
+			&TemplateFunctionDesc{
+				f("stack_output_ext"),
+				"stack_output_ext fetches the output value of a given stack that exists outside of your project/configuration and stores the value in your template. This function requires the full name of the stack as it appears on the AWS Console.", d,
+				`<< stack_output_ext "external-vpc::vpcid" >>`,
+			},
+		}
+
+		doc := fmt.Sprintf(templateFunctionDoc, log.ColorString("Function", log.YELLOW),
+			log.ColorString("Description", log.YELLOW),
+			log.ColorString("Usage", log.YELLOW),
+		)
+		tmpl, err := template.New("function doc").Parse(doc)
+		utils.HandleError(err)
+
+		var t bytes.Buffer
+		utils.HandleError(tmpl.Execute(&t, data))
+
+		// formatting delimeters
+		doc = regexp.MustCompile(`{{|}}|<<|>>`).
+			ReplaceAllStringFunc(t.String(), func(s string) string {
+				return log.ColorString(s, log.RED)
+			})
+
+		pager := exec.Command(os.Getenv("PAGER"))
+		pager.Stdin = strings.NewReader(doc)
+		pager.Stdout = os.Stdout
+		utils.HandleError(pager.Run())
+	},
+}
