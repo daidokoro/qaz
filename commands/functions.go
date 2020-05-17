@@ -289,6 +289,9 @@ Qaz has two levels of custom template functions, these are Gen-Time functions an
 
 --
 {{ end }}
+
+This list contains only custom functions added to Qaz, however, all built-in functionality for Go Templates is supported.
+See here for details: https://golang.org/pkg/text/template/
 `
 
 // TemplateFunctionDesc -describes template functions
