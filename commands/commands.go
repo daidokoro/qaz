@@ -10,13 +10,11 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
-	stks "github.com/daidokoro/qaz/stacks"
-
-	"github.com/daidokoro/qaz/bucket"
-	"github.com/daidokoro/qaz/repo"
+	"github.com/daidokoro/qaz/stacks"
 	"github.com/daidokoro/qaz/utils"
 
 	"github.com/CrowdSurge/banner"
+	"github.com/daidokoro/qaz/log"
 	"github.com/spf13/cobra"
 )
 
@@ -24,15 +22,12 @@ var t sync.Map
 
 // initialise - adds, logging and repo vars to dependecny functions
 var initialise = func(cmd *cobra.Command, args []string) {
-	log.Debug("initialising command [%s]", cmd.Name())
 	// add logging
-	stks.Log = &log
-	bucket.Log = &log
-	repo.Log = &log
-	utils.Log = &log
+	log.SetDefault(log.NewDefaultLogger(run.debug, run.colors))
+	log.Debug("initialising command [%s]", cmd.Name())
 
 	// add repo
-	stks.Git = &gitrepo
+	stacks.Git(&gitrepo)
 }
 
 var (
@@ -71,7 +66,7 @@ var (
 			}
 
 			// Get Project & AWS Region
-			arrow := log.ColorString("->", "magenta")
+			arrow := log.ColorString("->", log.MAGENTA)
 			project = utils.GetInput(fmt.Sprintf("%s Enter your Project name", arrow), "qaz-project")
 			region := utils.GetInput(fmt.Sprintf("%s Enter AWS Region", arrow), "eu-west-1")
 
@@ -82,19 +77,22 @@ var (
 			var overwrite string
 			if _, err := os.Stat(c); err == nil {
 				overwrite = utils.GetInput(
-					fmt.Sprintf("%s [%s] already exist, Do you want to %s?(Y/N) ", log.ColorString("->", "yellow"), c, log.ColorString("Overwrite", "red")),
+					fmt.Sprintf(
+						"%s [%s] already exist, Do you want to %s?(Y/N) ",
+						log.ColorString("->", log.YELLOW),
+						c, log.ColorString("Overwrite", log.RED)),
 					"N",
 				)
 
 				if overwrite == "Y" {
-					fmt.Println(fmt.Sprintf("%s Overwriting: [%s]..", log.ColorString("->", "yellow"), c))
+					fmt.Println(fmt.Sprintf("%s Overwriting: [%s]..", log.ColorString("->", log.YELLOW), c))
 				}
 			}
 
 			// Create template file
 			if overwrite != "N" {
 				if err := ioutil.WriteFile(c, utils.ConfigTemplate(project, region), 0644); err != nil {
-					fmt.Printf("%s Error, unable to create config.yml file: %s"+"\n", err, log.ColorString("->", "red"))
+					fmt.Printf("%s Error, unable to create config.yml file: %s"+"\n", err, log.ColorString("->", log.RED))
 					return
 				}
 			}
@@ -115,17 +113,17 @@ var (
 				utils.HandleError(fmt.Errorf("please specify stack name"))
 			}
 
-			err := Configure(run.cfgSource, run.cfgRaw)
+			stks, err := Configure(run.cfgSource, run.cfgRaw)
 			utils.HandleError(err)
 
 			for _, s := range args {
 				wg.Add(1)
 				go func(s string) {
-					if _, ok := stacks.Get(s); !ok {
+					if _, ok := stks.Get(s); !ok {
 						utils.HandleError(fmt.Errorf("Stack [%s] not found in config", s))
 					}
 
-					err := stacks.MustGet(s).StackPolicy()
+					err := stks.MustGet(s).StackPolicy()
 					utils.HandleError(err)
 
 					wg.Done()
@@ -155,14 +153,14 @@ var (
 			// set stack value based on argument
 			s := args[0]
 
-			err := Configure(run.cfgSource, run.cfgRaw)
+			stks, err := Configure(run.cfgSource, run.cfgRaw)
 			utils.HandleError(err)
 
-			if _, ok := stacks.Get(s); !ok {
+			if _, ok := stks.Get(s); !ok {
 				utils.HandleError(fmt.Errorf("Stack [%s] not found in config", s))
 			}
 
-			values := stacks.MustGet(s).TemplateValues[s].(map[string]interface{})
+			values := stks.MustGet(s).TemplateValues[s].(map[string]interface{})
 
 			log.Debug("Converting stack outputs to JSON from: %s", values)
 			output, err := yaml.Marshal(values)
@@ -172,7 +170,7 @@ var (
 			utils.HandleError(err)
 
 			resp := reg.ReplaceAllStringFunc(string(output), func(s string) string {
-				return log.ColorString(s, "cyan")
+				return log.ColorString(s, log.CYAN)
 			})
 
 			fmt.Printf("\n%s\n", resp)

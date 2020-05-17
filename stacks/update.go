@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/daidokoro/qaz/bucket"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/daidokoro/qaz/bucket"
+	"github.com/daidokoro/qaz/log"
 )
 
 // Update - Update Cloudformation Stack
@@ -44,11 +44,11 @@ func (s *Stack) Update() error {
 	if s.Bucket != "" {
 		exists, err := bucket.Exists(s.Bucket, s.Session)
 		if err != nil {
-			Log.Warn("Received Error when checking if [%s] exists: %v", s.Bucket, err)
+			log.Warn("Received Error when checking if [%s] exists: %v", s.Bucket, err)
 		}
 
 		if !exists {
-			Log.Info("Creating Bucket [%s]", s.Bucket)
+			log.Info("Creating Bucket [%s]", s.Bucket)
 			if err = bucket.Create(s.Bucket, s.Session); err != nil {
 				return err
 			}
@@ -78,9 +78,9 @@ func (s *Stack) Update() error {
 	}
 
 	if s.StackExists() {
-		Log.Info("Stack exists, updating...")
+		log.Info("Stack exists, updating...")
 
-		Log.Debug("calling [UpdateStack] with parameters: %s", updateParams)
+		log.Debug("calling [UpdateStack] with parameters: %s", updateParams)
 		_, err := svc.UpdateStack(updateParams)
 
 		if err != nil {
@@ -92,12 +92,12 @@ func (s *Stack) Update() error {
 		describeStacksInput := &cloudformation.DescribeStacksInput{
 			StackName: aws.String(s.Stackname),
 		}
-		Log.Debug("calling [WaitUntilStackUpdateComplete] with parameters: %s", describeStacksInput)
+		log.Debug("calling [WaitUntilStackUpdateComplete] with parameters: %s", describeStacksInput)
 		if err := svc.WaitUntilStackUpdateComplete(describeStacksInput); err != nil {
 			return err
 		}
 
-		Log.Info("stack update successful: [%s]", s.Stackname)
+		log.Info("stack update successful: [%s]", s.Stackname)
 
 	}
 	done <- true

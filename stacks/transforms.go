@@ -5,6 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/daidokoro/qaz/log"
 )
 
 // support for SAM - Serverless Arch Model Cloudformation templates
@@ -12,9 +13,9 @@ import (
 // DeploySAM deploys SAMs Cloudformation templates
 func (s *Stack) DeploySAM() error {
 	changename := fmt.Sprintf("%s-change-set", s.Stackname)
-	Log.Info(
+	log.Info(
 		"%s [SAM] deploy detected via [%s]: deploying serverless template via change-set",
-		Log.ColorString("serverless", "cyan"),
+		log.ColorString("serverless", log.CYAN),
 		s.Stackname,
 	)
 
@@ -33,15 +34,15 @@ func (s *Stack) DeploySAM() error {
 		StackName: aws.String(s.Stackname),
 	}
 
-	Log.Debug("Calling [WaitUntilStackCreateComplete] with parameters: %s", describeStacksInput)
+	log.Debug("Calling [WaitUntilStackCreateComplete] with parameters: %s", describeStacksInput)
 	if err := svc.WaitUntilStackCreateComplete(describeStacksInput); err != nil {
 		return err
 	}
 
 	done <- true
-	Log.Info(
+	log.Info(
 		"%s [SAM] - deploy completed - %s",
-		Log.ColorString("serverless", "cyan"),
+		log.ColorString("serverless", log.CYAN),
 		s.Stackname,
 	)
 	return nil

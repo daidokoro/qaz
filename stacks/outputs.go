@@ -5,6 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/daidokoro/qaz/log"
 )
 
 // Outputs - Get Stack outputs
@@ -15,7 +16,7 @@ func (s *Stack) Outputs() error {
 		StackName: aws.String(s.Stackname),
 	}
 
-	Log.Debug("Calling [DescribeStacks] with parameters:", outputParams)
+	log.Debug("Calling [DescribeStacks] with parameters:", outputParams)
 	outputs, err := svc.DescribeStacks(outputParams)
 	if err != nil {
 		return fmt.Errorf("Unable to reach stack: %v", err)

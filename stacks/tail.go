@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/daidokoro/qaz/log"
 )
 
 // tail - tracks the progress during stack updates. c - command Type
@@ -23,31 +24,31 @@ func (s *Stack) tail(c string, done <-chan bool) {
 	for ch := time.Tick(time.Millisecond * 1300); ; <-ch {
 		select {
 		case <-done:
-			Log.Debug("Tail run.Completed")
+			log.Debug("Tail run.Completed")
 			return
 		default:
 			// If channel is not populated, run verbose cf print
-			Log.Debug("calling [DescribeStackEvents] with parameters: %s", params)
+			log.Debug("calling [DescribeStackEvents] with parameters: %s", params)
 			stackevents, err := svc.DescribeStackEvents(params)
 			if err != nil {
-				Log.Debug("error when tailing events: %v", err)
+				log.Debug("error when tailing events: %v", err)
 				continue
 			}
 
-			Log.Debug("response: %s", stackevents)
+			log.Debug("response: %s", stackevents)
 
 			event := stackevents.StackEvents[0]
 
 			statusReason := ""
-			var lg = Log.Info
+			var lg = log.Info
 			if strings.Contains(*event.ResourceStatus, "FAILED") {
 				statusReason = *event.ResourceStatusReason
-				lg = Log.Error
+				lg = log.Error
 			}
 
 			line := strings.Join([]string{
 				*event.StackName,
-				Log.ColorMap(*event.ResourceStatus),
+				log.ColorMap(*event.ResourceStatus),
 				*event.ResourceType,
 				*event.LogicalResourceId,
 				statusReason,

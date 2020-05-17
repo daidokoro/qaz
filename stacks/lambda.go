@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/daidokoro/qaz/log"
 )
 
 type awslambda struct {
@@ -25,7 +26,7 @@ func (a *awslambda) Invoke(sess *session.Session) error {
 		params.Payload = a.payload
 	}
 
-	Log.Debug("Calling [Invoke] with parameters: %s", params)
+	log.Debug("Calling [Invoke] with parameters: %s", params)
 	resp, err := svc.Invoke(params)
 
 	if err != nil {
@@ -38,6 +39,6 @@ func (a *awslambda) Invoke(sess *session.Session) error {
 
 	a.response = string(resp.Payload)
 
-	Log.Debug("Lambda response: %s", a.response)
+	log.Debug("Lambda response: %s", a.response)
 	return nil
 }

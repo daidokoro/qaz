@@ -8,10 +8,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/daidokoro/qaz/log"
 	"github.com/daidokoro/qaz/repo"
+	"github.com/daidokoro/qaz/stacks"
 	"github.com/daidokoro/qaz/utils"
-
-	stks "github.com/daidokoro/qaz/stacks"
 
 	"github.com/spf13/cobra"
 )
@@ -33,7 +33,7 @@ var (
 		PreRun: initialise,
 		Run: func(cmd *cobra.Command, args []string) {
 
-			err := Configure(run.cfgSource, run.cfgRaw)
+			stks, err := Configure(run.cfgSource, run.cfgRaw)
 			utils.HandleError(err)
 
 			run.stacks = make(map[string]string)
@@ -42,16 +42,16 @@ var (
 			for _, src := range run.tplSources {
 				s, source, err := utils.GetSource(src)
 				utils.HandleError(err)
-				if _, ok := stacks.Get(s); !ok {
+				if _, ok := stks.Get(s); !ok {
 					utils.HandleError(fmt.Errorf("stacks [%s] not found in config", s))
 				}
-				stacks.MustGet(s).Source = source
-				stacks.MustGet(s).Actioned = true
+				stks.MustGet(s).Source = source
+				stks.MustGet(s).Actioned = true
 			}
 
 			// Add all stacks with defined sources if actioned
 			if run.all {
-				stacks.Range(func(_ string, s *stks.Stack) bool {
+				stks.Range(func(_ string, s *stacks.Stack) bool {
 					s.Actioned = true
 					return true
 				})
@@ -60,15 +60,15 @@ var (
 			// Add run.stacks based on Args
 			if len(args) > 0 && !run.all {
 				for _, s := range args {
-					if _, ok := stacks.Get(s); !ok {
+					if _, ok := stks.Get(s); !ok {
 						utils.HandleError(fmt.Errorf("stacks [%s] not found in config", s))
 					}
-					stacks.MustGet(s).Actioned = true
+					stks.MustGet(s).Actioned = true
 				}
 			}
 
 			// run gentimeParser
-			stacks.Range(func(_ string, s *stks.Stack) bool {
+			stks.Range(func(_ string, s *stacks.Stack) bool {
 				if !s.Actioned {
 					return true
 				}
@@ -79,7 +79,7 @@ var (
 			})
 
 			// Deploy Stacks
-			stks.DeployHandler(&stacks)
+			stacks.DeployHandler(&stks)
 
 		},
 	}
@@ -98,14 +98,14 @@ var (
 				return
 			}
 
-			repo, err := repo.NewRepo(args[0], run.gituser, run.gitrsa)
+			repo, err := repo.New(args[0], run.gituser, run.gitrsa)
 			utils.HandleError(err)
 
 			// Passing repo to the global var
 			gitrepo = *repo
 
 			// add repo
-			stks.Git = &gitrepo
+			stacks.Git(&gitrepo)
 
 			if out, ok := repo.Files[run.cfgSource]; ok {
 				repo.Config = out
@@ -116,19 +116,18 @@ var (
 				log.Debug(k)
 			}
 
-			err = Configure(run.cfgSource, repo.Config)
+			stks, err := Configure(run.cfgSource, repo.Config)
 			utils.HandleError(err)
 
 			//create set actioned stacks
-			stacks.Range(func(_ string, s *stks.Stack) bool {
+			stks.Range(func(_ string, s *stacks.Stack) bool {
 				s.Actioned = true
 				utils.HandleError(s.GenTimeParser())
 				return true
 			})
 
 			// Deploy Stacks
-			stks.DeployHandler(&stacks)
-
+			stacks.DeployHandler(&stks)
 		},
 	}
 
@@ -148,7 +147,7 @@ var (
 			var s string
 			var source string
 
-			err := Configure(run.cfgSource, run.cfgRaw)
+			stks, err := Configure(run.cfgSource, run.cfgRaw)
 			if err != nil {
 				utils.HandleError(err)
 				return
@@ -162,37 +161,37 @@ var (
 
 			case len(args) > 0:
 				s = args[0]
-				if _, ok := stacks.Get(s); !ok {
+				if _, ok := stks.Get(s); !ok {
 					utils.HandleError(fmt.Errorf("stacks [%s] not found in config", s))
 				}
 			}
 
 			// check stack exists
-			if _, ok := stacks.Get(s); !ok {
+			if _, ok := stks.Get(s); !ok {
 				utils.HandleError(fmt.Errorf("stacks [%s] not found in config", s))
 			}
 
 			if source != "" {
-				stacks.MustGet(s).Source = source
+				stks.MustGet(s).Source = source
 			}
 
-			utils.HandleError(stacks.MustGet(s).GenTimeParser())
+			utils.HandleError(stks.MustGet(s).GenTimeParser())
 
 			if run.interactive {
 				// random change-set name
 				run.changeName = fmt.Sprintf(
 					"%s-change-%s",
-					stacks.MustGet(s).Stackname,
+					stks.MustGet(s).Stackname,
 					strconv.Itoa((rand.Int())),
 				)
 
-				if err := stacks.MustGet(s).Change("create", run.changeName); err != nil {
+				if err := stks.MustGet(s).Change("create", run.changeName); err != nil {
 					log.Error(err.Error())
 					return
 				}
 
 				// describe change-set
-				if err := stacks.MustGet(s).Change("desc", run.changeName); err != nil {
+				if err := stks.MustGet(s).Change("desc", run.changeName); err != nil {
 					log.Error(err.Error())
 					return
 				}
@@ -200,8 +199,8 @@ var (
 				for {
 					fmt.Println(fmt.Sprintf(
 						"--\n%s [%s]: ",
-						log.ColorString("The above will be updated, do you want to proceed?", "red"),
-						log.ColorString("Y/N", "cyan"),
+						log.ColorString("The above will be updated, do you want to proceed?", log.RED),
+						log.ColorString("Y/N", log.CYAN),
 					))
 
 					scanner := bufio.NewScanner(os.Stdin)
@@ -209,14 +208,14 @@ var (
 					resp := scanner.Text()
 					switch strings.ToLower(resp) {
 					case "y":
-						if err := stacks.MustGet(s).Change("execute", run.changeName); err != nil {
+						if err := stks.MustGet(s).Change("execute", run.changeName); err != nil {
 							log.Error(err.Error())
 							return
 						}
 						log.Info("update completed successfully...")
 						return
 					case "n":
-						if err := stacks.MustGet(s).Change("rm", run.changeName); err != nil {
+						if err := stks.MustGet(s).Change("rm", run.changeName); err != nil {
 							log.Error(err.Error())
 							return
 						}
@@ -229,7 +228,7 @@ var (
 
 			} else {
 				// non-interactive mode
-				utils.HandleError(stacks.MustGet(s).Update())
+				utils.HandleError(stks.MustGet(s).Update())
 			}
 
 		},
@@ -247,27 +246,27 @@ var (
 				return
 			}
 
-			err := Configure(run.cfgSource, "")
+			stks, err := Configure(run.cfgSource, "")
 			utils.HandleError(err)
 
 			// select actioned stacks
 			for _, s := range args {
-				if _, ok := stacks.Get(s); !ok {
+				if _, ok := stks.Get(s); !ok {
 					utils.HandleError(fmt.Errorf("stacks [%s] not found in config", s))
 				}
-				stacks.MustGet(s).Actioned = true
+				stks.MustGet(s).Actioned = true
 			}
 
 			// action stacks if all
 			if run.all {
-				stacks.Range(func(_ string, s *stks.Stack) bool {
+				stks.Range(func(_ string, s *stacks.Stack) bool {
 					s.Actioned = true
 					return true
 				})
 			}
 
 			// Terminate Stacks
-			stks.TerminateHandler(&stacks)
+			stacks.TerminateHandler(&stks)
 		},
 	}
 )

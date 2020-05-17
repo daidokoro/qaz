@@ -3,17 +3,17 @@ package commands
 import (
 	"fmt"
 
-	yaml "gopkg.in/yaml.v2"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
-	stks "github.com/daidokoro/qaz/stacks"
+	"github.com/daidokoro/qaz/log"
+	"github.com/daidokoro/qaz/stacks"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/daidokoro/hcl"
 )
 
-// Configure parses the config file abd setos stacjs abd ebv
-func Configure(confSource string, conf string) (err error) {
+// Configure parses the config file and string and returns a stacks.Map
+func Configure(confSource string, conf string) (stks stacks.Map, err error) {
 
 	// set config session
 	config.Session, err = GetSession()
@@ -23,8 +23,8 @@ func Configure(confSource string, conf string) (err error) {
 
 	if conf == "" {
 		// utilise FetchSource to get sources
-		if err = stks.FetchSource(confSource, &config); err != nil {
-			return err
+		if err = stacks.FetchSource(confSource, &config); err != nil {
+			return
 		}
 	} else {
 		config.String = conf
@@ -32,7 +32,8 @@ func Configure(confSource string, conf string) (err error) {
 
 	// execute config Functions
 	if err = config.CallFunctions(GenTimeFunctions); err != nil {
-		return fmt.Errorf("failed to run template functions in config: %s", err)
+		err = fmt.Errorf("failed to run template functions in config: %s", err)
+		return
 	}
 
 	log.Debug("checking Config for HCL format...")
@@ -40,7 +41,7 @@ func Configure(confSource string, conf string) (err error) {
 		// fmt.Println(err)
 		log.Debug("failed to parse hcl... moving to JSON/YAML... error: %v", err)
 		if err = yaml.Unmarshal([]byte(config.String), &config); err != nil {
-			return err
+			return
 		}
 	}
 
@@ -50,7 +51,7 @@ func Configure(confSource string, conf string) (err error) {
 
 	// Get Stack Values
 	for s, v := range config.Stacks {
-		stacks.Add(s, &stks.Stack{
+		stks.Add(s, &stacks.Stack{
 			Name:             s,
 			Profile:          v.Profile,
 			Region:           v.Region,
@@ -70,12 +71,12 @@ func Configure(confSource string, conf string) (err error) {
 			NotificationARNs: v.NotificationARNs,
 		})
 
-		stacks.MustGet(s).SetStackName()
+		stks.MustGet(s).SetStackName()
 
 		// set session
-		stacks.MustGet(s).Session, err = GetSession(func(opts *session.Options) {
-			if stacks.MustGet(s).Profile != "" {
-				opts.Profile = stacks.MustGet(s).Profile
+		stks.MustGet(s).Session, err = GetSession(func(opts *session.Options) {
+			if stks.MustGet(s).Profile != "" {
+				opts.Profile = stks.MustGet(s).Profile
 			}
 
 			// use config region
@@ -84,8 +85,8 @@ func Configure(confSource string, conf string) (err error) {
 			}
 
 			// stack region trumps all other regions if-set
-			if stacks.MustGet(s).Region != "" {
-				opts.Config.Region = aws.String(stacks.MustGet(s).Region)
+			if stks.MustGet(s).Region != "" {
+				opts.Config.Region = aws.String(stks.MustGet(s).Region)
 			}
 
 			return
@@ -95,11 +96,13 @@ func Configure(confSource string, conf string) (err error) {
 			return
 		}
 
-		// stacks.MustGet(s).Session = sess
-
 		// set parameters and tags, if any
-		config.Parameters(stacks.MustGet(s)).Tags(stacks.MustGet(s))
+		config.
+			Parameters(stks.MustGet(s)).
+			Tags(stks.MustGet(s))
 
+		// update DeployTimeFunctions
+		stks.AddMapFuncs(DeployTimeFunctions)
 	}
 
 	return

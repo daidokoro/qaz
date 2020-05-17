@@ -3,19 +3,14 @@ package commands
 import (
 	stks "github.com/daidokoro/qaz/stacks"
 
-	"github.com/daidokoro/qaz/logger"
 	"github.com/daidokoro/qaz/repo"
 )
 
 var (
-	config  stks.Config
-	stacks  stks.Map
+	config stks.Config
+	// stacks  stks.Map
 	project string
 	gitrepo repo.Repo
-	log     = logger.Logger{
-		DebugMode: &run.debug,
-		Colors:    &run.colors,
-	}
 )
 
 // config environment variable

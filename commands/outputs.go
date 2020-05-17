@@ -9,9 +9,9 @@ import (
 	"sync"
 	"text/tabwriter"
 
+	"github.com/daidokoro/qaz/log"
+	"github.com/daidokoro/qaz/stacks"
 	"github.com/daidokoro/qaz/utils"
-
-	stks "github.com/daidokoro/qaz/stacks"
 
 	"github.com/spf13/cobra"
 )
@@ -32,24 +32,24 @@ var (
 				return
 			}
 
-			err := Configure(run.cfgSource, run.cfgRaw)
+			stks, err := Configure(run.cfgSource, run.cfgRaw)
 			utils.HandleError(err)
 
 			for _, s := range args {
 				// check if stack exists
-				if _, ok := stacks.Get(s); !ok {
+				if _, ok := stks.Get(s); !ok {
 					utils.HandleError(fmt.Errorf("%s: does not Exist in Config", s))
 				}
 
 				wg.Add(1)
 				go func(s string) {
 					defer wg.Done()
-					if err := stacks.MustGet(s).Outputs(); err != nil {
+					if err := stks.MustGet(s).Outputs(); err != nil {
 						log.Error(err.Error())
 						return
 					}
 
-					for _, i := range stacks.MustGet(s).Output.Stacks {
+					for _, i := range stks.MustGet(s).Output.Stacks {
 						m, err := json.MarshalIndent(i.Outputs, "", "  ")
 						if err != nil {
 							log.Error(err.Error())
@@ -57,7 +57,7 @@ var (
 
 						resp := regexp.MustCompile(OutputRegex).
 							ReplaceAllStringFunc(string(m), func(s string) string {
-								return log.ColorString(s, "cyan")
+								return log.ColorString(s, log.CYAN)
 							})
 
 						fmt.Println(resp)
@@ -79,7 +79,7 @@ var (
 		Run: func(cmd *cobra.Command, args []string) {
 			sess, err := GetSession()
 			utils.HandleError(err)
-			utils.HandleError(stks.Exports(sess))
+			utils.HandleError(stacks.Exports(sess))
 		},
 	}
 
@@ -96,24 +96,24 @@ var (
 				return
 			}
 
-			err := Configure(run.cfgSource, run.cfgRaw)
+			stks, err := Configure(run.cfgSource, run.cfgRaw)
 			utils.HandleError(err)
 
 			for _, s := range args {
 				// check if stack exists
-				if _, ok := stacks.Get(s); !ok {
+				if _, ok := stks.Get(s); !ok {
 					utils.HandleError(fmt.Errorf("%s: does not Exist in Config", s))
 				}
 
 				wg.Add(1)
 				go func(s string) {
 					defer wg.Done()
-					if err := stacks.MustGet(s).Outputs(); err != nil {
+					if err := stks.MustGet(s).Outputs(); err != nil {
 						log.Error(err.Error())
 						return
 					}
 
-					for _, stack := range stacks.MustGet(s).Output.Stacks {
+					for _, stack := range stks.MustGet(s).Output.Stacks {
 
 						w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, '.', 0)
 						// sort parameters by key
@@ -122,13 +122,13 @@ var (
 						})
 						// iterate over deployed stack parameters
 						for _, p := range stack.Parameters {
-							fmt.Fprintf(w, "%s\t %s", log.ColorString(*p.ParameterKey, "cyan"), *p.ParameterValue)
+							fmt.Fprintf(w, "%s\t %s", log.ColorString(*p.ParameterKey, log.CYAN), *p.ParameterValue)
 							// find corresponding parameter in local qaz config
-							for _, pl := range stacks.MustGet(s).Parameters {
+							for _, pl := range stks.MustGet(s).Parameters {
 								if *pl.ParameterKey == *p.ParameterKey {
 									if *pl.ParameterValue != *p.ParameterValue {
 										// explicitly log divergent local values
-										fmt.Fprintf(w, " vs. %s", log.ColorString(*pl.ParameterValue, "red"))
+										fmt.Fprintf(w, " vs. %s", log.ColorString(*pl.ParameterValue, log.RED))
 									}
 								}
 							}
@@ -144,5 +144,4 @@ var (
 
 		},
 	}
-
 )

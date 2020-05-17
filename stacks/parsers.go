@@ -3,6 +3,8 @@ package stacks
 import (
 	"bytes"
 	"text/template"
+
+	"github.com/daidokoro/qaz/log"
 )
 
 // DeployTimeParser - Parses templates during deployment to resolve specfic Dependency functions like stackout...
@@ -28,7 +30,7 @@ func (s *Stack) DeployTimeParser() error {
 
 	t.Execute(&doc, s.TemplateValues)
 	s.Template = doc.String()
-	Log.Debug("Deploy Time Template Generate:\n%s", s.Template)
+	log.Debug("Deploy Time Template Generate:\n%s", s.Template)
 
 	return nil
 }
@@ -44,7 +46,10 @@ func (s *Stack) GenTimeParser() error {
 	left, right := s.delims("gen")
 
 	// create template
-	t, err := template.New("gen-template").Delims(left, right).Funcs(*s.GenTimeFunc).Parse(s.Template)
+	t, err := template.New("gen-template").
+		Delims(left, right).
+		Funcs(*s.GenTimeFunc).
+		Parse(s.Template)
 	// t, err := template.New("gen-template").Delims(left, right).Funcs(*s.GenTimeFunc).Funcs(sprig.FuncMap()).Parse(s.Template)
 
 	if err != nil {

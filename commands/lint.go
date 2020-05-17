@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/daidokoro/qaz/log"
 	"github.com/daidokoro/qaz/utils"
 
 	"github.com/spf13/cobra"
@@ -26,7 +27,7 @@ var lintCmd = &cobra.Command{
 		var s string
 		var source string
 
-		err := Configure(run.cfgSource, run.cfgRaw)
+		stks, err := Configure(run.cfgSource, run.cfgRaw)
 		utils.HandleError(err)
 
 		switch {
@@ -38,22 +39,22 @@ var lintCmd = &cobra.Command{
 		}
 
 		// check if stack exists in config
-		if _, ok := stacks.Get(s); !ok {
+		if _, ok := stks.Get(s); !ok {
 			utils.HandleError(fmt.Errorf("Stack [%s] not found in config", s))
 			return
 		}
 
 		// if source is defined via cli arg
 		if source != "" {
-			stacks.MustGet(s).Source = source
+			stks.MustGet(s).Source = source
 		}
 
 		name := fmt.Sprintf("%s-%s", project, s)
 		log.Debug("generating a template for %s", name)
-		utils.HandleError(stacks.MustGet(s).GenTimeParser())
+		utils.HandleError(stks.MustGet(s).GenTimeParser())
 
 		// write template to temporary file
-		content := []byte(stacks.MustGet(s).Template)
+		content := []byte(stks.MustGet(s).Template)
 		filename := fmt.Sprintf(".%s.qaz", s)
 		writeErr := ioutil.WriteFile(filename, content, 0644)
 		utils.HandleError(writeErr)
@@ -61,7 +62,9 @@ var lintCmd = &cobra.Command{
 		// run cfn-lint against temporary file
 		_, lookErr := exec.LookPath("cfn-lint")
 		if lookErr != nil {
-			utils.HandleError(fmt.Errorf("cfn-lint executable not found! Please consider https://pypi.org/project/cfn-lint/ for help."))
+			utils.HandleError(
+				fmt.Errorf("cfn-lint executable not found! Please consider https://pypi.org/project/cfn-lint/ for help."),
+			)
 		}
 		execCmd := exec.Command("cfn-lint", filename)
 		execCmd.Env = append(os.Environ())

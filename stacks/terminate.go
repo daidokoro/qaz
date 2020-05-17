@@ -6,12 +6,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/daidokoro/qaz/log"
 )
 
 func (s *Stack) terminate() error {
-	Log.Debug("terminate called for: [%s]", s.Name)
+	log.Debug("terminate called for: [%s]", s.Name)
 	if !s.StackExists() {
-		Log.Info("%s: does not exist...", s.Name)
+		log.Info("%s: does not exist...", s.Name)
 		return nil
 	}
 
@@ -31,7 +32,7 @@ func (s *Stack) terminate() error {
 
 	go tailWait(done, &tailinput)
 
-	Log.Debug("calling [DeleteStack] with parameters: %s", params)
+	log.Debug("calling [DeleteStack] with parameters: %s", params)
 	if _, err := svc.DeleteStack(params); err != nil {
 		done <- true
 		return errors.New(fmt.Sprintln("Deleting failed: ", err))
@@ -44,7 +45,7 @@ func (s *Stack) terminate() error {
 	}
 
 	done <- true
-	Log.Info("deletion successful: [%s]", s.Stackname)
+	log.Info("deletion successful: [%s]", s.Stackname)
 
 	return nil
 }
