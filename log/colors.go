@@ -7,6 +7,26 @@ import (
 	"github.com/fatih/color"
 )
 
+// Color type used in ColorString function
+type Color uint8
+
+const (
+	// GREEN - log color green
+	GREEN Color = 0
+
+	// CYAN - log color cyan
+	CYAN Color = 1
+
+	// RED - log color red
+	RED Color = 2
+
+	// MAGENTA - log color megenta
+	MAGENTA Color = 3
+
+	// YELLOW - log color yellow
+	YELLOW Color = 4
+)
+
 // ColorMap - Used to map a particular color to a cf status phrase - returns lowercase strings in color.
 func ColorMap(s string) string {
 	// If Windows, disable colorS
@@ -39,28 +59,24 @@ func ColorMap(s string) string {
 }
 
 // ColorString - Returns colored string
-func ColorString(s, col string) string {
-
+func ColorString(s string, col Color) string {
 	// If Windows, disable colorS
 	if runtime.GOOS == "windows" || Default().Colors() {
 		return s
 	}
 
 	var result string
-	switch strings.ToLower(col) {
-	case "green":
+	switch col {
+	case GREEN:
 		result = color.New(color.FgGreen).Add().SprintFunc()(s)
-	case "yellow":
+	case YELLOW:
 		result = color.New(color.FgYellow).Add().SprintFunc()(s)
-	case "red":
+	case RED:
 		result = color.New(color.FgRed).Add().SprintFunc()(s)
-	case "magenta":
+	case MAGENTA:
 		result = color.New(color.FgMagenta).Add().SprintFunc()(s)
-	case "cyan":
+	case CYAN:
 		result = color.New(color.FgCyan).Add().SprintFunc()(s)
-	default:
-		// Unidentified, just returns the same string
-		return s
 	}
 
 	return result

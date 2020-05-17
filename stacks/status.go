@@ -42,7 +42,7 @@ func (s *Stack) Status() error {
 	// Print Status
 	fmt.Printf(
 		"%s%s - %s --> %s - [%s]"+"\n",
-		log.ColorString(`@`, "magenta"),
+		log.ColorString(`@`, log.MAGENTA),
 		timeflag.Format(time.RFC850),
 		strings.ToLower(log.ColorMap(*status.Stacks[0].StackStatus)),
 		s.Name,

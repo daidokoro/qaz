@@ -13,23 +13,23 @@ type DefaultLogger struct {
 
 // Info - Prints info level log statments
 func (l *DefaultLogger) Info(msg string, args ...interface{}) {
-	fmt.Fprintf(os.Stdout, "%s: %s\n", ColorString("info", "green"), fmt.Sprintf(msg, args...))
+	fmt.Fprintf(os.Stdout, "%s: %s\n", ColorString("info", GREEN), fmt.Sprintf(msg, args...))
 }
 
 // Warn - Prints warn level log statments
 func (l *DefaultLogger) Warn(msg string, args ...interface{}) {
-	fmt.Fprintf(os.Stdout, "%s: %s\n", ColorString("warn", "yellow"), fmt.Sprintf(msg, args...))
+	fmt.Fprintf(os.Stdout, "%s: %s\n", ColorString("warn", YELLOW), fmt.Sprintf(msg, args...))
 }
 
 // Error - Prints error level log statements
 func (l *DefaultLogger) Error(msg string, args ...interface{}) {
-	fmt.Fprintf(os.Stderr, "%s: %s\n", ColorString("error", "red"), fmt.Sprintf(msg, args...))
+	fmt.Fprintf(os.Stderr, "%s: %s\n", ColorString("error", RED), fmt.Sprintf(msg, args...))
 }
 
 // Debug - Prints debug level log statements
 func (l *DefaultLogger) Debug(msg string, args ...interface{}) {
 	if *l.debugMode {
-		fmt.Fprintf(os.Stdout, "%s: %s\n", ColorString("debug", "magenta"), fmt.Sprintf(msg, args...))
+		fmt.Fprintf(os.Stdout, "%s: %s\n", ColorString("debug", MAGENTA), fmt.Sprintf(msg, args...))
 	}
 }
 

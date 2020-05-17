@@ -57,7 +57,7 @@ var (
 
 						resp := regexp.MustCompile(OutputRegex).
 							ReplaceAllStringFunc(string(m), func(s string) string {
-								return log.ColorString(s, "cyan")
+								return log.ColorString(s, log.CYAN)
 							})
 
 						fmt.Println(resp)
@@ -122,13 +122,13 @@ var (
 						})
 						// iterate over deployed stack parameters
 						for _, p := range stack.Parameters {
-							fmt.Fprintf(w, "%s\t %s", log.ColorString(*p.ParameterKey, "cyan"), *p.ParameterValue)
+							fmt.Fprintf(w, "%s\t %s", log.ColorString(*p.ParameterKey, log.CYAN), *p.ParameterValue)
 							// find corresponding parameter in local qaz config
 							for _, pl := range stks.MustGet(s).Parameters {
 								if *pl.ParameterKey == *p.ParameterKey {
 									if *pl.ParameterValue != *p.ParameterValue {
 										// explicitly log divergent local values
-										fmt.Fprintf(w, " vs. %s", log.ColorString(*pl.ParameterValue, "red"))
+										fmt.Fprintf(w, " vs. %s", log.ColorString(*pl.ParameterValue, log.RED))
 									}
 								}
 							}

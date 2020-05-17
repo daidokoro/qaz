@@ -199,8 +199,8 @@ var (
 				for {
 					fmt.Println(fmt.Sprintf(
 						"--\n%s [%s]: ",
-						log.ColorString("The above will be updated, do you want to proceed?", "red"),
-						log.ColorString("Y/N", "cyan"),
+						log.ColorString("The above will be updated, do you want to proceed?", log.RED),
+						log.ColorString("Y/N", log.CYAN),
 					))
 
 					scanner := bufio.NewScanner(os.Stdin)

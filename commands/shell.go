@@ -52,7 +52,7 @@ func initShell(p string, stks *stacks.Map, s *ishell.Shell) {
 	// display welcome info.
 	s.Println(fmt.Sprintf(
 		"\n%s Shell Mode\n--\nTry \"help\" for a list of commands\n",
-		log.ColorString("Qaz", "magenta"),
+		log.ColorString("Qaz", log.MAGENTA),
 	))
 
 	// arrary of commands
@@ -127,7 +127,7 @@ func initShell(p string, stks *stacks.Map, s *ishell.Shell) {
 							utils.HandleError(err)
 
 							resp := reg.ReplaceAllStringFunc(string(m), func(s string) string {
-								return log.ColorString(s, "cyan")
+								return log.ColorString(s, log.CYAN)
 							})
 
 							fmt.Println(resp)
@@ -176,7 +176,7 @@ func initShell(p string, stks *stacks.Map, s *ishell.Shell) {
 				}
 
 				resp := reg.ReplaceAllStringFunc(string(output), func(s string) string {
-					return log.ColorString(s, "cyan")
+					return log.ColorString(s, log.CYAN)
 				})
 
 				fmt.Printf("\n%s\n", resp)
@@ -198,14 +198,14 @@ func initShell(p string, stks *stacks.Map, s *ishell.Shell) {
 				// create checklist
 				choices := c.Checklist(
 					stklist,
-					fmt.Sprintf("select stacks to %s:", log.ColorString("Deploy", "cyan")),
+					fmt.Sprintf("select stacks to %s:", log.ColorString("Deploy", log.CYAN)),
 					nil,
 				)
 
 				// define actioned stacks
 				for _, i := range choices {
 					if i < 0 {
-						fmt.Printf("--\nPress %s to return\n--\n", log.ColorString("ENTER", "green"))
+						fmt.Printf("--\nPress %s to return\n--\n", log.ColorString("ENTER", log.GREEN))
 						return
 					}
 
@@ -227,7 +227,7 @@ func initShell(p string, stks *stacks.Map, s *ishell.Shell) {
 
 				// Deploy Stacks
 				stacks.DeployHandler(stks)
-				fmt.Printf("--\nPress %s to return\n--\n", log.ColorString("ENTER", "green"))
+				fmt.Printf("--\nPress %s to return\n--\n", log.ColorString("ENTER", log.GREEN))
 				return
 			},
 		},
@@ -247,14 +247,14 @@ func initShell(p string, stks *stacks.Map, s *ishell.Shell) {
 				// create checklist
 				choices := c.Checklist(
 					stklist,
-					fmt.Sprintf("select stacks to %s:", log.ColorString("Terminate", "red")),
+					fmt.Sprintf("select stacks to %s:", log.ColorString("Terminate", log.RED)),
 					nil,
 				)
 
 				// define run.stacks
 				for _, i := range choices {
 					if i < 0 {
-						fmt.Printf("--\nPress %s to return\n--\n", log.ColorString("ENTER", "green"))
+						fmt.Printf("--\nPress %s to return\n--\n", log.ColorString("ENTER", log.GREEN))
 						return
 					}
 					stks.MustGet(stklist[i]).Actioned = true
@@ -262,7 +262,7 @@ func initShell(p string, stks *stacks.Map, s *ishell.Shell) {
 
 				// Terminate Stacks
 				stacks.TerminateHandler(stks)
-				fmt.Printf("--\nPress %s to return\n--\n", log.ColorString("ENTER", "green"))
+				fmt.Printf("--\nPress %s to return\n--\n", log.ColorString("ENTER", log.GREEN))
 				return
 
 			},
@@ -303,7 +303,7 @@ func initShell(p string, stks *stacks.Map, s *ishell.Shell) {
 				utils.HandleError(err)
 
 				resp := reg.ReplaceAllStringFunc(string(stks.MustGet(s).Template), func(s string) string {
-					return log.ColorString(s, "cyan")
+					return log.ColorString(s, log.CYAN)
 				})
 
 				fmt.Println(resp)
@@ -399,8 +399,8 @@ func initShell(p string, stks *stacks.Map, s *ishell.Shell) {
 				for {
 					c.Print(fmt.Sprintf(
 						"--\n%s [%s]: ",
-						log.ColorString("The above will be updated, do you want to proceed?", "red"),
-						log.ColorString("Y/N", "cyan"),
+						log.ColorString("The above will be updated, do you want to proceed?", log.RED),
+						log.ColorString("Y/N", log.CYAN),
 					))
 
 					resp := c.ReadLine()
@@ -443,14 +443,14 @@ func initShell(p string, stks *stacks.Map, s *ishell.Shell) {
 				// create checklist
 				choices := c.Checklist(
 					stklist,
-					fmt.Sprintf("select stacks to %s:", log.ColorString("set-policy", "yellow")),
+					fmt.Sprintf("select stacks to %s:", log.ColorString("set-policy", log.YELLOW)),
 					nil,
 				)
 
 				// define run.stacks
 				for _, i := range choices {
 					if i < 0 {
-						fmt.Printf("--\nPress %s to return\n--\n", log.ColorString("ENTER", "green"))
+						fmt.Printf("--\nPress %s to return\n--\n", log.ColorString("ENTER", log.GREEN))
 						return
 					}
 					stks.MustGet(stklist[i]).Actioned = true
@@ -557,10 +557,10 @@ func initShell(p string, stks *stacks.Map, s *ishell.Shell) {
 	// set prompt
 	s.SetPrompt(fmt.Sprintf(
 		"%s %s:(%s) %s ",
-		log.ColorString("@", "yellow"),
-		log.ColorString("qaz", "cyan"),
-		log.ColorString(p, "magenta"),
-		log.ColorString("✗", "green"),
+		log.ColorString("@", log.YELLOW),
+		log.ColorString("qaz", log.CYAN),
+		log.ColorString(p, log.MAGENTA),
+		log.ColorString("✗", log.GREEN),
 	))
 
 	// add commands

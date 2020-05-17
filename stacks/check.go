@@ -40,7 +40,7 @@ func (s *Stack) Check() error {
 	}
 
 	output := reg.ReplaceAllStringFunc(string(out), func(s string) string {
-		return log.ColorString(s, "cyan")
+		return log.ColorString(s, log.CYAN)
 	})
 
 	fmt.Println(output)

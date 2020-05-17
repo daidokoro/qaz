@@ -15,7 +15,7 @@ func (s *Stack) DeploySAM() error {
 	changename := fmt.Sprintf("%s-change-set", s.Stackname)
 	log.Info(
 		"%s [SAM] deploy detected via [%s]: deploying serverless template via change-set",
-		log.ColorString("serverless", "cyan"),
+		log.ColorString("serverless", log.CYAN),
 		s.Stackname,
 	)
 
@@ -42,7 +42,7 @@ func (s *Stack) DeploySAM() error {
 	done <- true
 	log.Info(
 		"%s [SAM] - deploy completed - %s",
-		log.ColorString("serverless", "cyan"),
+		log.ColorString("serverless", log.CYAN),
 		s.Stackname,
 	)
 	return nil

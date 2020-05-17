@@ -137,7 +137,7 @@ func (s *Stack) Change(req, changename string) error {
 		}
 
 		for _, i := range resp.Summaries {
-			log.Info("%s%s - Change-Set: [%s] - Status: [%s]", log.ColorString("@", "magenta"), i.CreationTime.Format(time.RFC850), *i.ChangeSetName, *i.ExecutionStatus)
+			log.Info("%s%s - Change-Set: [%s] - Status: [%s]", log.ColorString("@", log.MAGENTA), i.CreationTime.Format(time.RFC850), *i.ChangeSetName, *i.ExecutionStatus)
 		}
 
 	case execute, serverless:
@@ -187,7 +187,7 @@ func (s *Stack) Change(req, changename string) error {
 		utils.HandleError(err)
 
 		out := reg.ReplaceAllStringFunc(string(o), func(s string) string {
-			return log.ColorString(s, "cyan")
+			return log.ColorString(s, log.CYAN)
 		})
 
 		fmt.Printf(out)

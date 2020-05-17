@@ -52,7 +52,7 @@ var generateCmd = &cobra.Command{
 
 		resp := regexp.MustCompile(OutputRegex).
 			ReplaceAllStringFunc(string(stks.MustGet(s).Template), func(s string) string {
-				return log.ColorString(s, "cyan")
+				return log.ColorString(s, log.CYAN)
 			})
 
 		fmt.Println(resp)

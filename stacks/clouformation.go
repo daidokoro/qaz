@@ -60,7 +60,7 @@ func Exports(session *session.Session) error {
 
 	for _, i := range exports.Exports {
 
-		fmt.Printf("Export Name: %s\nExport Value: %s\n--\n", log.ColorString(*i.Name, "magenta"), *i.Value)
+		fmt.Printf("Export Name: %s\nExport Value: %s\n--\n", log.ColorString(*i.Name, log.MAGENTA), *i.Value)
 	}
 
 	return nil
