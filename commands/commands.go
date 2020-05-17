@@ -66,7 +66,7 @@ var (
 			}
 
 			// Get Project & AWS Region
-			arrow := log.ColorString("->", "magenta")
+			arrow := log.ColorString("->", log.MAGENTA)
 			project = utils.GetInput(fmt.Sprintf("%s Enter your Project name", arrow), "qaz-project")
 			region := utils.GetInput(fmt.Sprintf("%s Enter AWS Region", arrow), "eu-west-1")
 
@@ -77,19 +77,22 @@ var (
 			var overwrite string
 			if _, err := os.Stat(c); err == nil {
 				overwrite = utils.GetInput(
-					fmt.Sprintf("%s [%s] already exist, Do you want to %s?(Y/N) ", log.ColorString("->", "yellow"), c, log.ColorString("Overwrite", "red")),
+					fmt.Sprintf(
+						"%s [%s] already exist, Do you want to %s?(Y/N) ",
+						log.ColorString("->", log.YELLOW),
+						c, log.ColorString("Overwrite", log.RED)),
 					"N",
 				)
 
 				if overwrite == "Y" {
-					fmt.Println(fmt.Sprintf("%s Overwriting: [%s]..", log.ColorString("->", "yellow"), c))
+					fmt.Println(fmt.Sprintf("%s Overwriting: [%s]..", log.ColorString("->", log.YELLOW), c))
 				}
 			}
 
 			// Create template file
 			if overwrite != "N" {
 				if err := ioutil.WriteFile(c, utils.ConfigTemplate(project, region), 0644); err != nil {
-					fmt.Printf("%s Error, unable to create config.yml file: %s"+"\n", err, log.ColorString("->", "red"))
+					fmt.Printf("%s Error, unable to create config.yml file: %s"+"\n", err, log.ColorString("->", log.RED))
 					return
 				}
 			}
@@ -167,7 +170,7 @@ var (
 			utils.HandleError(err)
 
 			resp := reg.ReplaceAllStringFunc(string(output), func(s string) string {
-				return log.ColorString(s, "cyan")
+				return log.ColorString(s, log.CYAN)
 			})
 
 			fmt.Printf("\n%s\n", resp)
