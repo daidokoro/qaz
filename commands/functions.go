@@ -300,8 +300,12 @@ type TemplateFunctionDesc struct {
 }
 
 var templateFunctionsCmd = &cobra.Command{
-	Use:    "template-functions",
-	Short:  "prints a list of all available custom template functions",
+	Use: "template-functions",
+	Example: strings.Join([]string{
+		"qaz template-functions [function-name]",
+		"qaz template-functions",
+	}, "\n"),
+	Short:  "prints a list with descriptions and examples of all available custom template functions",
 	PreRun: initialise,
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -331,7 +335,7 @@ var templateFunctionsCmd = &cobra.Command{
 			},
 
 			&TemplateFunctionDesc{
-				f("Cat"),
+				f("cat"),
 				"Reads text from a given filepath to template", g,
 				`{{ cat "/path/to/some/file.txt" }}`,
 			},
@@ -425,6 +429,21 @@ var templateFunctionsCmd = &cobra.Command{
 				"stack_output_ext fetches the output value of a given stack that exists outside of your project/configuration and stores the value in your template. This function requires the full name of the stack as it appears on the AWS Console.", d,
 				`<< stack_output_ext "external-vpc::vpcid" >>`,
 			},
+		}
+
+		// if specific function is requested
+		var singleFunctionData []*TemplateFunctionDesc
+		if len(args) > 0 {
+			fn := args[0]
+			for _, tf := range data {
+				if tf.Name == f(fn) {
+					singleFunctionData = append(singleFunctionData, tf)
+				}
+			}
+
+			if len(singleFunctionData) > 0 {
+				data = singleFunctionData
+			}
 		}
 
 		doc := fmt.Sprintf(templateFunctionDoc, log.ColorString("Function", log.YELLOW),
