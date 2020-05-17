@@ -64,6 +64,7 @@ func (m *Map) Count() int {
 
 // --- Template Functions for StackMap --- //
 
+// StackOutput - stack output reader for template function
 func (m *Map) StackOutput(target string) string {
 	log.Debug("Deploy-Time function resolving: %s", target)
 	req := strings.Split(target, "::")
