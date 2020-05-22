@@ -42,6 +42,7 @@ func init() {
 	RootCmd.PersistentFlags().BoolVarP(&run.colors, "no-colors", "", false, "disable colors in outputs")
 	RootCmd.PersistentFlags().StringVarP(&run.profile, "profile", "p", "default", "configured aws profile")
 	RootCmd.PersistentFlags().StringVarP(&run.region, "region", "r", "", "configured aws region: if blank, the region is acquired via the profile")
+	RootCmd.PersistentFlags().BoolVarP(&run.executePackage, "package", "P", false, "execute package template functions")
 	RootCmd.PersistentFlags().BoolVarP(&run.debug, "debug", "", false, "Run in debug mode...")
 
 	// Define Lambda Invoke Flags
