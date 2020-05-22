@@ -2,6 +2,7 @@ package stacks
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/daidokoro/qaz/bucket"
@@ -39,7 +40,7 @@ func resolveBucket(s *Stack) (string, error) {
 	}
 	t := time.Now()
 	tStamp := fmt.Sprintf("%d-%d-%d_%d%d", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute())
-	url, err := bucket.S3write(s.Bucket, fmt.Sprintf("%s_%s.template", s.Stackname, tStamp), s.Template, s.Session)
+	url, err := bucket.S3write(s.Bucket, fmt.Sprintf("%s_%s.template", s.Stackname, tStamp), strings.NewReader(s.Template), s.Session)
 	if err != nil {
 		return "", err
 	}

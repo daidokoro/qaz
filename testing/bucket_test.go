@@ -3,6 +3,7 @@ package testing
 import (
 	"fmt"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -21,7 +22,7 @@ func TestS3Write(t *testing.T) {
 	s, err := bucket.S3write(
 		"daidokoro-dev",
 		"qaz_testing.txt",
-		body,
+		strings.NewReader(body),
 		sess,
 	)
 

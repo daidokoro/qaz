@@ -2,6 +2,7 @@ package bucket
 
 import (
 	"bytes"
+	"io"
 	"net/url"
 	"strings"
 	"time"
@@ -46,12 +47,12 @@ func S3Read(URL string, sess *session.Session) (string, error) {
 }
 
 // S3write - Writes a file to s3 and returns the presigned url
-func S3write(bucket string, key string, body string, sess *session.Session) (string, error) {
+func S3write(bucket string, key string, body io.Reader, sess *session.Session) (string, error) {
 	svc := s3.New(sess)
 	params := &s3.PutObjectInput{
 		Bucket: &bucket,
 		Key:    &key,
-		Body:   bytes.NewReader([]byte(body)),
+		Body:   aws.ReadSeekCloser(body),
 		Metadata: map[string]*string{
 			"created_by": aws.String("qaz"),
 		},
