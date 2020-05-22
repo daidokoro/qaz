@@ -457,6 +457,12 @@ var templateFunctionsCmd = &cobra.Command{
 			},
 
 			&TemplateFunctionDesc{
+				f("package"),
+				"The package function creates a ZIP file from a given path and uploads it to S3. This functionality is useful for AWS Lambda & Layer deployments", g,
+				`{{ package "./code" "s3://mybucket/path/to/function.zip" }} --> s3://mybucket/path/to/function.zip`,
+			},
+
+			&TemplateFunctionDesc{
 				f("stack_output"),
 				"Fetches the output value of a given stack and stores the value in your template. This function uses the stack name as defined in your project configuration", d,
 				`<< stack_output "vpc::vpcid" >>`,
