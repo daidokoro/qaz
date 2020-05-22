@@ -101,8 +101,8 @@ func Configure(confSource string, conf string) (stks stacks.Map, err error) {
 			Parameters(stks.MustGet(s)).
 			Tags(stks.MustGet(s))
 
-		// update DeployTimeFunctions
-		stks.AddMapFuncs(DeployTimeFunctions)
+		// add stack based functions stackoutput
+		stks.AddFuncs(DeployTimeFunctions)
 	}
 
 	return
