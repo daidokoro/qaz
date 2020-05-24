@@ -181,6 +181,7 @@ func addFileToZip(zipWriter *zip.Writer, filename, dir string) error {
 	}
 
 	// stripping out top level dir name here
+	dir = strings.TrimLeft(dir, "./")
 	filename = regexp.MustCompile(fmt.Sprintf(`^%s/`, dir)).
 		ReplaceAllString(filename, "")
 	log.Debug("adding file to zip package: [%s]", filename)
