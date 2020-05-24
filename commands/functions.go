@@ -72,12 +72,20 @@ var (
 		return resp
 	}
 
-	pkgfunc = func(path, s3URI string, profile ...string) string {
+	pkgfunc = func(path, s3URI string, profile ...string) interface{} {
+		u, err := url.Parse(s3URI)
+		utils.HandleError(err)
+
+		m := make(map[string]string, 2)
+		m["S3Key"] = u.Path[1:]
+		m["S3Bucket"] = u.Host
+
 		if !run.executePackage {
 			log.Warn("[package] template function detected but package not used")
 			log.Warn("please use --package/-P flags to execute package functions")
-			return s3URI
+			return m
 		}
+
 		log.Debug("Calling Template Function [package] with arguments: %s:")
 		sess, err := GetSession(func(opts *session.Options) {
 			if len(profile) < 1 {
@@ -93,15 +101,11 @@ var (
 		buf, err := utils.Zip(path)
 		utils.HandleError(err)
 
-		u, err := url.Parse(s3URI)
-		utils.HandleError(err)
-
 		log.Info("uploading package to s3: [%s]", s3URI)
 		_, err = bucket.S3write(u.Host, u.Path, bytes.NewReader(buf.Bytes()), sess)
 		utils.HandleError(err)
 
-		// bucket.S3write()
-		return s3URI
+		return m
 	}
 
 	s3Read = func(url string, profile ...string) string {
