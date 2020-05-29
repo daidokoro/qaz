@@ -23,7 +23,7 @@ var (
 	gitrepo *repo.Repo
 
 	// OutputRegex for printing yaml/json output
-	OutputRegex = `(?m)^[ -]*([^\r\n :]+?)\s*:`
+	OutputRegex = `(?m)^[ -]*([^\r\n:]+?)\s*:[ \n\r\s]`
 )
 
 // Stack - holds all meaningful information about a particular stack.
