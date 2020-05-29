@@ -123,7 +123,7 @@ func initShell(p string, stks *stacks.Map, s *ishell.Shell) {
 								log.Error(err.Error())
 							}
 
-							reg, err := regexp.Compile(OutputRegex)
+							reg, err := regexp.Compile(stacks.OutputRegex)
 							utils.HandleError(err)
 
 							resp := reg.ReplaceAllStringFunc(string(m), func(s string) string {
@@ -299,7 +299,7 @@ func initShell(p string, stks *stacks.Map, s *ishell.Shell) {
 					return
 				}
 
-				reg, err := regexp.Compile(OutputRegex)
+				reg, err := regexp.Compile(stacks.OutputRegex)
 				utils.HandleError(err)
 
 				resp := reg.ReplaceAllStringFunc(string(stks.MustGet(s).Template), func(s string) string {
