@@ -61,6 +61,9 @@ type Stack struct {
 	GenDelims      *string
 	TemplateValues map[string]interface{}
 
+	// Cloudformation Role
+	CFRoleARN string
+
 	// Debug value
 	// Debug   bool
 	Timeout int64

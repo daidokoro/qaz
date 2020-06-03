@@ -69,6 +69,7 @@ func Configure(confSource string, conf string) (stks stacks.Map, err error) {
 			Project:          &config.Project,
 			Timeout:          v.Timeout,
 			NotificationARNs: v.NotificationARNs,
+			CFRoleARN:        v.CFRoleArn,
 		})
 
 		stks.MustGet(s).SetStackName()
