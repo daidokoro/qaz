@@ -1,0 +1,22 @@
+project: package-test
+
+# list of sources and destinations to package to s3
+# note that the credentials used to run qaz will need access
+# to any/all S3 destinations and sources specified.
+# 
+# qaz needs to be executed with the --package/-p flag
+# to trigger package uploads - for eg. qaz deploy --all --package
+s3_package:
+  myfunc:
+    source: ./code
+    destination: s3://daidokoro-lambda/code_test.zip
+
+
+stacks:
+  func:
+    source: template.yaml
+    cf:
+      handle: main.handle
+      name: code_test_function
+      code_uri: s3://daidokoro-lambda/code_test.zip
+    
