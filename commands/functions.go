@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"net/url"
 	"os"
 	"os/exec"
 	"regexp"
@@ -70,42 +69,6 @@ var (
 		utils.HandleError(err)
 
 		return resp
-	}
-
-	pkgfunc = func(path, s3URI string, profile ...string) interface{} {
-		u, err := url.Parse(s3URI)
-		utils.HandleError(err)
-
-		m := make(map[string]string, 2)
-		m["S3Key"] = u.Path[1:]
-		m["S3Bucket"] = u.Host
-
-		if !run.executePackage {
-			log.Warn("[package] template function detected but package not used")
-			log.Warn("please use --package/-P flags to execute package functions")
-			return m
-		}
-
-		log.Debug("Calling Template Function [package] with arguments: %s:")
-		sess, err := GetSession(func(opts *session.Options) {
-			if len(profile) < 1 {
-				log.Warn("No Profile specified for [package], using: %s", run.profile)
-				return
-			}
-			opts.Profile = profile[0]
-			return
-		})
-		utils.HandleError(err)
-
-		log.Info("creating ZIP package from : [%s]", path)
-		buf, err := utils.Zip(path)
-		utils.HandleError(err)
-
-		log.Info("uploading package to s3: [%s]", s3URI)
-		_, err = bucket.S3write(u.Host, u.Path, bytes.NewReader(buf.Bytes()), sess)
-		utils.HandleError(err)
-
-		return m
 	}
 
 	s3Read = func(url string, profile ...string) string {
@@ -246,9 +209,6 @@ var (
 			log.Debug("Calling Template Function [title] with arguments: %s", s)
 			return strings.Title(s)
 		},
-
-		// package function - create  zip package from local path
-		"package": pkgfunc,
 	}
 
 	// deploytime function maps
@@ -458,12 +418,6 @@ var templateFunctionsCmd = &cobra.Command{
 				f("title"),
 				"Returns a copy of the string s with all Unicode letters that begin words mapped to their title case", g,
 				`{{ title "tengen toppa gurren lagan" }} --> Tengen Toppa Gurren Lagan`,
-			},
-
-			&TemplateFunctionDesc{
-				f("package"),
-				"The package function creates a ZIP file from a given path and uploads it to S3. This functionality is useful for AWS Lambda & Layer deployments", g,
-				`{{ package "./code" "s3://mybucket/path/to/function.zip" }} --> s3://mybucket/path/to/function.zip`,
 			},
 
 			&TemplateFunctionDesc{
