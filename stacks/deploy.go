@@ -62,6 +62,11 @@ func (s *Stack) Deploy() error {
 		createParams.NotificationARNs = aws.StringSlice(s.NotificationARNs)
 	}
 
+	// add role arn
+	if s.CFRoleARN != "" {
+		createParams.SetRoleARN(s.CFRoleARN)
+	}
+
 	// If IAM is being touched, add Capabilities
 	if strings.Contains(s.Template, "AWS::IAM") {
 		createParams.Capabilities = []*string{

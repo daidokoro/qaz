@@ -166,7 +166,7 @@ var (
 			output, err := yaml.Marshal(values)
 			utils.HandleError(err)
 
-			reg, err := regexp.Compile(OutputRegex)
+			reg, err := regexp.Compile(stacks.OutputRegex)
 			utils.HandleError(err)
 
 			resp := reg.ReplaceAllStringFunc(string(output), func(s string) string {

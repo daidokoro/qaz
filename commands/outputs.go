@@ -55,7 +55,7 @@ var (
 							log.Error(err.Error())
 						}
 
-						resp := regexp.MustCompile(OutputRegex).
+						resp := regexp.MustCompile(stacks.OutputRegex).
 							ReplaceAllStringFunc(string(m), func(s string) string {
 								return log.ColorString(s, log.CYAN)
 							})

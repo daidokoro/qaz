@@ -42,6 +42,7 @@ type Config struct {
 		Tags             []map[string]string    `yaml:"tags,omitempty" json:"tags,omitempty" hcl:"tags,omitempty"`
 		Timeout          int64                  `yaml:"timeout,omitempty" json:"timeout,omitempty" hcl:"timeout,omitempty"`
 		NotificationARNs []string               `yaml:"notification-arns" json:"notification-arns" hcl:"notification-arns"`
+		CFRoleArn        string                 `yaml:"cf-role-arn" json:"cf-role-arn" hcl:"cf-role-arn"`
 		CF               map[string]interface{} `yaml:"cf,omitempty" json:"cf,omitempty" hcl:"cf,omitempty"`
 	} `yaml:"stacks" json:"stacks" hcl:"stacks"`
 }
