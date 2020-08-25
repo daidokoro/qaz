@@ -15,8 +15,9 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 
 	// git "github.com/daidokoro/go-git"
-	"github.com/daidokoro/go-git/plumbing/transport/http"
-	"github.com/daidokoro/go-git/plumbing/transport/ssh"
+	"gopkg.in/src-d/go-git.v4/plumbing/transport/http"
+	// "github.com/daidokoro/go-git/plumbing/transport/ssh"
+	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 
 	// "github.com/daidokoro/go-git/storage/memory"
 	billy "gopkg.in/src-d/go-billy.v4"
@@ -142,7 +143,11 @@ func (r *Repo) getAuth(opts *git.CloneOptions) error {
 
 			r.Secret = string(p)
 		}
-		opts.Auth = http.NewBasicAuth(r.User, r.Secret)
+
+		opts.Auth = &http.BasicAuth{
+			Username: r.User,
+			Password: r.Secret,
+		}
 	}
 
 	return nil

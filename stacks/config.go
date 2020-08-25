@@ -130,9 +130,7 @@ type s3Package struct {
 // PackageToS3 - executes package to s3 if --package/-p flag is given
 // and packages are defined.
 func (c *Config) PackageToS3(packageFlag bool) (err error) {
-	if len(c.S3Package) > 0 && !packageFlag {
-		log.Warn("[s3_package] config resource detected...")
-		log.Warn("please use --package/-P flags to execute package functions")
+	if !packageFlag {
 		return
 	}
 
@@ -183,7 +181,6 @@ func (c *Config) PackageToS3(packageFlag bool) (err error) {
 
 	for k, v := range c.S3Package {
 		jobs <- &s3Package{k, v.Source, v.Destination}
-		fmt.Println("here")
 	}
 
 	log.Debug("closing concurrent s3 packaging jobs")

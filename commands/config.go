@@ -106,6 +106,9 @@ func Configure(confSource string, conf string) (stks stacks.Map, err error) {
 		stks.AddFuncs(DeployTimeFunctions)
 	}
 
-	err = config.PackageToS3(run.executePackage)
+	if len(config.S3Package) > 0 {
+		err = config.PackageToS3(run.executePackage)
+	}
+
 	return
 }

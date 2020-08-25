@@ -15,6 +15,7 @@ func init() {
 	deployCmd.Flags().StringArrayVarP(&run.tplSources, "template", "t", []string{}, "path to template file(s) Or stack::url")
 	deployCmd.Flags().BoolVarP(&run.rollback, "disable-rollback", "", false, "Set Stack to rollback on deployment failures")
 	deployCmd.Flags().BoolVarP(&run.all, "all", "A", false, "deploy all stacks with defined Sources in config")
+	deployCmd.Flags().BoolVarP(&run.executePackage, "package", "P", false, "execute s3 packaging actions from config")
 
 	// Define Git Deploy Flags
 	gitDeployCmd.Flags().BoolVarP(&run.rollback, "disable-rollback", "", false, "Set Stack to rollback on deployment failures")
@@ -42,7 +43,6 @@ func init() {
 	RootCmd.PersistentFlags().BoolVarP(&run.colors, "no-colors", "", false, "disable colors in outputs")
 	RootCmd.PersistentFlags().StringVarP(&run.profile, "profile", "p", "default", "configured aws profile")
 	RootCmd.PersistentFlags().StringVarP(&run.region, "region", "r", "", "configured aws region: if blank, the region is acquired via the profile")
-	RootCmd.PersistentFlags().BoolVarP(&run.executePackage, "package", "P", false, "execute package template functions")
 	RootCmd.PersistentFlags().BoolVarP(&run.debug, "debug", "", false, "Run in debug mode...")
 
 	// Define Lambda Invoke Flags
@@ -58,6 +58,7 @@ func init() {
 
 	// Define Update Command
 	updateCmd.Flags().BoolVarP(&run.interactive, "interactive", "i", false, "preview change-set and ask before executing it")
+	updateCmd.Flags().BoolVarP(&run.executePackage, "package", "P", false, "execute s3 packaging actions from config")
 
 	// Add Config --config common flag
 	for _, cmd := range []interface{}{
