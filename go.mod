@@ -6,7 +6,7 @@ require (
 	github.com/CrowdSurge/banner v0.0.0-20140923200336-8c0e79dc5ff7
 	github.com/abiosoft/ishell v2.0.0+incompatible // indirect
 	github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db // indirect
-	github.com/aws/aws-sdk-go v1.34.10
+	github.com/aws/aws-sdk-go v1.37.18
 	github.com/chzyer/logex v1.1.10 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
 	github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1 // indirect
@@ -16,7 +16,8 @@ require (
 	github.com/flynn-archive/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
 	github.com/spf13/cobra v1.0.0
 	github.com/stretchr/testify v1.6.1
-	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
+	go.mozilla.org/sops/v3 v3.7.1
+	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
 	gopkg.in/src-d/go-billy.v4 v4.3.2
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	gopkg.in/yaml.v2 v2.3.0
