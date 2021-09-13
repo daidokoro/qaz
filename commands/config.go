@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/daidokoro/qaz/log"
 	"github.com/daidokoro/qaz/stacks"
+
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/daidokoro/hcl"
@@ -36,10 +37,17 @@ func Configure(confSource string, conf string) (stks stacks.Map, err error) {
 		return
 	}
 
+	// decrypt config secrets
+	if err = config.SopsDecrypt(); err != nil {
+		err = fmt.Errorf("failed to decrypt secrets in config: %s", err)
+		return
+	}
+
 	log.Debug("checking Config for HCL format...")
 	if err = hcl.Unmarshal([]byte(config.String), &config); err != nil {
 		// fmt.Println(err)
 		log.Debug("failed to parse hcl... moving to JSON/YAML... error: %v", err)
+
 		if err = yaml.Unmarshal([]byte(config.String), &config); err != nil {
 			return
 		}

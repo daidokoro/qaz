@@ -2,6 +2,7 @@ package stacks
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"strings"
@@ -14,6 +15,10 @@ import (
 	"github.com/daidokoro/qaz/bucket"
 	"github.com/daidokoro/qaz/log"
 	"github.com/daidokoro/qaz/utils"
+	yaml "gopkg.in/yaml.v2"
+
+	"go.mozilla.org/sops/v3"
+	"go.mozilla.org/sops/v3/decrypt"
 )
 
 // Config type for handling yaml config files
@@ -117,6 +122,43 @@ func (c *Config) CallFunctions(fmap template.FuncMap) error {
 	t.Execute(&doc, nil)
 	c.String = doc.String()
 	log.Debug("config: %s", c.String)
+	return nil
+}
+
+// SopsDecrypt - decrypt secrets in config using SOPS
+func (c *Config) SopsDecrypt() error {
+
+	log.Debug("decrypting secrets in config file")
+
+	data := []byte(c.String)
+
+	// sops/v3/decrypt func requires format string or enum
+	var tmp map[string]interface{}
+	var format string
+	if json.Unmarshal(data, &tmp) == nil {
+		format = "json"
+	} else if yaml.Unmarshal(data, &tmp) == nil {
+		format = "yaml"
+	} else {
+		format = "undetected"
+	}
+	log.Debug("format: %s", format)
+
+	// check for sops metadata in supported formats
+	if format == "json" || format == "yaml" {
+		confData, err := decrypt.Data(data, format)
+		if err != nil {
+			if err == sops.MetadataNotFound {
+				// not an encrypted file
+				log.Debug("config did not contain SOPS metadata")
+			} else {
+				return err
+			}
+		} else {
+			c.String = string(confData)
+		}
+	}
+
 	return nil
 }
 
