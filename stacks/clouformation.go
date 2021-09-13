@@ -1,7 +1,10 @@
 package stacks
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
+	"regexp"
 	"sync"
 	"time"
 
@@ -44,6 +47,11 @@ var state = status{
 	failed:   "failed",
 }
 
+type exportOutput struct {
+	Name  string `json:"name" yaml:"name"`
+	Value string `json:"value" yaml:"value"`
+}
+
 // Exports - prints all cloudformation exports
 func Exports(session *session.Session) error {
 
@@ -58,11 +66,26 @@ func Exports(session *session.Session) error {
 		return err
 	}
 
+	m := make(map[string][]exportOutput)
 	for _, i := range exports.Exports {
+		if _, ok := m[*i.ExportingStackId]; !ok {
+			m[*i.ExportingStackId] = []exportOutput{exportOutput{*i.Name, *i.Value}}
+			continue
+		}
 
-		fmt.Printf("Export Name: %s\nExport Value: %s\n--\n", log.ColorString(*i.Name, log.MAGENTA), *i.Value)
+		m[*i.ExportingStackId] = append(m[*i.ExportingStackId], exportOutput{*i.Name, *i.Value})
 	}
 
+	b, err := json.MarshalIndent(&m, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	o := regexp.MustCompile(OutputRegex).
+		ReplaceAllStringFunc(string(b), func(s string) string {
+			return log.ColorString(s, log.CYAN)
+		})
+	fmt.Fprint(os.Stdout, o)
 	return nil
 }
 

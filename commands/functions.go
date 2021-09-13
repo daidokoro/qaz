@@ -82,7 +82,6 @@ var (
 			opts.Profile = profile[0]
 			return
 		})
-
 		utils.HandleError(err)
 
 		resp, err := bucket.S3Read(url, sess)

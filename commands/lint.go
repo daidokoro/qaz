@@ -58,12 +58,13 @@ var lintCmd = &cobra.Command{
 		filename := fmt.Sprintf(".%s.qaz", s)
 		writeErr := ioutil.WriteFile(filename, content, 0644)
 		utils.HandleError(writeErr)
+		defer os.Remove(filename)
 
 		// run cfn-lint against temporary file
 		_, lookErr := exec.LookPath("cfn-lint")
 		if lookErr != nil {
 			utils.HandleError(
-				fmt.Errorf("cfn-lint executable not found! Please consider https://pypi.org/project/cfn-lint/ for help."),
+				fmt.Errorf("cfn-lint executable not found! Please consider https://pypi.org/project/cfn-lint/ for help"),
 			)
 		}
 		execCmd := exec.Command("cfn-lint", filename)

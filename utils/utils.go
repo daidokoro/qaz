@@ -1,3 +1,4 @@
+// Package utils contains uniility functions utilised by Qaz
 package utils
 
 // Helper functions
@@ -5,13 +6,18 @@ package utils
 // -- Contains helper functions
 
 import (
+	"archive/zip"
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -129,4 +135,66 @@ func IsJSON(s string) bool {
 func IsHCL(s string) bool {
 	var h map[string]interface{}
 	return hcl.Unmarshal([]byte(s), &h) == nil
+}
+
+// Zip -
+func Zip(dir string) (b bytes.Buffer, err error) {
+	z := io.Writer(&b)
+
+	zipWriter := zip.NewWriter(z)
+	defer zipWriter.Close()
+
+	err = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		f, err := os.Stat(path)
+		if err != nil {
+			return err
+		}
+
+		if !f.IsDir() {
+			if err = addFileToZip(zipWriter, path, dir); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+
+	return
+}
+
+func addFileToZip(zipWriter *zip.Writer, filename, dir string) error {
+
+	fileToZip, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	defer fileToZip.Close()
+
+	// Get the file information
+	info, err := fileToZip.Stat()
+	if err != nil {
+		return err
+	}
+
+	header, err := zip.FileInfoHeader(info)
+	if err != nil {
+		return err
+	}
+
+	// stripping out top level dir name here
+	dir = strings.TrimLeft(dir, "./")
+	filename = regexp.MustCompile(fmt.Sprintf(`^%s/`, dir)).
+		ReplaceAllString(filename, "")
+	log.Debug("adding file to zip package: [%s]", filename)
+	header.Name = filename
+
+	// Change to deflate to gain better compression
+	// see http://golang.org/pkg/archive/zip/#pkg-constants
+	header.Method = zip.Deflate
+
+	writer, err := zipWriter.CreateHeader(header)
+	if err != nil {
+		return err
+	}
+	_, err = io.Copy(writer, fileToZip)
+	return err
 }

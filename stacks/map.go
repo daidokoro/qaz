@@ -87,10 +87,11 @@ func (m *Map) StackOutput(target string) string {
 	return ""
 }
 
-// AddMapFuncs - add stack map functions to function map
-// Note: this map only exists for deploytime functions
+// AddFuncs - add stack map functions to function map
+// Note: this only exists for deploytime/gentime functions
 // that require access to stack data at runtime.
-func (m *Map) AddMapFuncs(t template.FuncMap) {
+func (m *Map) AddFuncs(t template.FuncMap) {
+
 	// Fetching stackoutputs
 	t["stack_output"] = func(target string) string {
 		log.Debug("Deploy-Time function resolving: %s", target)
@@ -131,4 +132,6 @@ func (m *Map) AddMapFuncs(t template.FuncMap) {
 		utils.HandleError(fmt.Errorf("Stack Output Not found - Stack:%s | Output:%s", req[0], req[1]))
 		return ""
 	}
+
+	return
 }

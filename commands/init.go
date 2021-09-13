@@ -15,6 +15,7 @@ func init() {
 	deployCmd.Flags().StringArrayVarP(&run.tplSources, "template", "t", []string{}, "path to template file(s) Or stack::url")
 	deployCmd.Flags().BoolVarP(&run.rollback, "disable-rollback", "", false, "Set Stack to rollback on deployment failures")
 	deployCmd.Flags().BoolVarP(&run.all, "all", "A", false, "deploy all stacks with defined Sources in config")
+	deployCmd.Flags().BoolVarP(&run.executePackage, "package", "P", false, "execute s3 packaging actions from config")
 
 	// Define Git Deploy Flags
 	gitDeployCmd.Flags().BoolVarP(&run.rollback, "disable-rollback", "", false, "Set Stack to rollback on deployment failures")
@@ -57,6 +58,7 @@ func init() {
 
 	// Define Update Command
 	updateCmd.Flags().BoolVarP(&run.interactive, "interactive", "i", false, "preview change-set and ask before executing it")
+	updateCmd.Flags().BoolVarP(&run.executePackage, "package", "P", false, "execute s3 packaging actions from config")
 
 	// Add Config --config common flag
 	for _, cmd := range []interface{}{

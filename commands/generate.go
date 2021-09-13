@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/daidokoro/qaz/log"
+	"github.com/daidokoro/qaz/stacks"
 	"github.com/daidokoro/qaz/utils"
 	"github.com/spf13/cobra"
 )
@@ -50,7 +51,7 @@ var generateCmd = &cobra.Command{
 		log.Debug("generating a template for %s", name)
 		utils.HandleError(stks.MustGet(s).GenTimeParser())
 
-		resp := regexp.MustCompile(OutputRegex).
+		resp := regexp.MustCompile(stacks.OutputRegex).
 			ReplaceAllStringFunc(string(stks.MustGet(s).Template), func(s string) string {
 				return log.ColorString(s, log.CYAN)
 			})
