@@ -70,6 +70,8 @@ func (s *Stack) Deploy() error {
 		}
 	}
 
+	createParams.Capabilities = append(createParams.Capabilities, aws.String(cloudformation.CapabilityCapabilityAutoExpand))
+
 	// If bucket - upload to s3
 	if s.Bucket != "" {
 		var url string

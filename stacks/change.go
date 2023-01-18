@@ -86,6 +86,8 @@ func (s *Stack) Change(req, changename string) error {
 			}
 		}
 
+		params.Capabilities = append(params.Capabilities, aws.String(cloudformation.CapabilityCapabilityAutoExpand))
+
 		log.Debug("calling [CreateChangeSet] with parameters: %s", params)
 		if _, err = svc.CreateChangeSet(params); err != nil {
 			return err

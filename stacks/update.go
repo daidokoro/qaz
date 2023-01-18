@@ -77,6 +77,8 @@ func (s *Stack) Update() error {
 		}
 	}
 
+	updateParams.Capabilities = append(updateParams.Capabilities, aws.String(cloudformation.CapabilityCapabilityAutoExpand))
+
 	if s.StackExists() {
 		log.Info("Stack exists, updating...")
 
