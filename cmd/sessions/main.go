@@ -1,10 +1,14 @@
-package commands
+go
+package cmdSessions
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/daidokoro/qaz/log"
+	"github.com/spf13/cobra"
 )
 
 // GetSession - Returns aws session based on default run.profile and run.Region
@@ -37,3 +41,45 @@ func GetSession(options ...func(*session.Options)) (*session.Session, error) {
 
 	return sess, nil
 }
+
+var (
+	run = struct {
+		cfgSource   string
+		tplSource   string
+		profile     string
+		region      string
+		tplSources  []string
+		stacks      map[string]string
+		all         bool
+		version     bool
+		request     string
+		debug       bool
+		funcEvent   string
+		lambdAsync  bool
+		changeName  string
+		stackName   string
+		rollback    bool
+		colors      bool
+		cfgRaw      string
+		gituser     string
+		gitpass     string
+		gitrsa      string
+		protectOff  bool
+		interactive bool
+	}{}
+)
+
+// NewCmdSessions - command to interact with AWS Sessions
+func NewCmdSessions() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "sessions",
+		Short: "Manage AWS sessions",
+		Long:  `Manage AWS sessions`,
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println("sessions called")
+		},
+	}
+	return cmd
+}
+
+

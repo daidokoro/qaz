@@ -1,4 +1,4 @@
-package commands
+package cmdDeploy
 
 import (
 	"bufio"
@@ -8,20 +8,28 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/daidokoro/qaz/cmd/deploy/functions"
 	"github.com/daidokoro/qaz/log"
-	"github.com/daidokoro/qaz/repo"
 	"github.com/daidokoro/qaz/stacks"
 	"github.com/daidokoro/qaz/utils"
 
 	"github.com/spf13/cobra"
 )
-
+var(
+	deployCmd = &cobra.Command{}
+	)
+	
+func NewCmdDeploy() *cobra.Command{
+	return deployCmd
+}
 // stack management commands, ie. deploy, terminate, update
 
 var (
 	// deploy command
-	deployCmd = &cobra.Command{
-		Use:   "deploy",
+	deployCmd_ = &cobra.Command{
+		Use:   "deploy [stacks]",
+		
+
 		Short: "Deploys stack(s) to AWS",
 		Example: strings.Join([]string{
 			"qaz deploy stack -c path/to/config",
@@ -29,8 +37,9 @@ var (
 			"qaz deploy -c path/to/config -t stack::path/to/template",
 			"qaz deploy -c path/to/config -t stack::http://someurl",
 			"qaz deploy -c path/to/config -t stack::lambda:{some:json}@lambda_function",
+			"qaz deploy -c path/to/config --all",
 		}, "\n"),
-		PreRun: initialise,
+		PreRun: RootCmd.PersistentPreRun,
 		Run: func(cmd *cobra.Command, args []string) {
 
 			stks, err := Configure(run.cfgSource, run.cfgRaw)
@@ -82,53 +91,7 @@ var (
 			stacks.DeployHandler(&stks)
 
 		},
-	}
-
-	// git-deploy command
-	gitDeployCmd = &cobra.Command{
-		Use:     "git-deploy [git-repo]",
-		Short:   "Deploy project from Git repository",
-		Example: "qaz git-deploy https://github.com/cfn-deployable/simplevpc --user me",
-		PreRun:  initialise,
-		Run: func(cmd *cobra.Command, args []string) {
-
-			// check args
-			if len(args) < 1 {
-				fmt.Println("Please specify git repo...")
-				return
-			}
-
-			repo, err := repo.New(args[0], run.gituser, run.gitrsa)
-			utils.HandleError(err)
-
-			// Passing repo to the global var
-			gitrepo = *repo
-
-			// add repo
-			stacks.Git(&gitrepo)
-
-			if out, ok := repo.Files[run.cfgSource]; ok {
-				repo.Config = out
-			}
-
-			log.Debug("Repo Files:")
-			for k := range repo.Files {
-				log.Debug(k)
-			}
-
-			stks, err := Configure(run.cfgSource, repo.Config)
-			utils.HandleError(err)
-
-			//create set actioned stacks
-			stks.Range(func(_ string, s *stacks.Stack) bool {
-				s.Actioned = true
-				utils.HandleError(s.GenTimeParser())
-				return true
-			})
-
-			// Deploy Stacks
-			stacks.DeployHandler(&stks)
-		},
+	
 	}
 
 	// update command
@@ -141,7 +104,7 @@ var (
 			"qaz update -c path/to/config -t stack::http://someurl",
 			"qaz deploy -c path/to/config -t stack::lambda:{some:json}@lambda_function",
 		}, "\n"),
-		PreRun: initialise,
+		PreRun: RootCmd.PersistentPreRun,
 		Run: func(cmd *cobra.Command, args []string) {
 
 			var s string
@@ -215,22 +178,60 @@ var (
 						log.Info("update completed successfully...")
 						return
 					case "n":
-						if err := stks.MustGet(s).Change("rm", run.changeName); err != nil {
-							log.Error(err.Error())
-							return
-						}
-						return
+						
 					default:
-						log.Warn(`invalid response, please type "Y" or "N"`)
-						continue
-					}
-				}
 
-			} else {
-				// non-interactive mode
-				utils.HandleError(stks.MustGet(s).Update())
+						// non-interactive mode
+						utils.HandleError(stks.MustGet(s).Update())
+					}
+
+				},
+			}
+			
+	// git-deploy command
+	gitDeployCmd = &cobra.Command{
+		Use:     "git-deploy [git-repo]",
+		Short:   "Deploy project from Git repository",
+		Example: "qaz git-deploy https://github.com/cfn-deployable/simplevpc --user me",
+		PreRun:  initialise,
+		Run: func(cmd *cobra.Command, args []string) {
+
+			// check args
+			if len(args) < 1 {
+				fmt.Println("Please specify git repo...")
+				return
 			}
 
+			repo, err := repo.New(args[0], run.gituser, run.gitrsa)
+			utils.HandleError(err)
+
+			// Passing repo to the global var
+			gitrepo = *repo
+
+			// add repo
+			stacks.Git(&gitrepo)
+
+			if out, ok := repo.Files[run.cfgSource]; ok {
+				repo.Config = out
+			}
+
+			log.Debug("Repo Files:")
+			for k := range repo.Files {
+				log.Debug(k)
+			}
+
+			stks, err := Configure(run.cfgSource, repo.Config)
+			utils.HandleError(err)
+
+			//create set actioned stacks
+			stks.Range(func(_ string, s *stacks.Stack) bool {
+				s.Actioned = true
+				utils.HandleError(s.GenTimeParser())
+				return true
+			})
+
+			// Deploy Stacks
+			stacks.DeployHandler(&stks)
 		},
 	}
 
@@ -270,3 +271,9 @@ var (
 		},
 	}
 )
+
+func init() {
+	deployCmd = deployCmd_
+	deployCmd.AddCommand(cmdFunctions.NewCmdFunctions())
+}
+

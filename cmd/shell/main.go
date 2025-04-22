@@ -24,14 +24,17 @@ import (
 
 // define shell commands
 
-var (
-	shell = ishell.New()
+func NewCmdShell() *cobra.Command {
+	shell := ishell.New()
 
-	// define shell cmd
-	shellCmd = &cobra.Command{
+	shellCmd := &cobra.Command{
 		Use:     "shell",
-		Short:   "Qaz interactive shell - loads the specified config into an interactive shell",
-		PreRun:  initialise,
+		Short:   "Qaz interactive shell",
+		Long: `
+Qaz interactive shell - loads the specified config into an interactive shell
+
+This allows you to deploy, update, terminate, and validate your stacks in an interactive environment.`,
+		PreRun: initialise,
 		Example: "qaz shell -c config.yml",
 		Run: func(cmd *cobra.Command, args []string) {
 			// read config
@@ -45,7 +48,8 @@ var (
 			shell.Run()
 		},
 	}
-)
+	return shellCmd
+}
 
 func initShell(p string, stks *stacks.Map, s *ishell.Shell) {
 	var wg sync.WaitGroup

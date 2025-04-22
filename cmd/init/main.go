@@ -2,11 +2,26 @@ package commands
 
 // Init sits here
 
+package commands
+
 import (
 	"os"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
+)
+
+var (
+	initCmd = &cobra.Command{
+		Use:   "init",
+		Short: "Initialize local env variables",
+		Run: func(cmd *cobra.Command, args []string) {
+
+			// run.Init()
+			cmd.Help()
+
+		},
+	}
 )
 
 func init() {
@@ -129,3 +144,11 @@ func init() {
 	)
 
 }
+
+// NewCmdInit creates the init command
+func NewCmdInit() *cobra.Command {
+	return initCmd
+}
+
+
+

@@ -1,4 +1,4 @@
-package commands
+package cmdLint
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var lintCmd = &cobra.Command{
+func NewCmdLint() *cobra.Command {var lintCmd = &cobra.Command{
 	Use:   "lint [stack]",
 	Short: "Validates stack by calling cfn-lint",
 	Example: strings.Join([]string{
@@ -74,4 +74,6 @@ var lintCmd = &cobra.Command{
 		utils.HandleError(execErr)
 
 	},
+}
+return lintCmd
 }

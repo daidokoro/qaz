@@ -2,15 +2,23 @@ package commands
 
 import (
 	"fmt"
-
+	"github.com/spf13/cobra"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/daidokoro/qaz/log"
 	"github.com/daidokoro/qaz/stacks"
 	yaml "gopkg.in/yaml.v2"
-
 	"github.com/daidokoro/hcl"
 )
+
+func NewCmdConfig() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "config",
+		Short: "Config related commands",
+		Long:  `Manage the config file and values`,
+	}
+	return cmd
+}
 
 // Configure parses the config file and string and returns a stacks.Map
 func Configure(confSource string, conf string) (stks stacks.Map, err error) {

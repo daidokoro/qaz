@@ -1,7 +1,9 @@
-package commands
+package cmdChange
 
 import (
 	"fmt"
+
+	"github.com/daidokoro/qaz/stacks"
 
 	"github.com/daidokoro/qaz/log"
 	"github.com/daidokoro/qaz/utils"
@@ -9,12 +11,35 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var run = stacks.Run{}
+
+
 var changeCmd = &cobra.Command{
 	Use:   "change",
 	Short: "Change-Set management for AWS Stacks",
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
 	},
+}
+
+func NewCmdChange() *cobra.Command {
+	changeCmd.PersistentFlags().StringVarP(&run.CfgSource, "config", "c", "", "path to config file (default: $PWD/qaz.yml)")
+	changeCmd.PersistentFlags().StringVarP(&run.StackName, "stack", "s", "", "name of stack to work against")
+	changeCmd.PersistentFlags().StringVarP(&run.TplSource, "template", "t", "", "path to template file/url")
+	changeCmd.PersistentFlags().StringVar(&run.CfgRaw, "raw-config", "", "raw config data")
+
+	changeCmd.AddCommand(NewCmdCreate())
+	changeCmd.AddCommand(NewCmdRm())
+	changeCmd.AddCommand(NewCmdList())
+	changeCmd.AddCommand(NewCmdExecute())
+	changeCmd.AddCommand(NewCmdDesc())
+
+	return changeCmd
+}
+
+func initialise(cmd *cobra.Command, args []string) {
+	run.CfgSource = utils.GetVal(run.CfgSource, "config")
+
 }
 
 var create = &cobra.Command{
@@ -69,6 +94,10 @@ var create = &cobra.Command{
 	},
 }
 
+func NewCmdCreate() *cobra.Command {
+	return create
+}
+
 var rm = &cobra.Command{
 	Use:    "rm",
 	Short:  "Delete Change-Set",
@@ -100,6 +129,10 @@ var rm = &cobra.Command{
 	},
 }
 
+func NewCmdRm() *cobra.Command {
+	return rm
+}
+
 var list = &cobra.Command{
 	Use:    "list",
 	Short:  "List Change-Sets",
@@ -121,6 +154,10 @@ var list = &cobra.Command{
 		err = stks.MustGet(run.stackName).Change("list", run.changeName)
 		utils.HandleError(err)
 	},
+}
+
+func NewCmdList() *cobra.Command {
+	return list
 }
 
 var execute = &cobra.Command{
@@ -158,6 +195,10 @@ var execute = &cobra.Command{
 	},
 }
 
+func NewCmdExecute() *cobra.Command {
+	return execute
+}
+
 var desc = &cobra.Command{
 	Use:    "desc",
 	Short:  "Describe Change-Set",
@@ -189,4 +230,8 @@ var desc = &cobra.Command{
 		err = stks.MustGet(run.stackName).Change("desc", run.changeName)
 		utils.HandleError(err)
 	},
+}
+
+func NewCmdDesc() *cobra.Command {
+	return desc
 }

@@ -1,4 +1,4 @@
-package commands
+package cmdOutputs
 
 import (
 	"encoding/json"
@@ -16,11 +16,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// output, export and parameters commands
-
-var (
+// NewCmdOutputs creates and returns the outputs command
+func NewCmdOutputs() *cobra.Command {
 	// output command
-	outputsCmd = &cobra.Command{
+	outputsCmd := &cobra.Command{
 		Use:     "outputs [stack]",
 		Short:   "Prints stack outputs",
 		Example: "qaz outputs vpc subnets --config path/to/config",
@@ -70,8 +69,13 @@ var (
 		},
 	}
 
+	return outputsCmd
+}
+
+// NewCmdExports creates and returns the exports command
+func NewCmdExports() *cobra.Command {
 	// export command
-	exportsCmd = &cobra.Command{
+	exportsCmd := &cobra.Command{
 		Use:     "exports",
 		Short:   "Prints stack exports",
 		Example: "qaz exports",
@@ -82,9 +86,13 @@ var (
 			utils.HandleError(stacks.Exports(sess))
 		},
 	}
+	return exportsCmd
+}
 
+// NewCmdParameters creates and returns the parameters command
+func NewCmdParameters() *cobra.Command {
 	// parameters command
-	parametersCmd = &cobra.Command{
+	parametersCmd := &cobra.Command{
 		Use:     "parameters [stack]",
 		Short:   "Prints parameters of deployed stack",
 		Example: "qaz parameters vpc subnets --config path/to/config",
@@ -144,4 +152,5 @@ var (
 
 		},
 	}
-)
+	return parametersCmd
+}
